@@ -1,0 +1,53 @@
+const { uploadFile, BUCKETS } = require('../services/storageService');
+
+// ==============================================================================
+// UPLOAD CONTROLLER - Upload de fichiers vers Supabase Storage
+// ==============================================================================
+
+// Configuration multer (memory storage pour upload direct vers Supabase)
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 Mo
+});
+
+exports.upload = upload;
+
+/**
+ * POST /api/upload
+ * Body: multipart/form-data avec un champ "file" (le fichier)
+ *       et un champ optionnel "bucket" (categories|products|templates|misc)
+ * Réponse: { success, data: { publicUrl, path } }
+ */
+exports.uploadSingle = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Aucun fichier envoyé (champ "file" requis)' });
+    }
+
+    const bucketKey = (req.body.bucket || 'misc').toLowerCase();
+    const folder = req.body.folder || '';
+
+    const result = await uploadFile(req.file, bucketKey, folder);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Fichier uploadé avec succès',
+      data: {
+        publicUrl: result.publicUrl,
+        path: result.path,
+        bucket: BUCKETS[bucketKey] || BUCKETS.misc,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+      },
+    });
+  } catch (error) {
+    const status = error.code === 'FILE_TOO_LARGE' ? 413
+      : error.code === 'INVALID_MIME' ? 415
+      : error.code === 'NO_FILE' ? 400
+      : 500;
+    return res.status(status).json({ success: false, message: error.message });
+  }
+};

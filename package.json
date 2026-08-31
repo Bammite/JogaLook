@@ -1,0 +1,26 @@
+{
+  "name": "jogalook",
+  "version": "1.0.0",
+  "description": "Platfome pour vendre des aricle lier au sport",
+  "license": "ISC",
+  "author": "Bammite",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "dev:full": "cd react/jogalook && npm run build && cd ../.. && nodemon server.js",
+    "start": "node server.js",
+    "create-admin": "node ./src/backend/scripts/createAdmin.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.40.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.1",
+    "multer": "^2.2.0",
+    "nodemailer": "^6.9.4",
+    "nodemon": "^3.1.14",
+    "pg": "^8.11.0"
+  }
+}

@@ -1,0 +1,1188 @@
+/* ==========================================================================
+   FIGMA-STYLE CUSTOM JERSEY STUDIO (CustomEditorPage.css)
+   ADAPTIVE LAYOUT: DESKTOP SIDE-INSPECTOR & MOBILE SPLIT-VIEW BOTTOM SHEET
+   ========================================================================== */
+
+.figma-editor-page {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── 1. MINIMAL TOP BAR ─────────────────────────────────────────────────── */
+
+.figma-top-bar {
+  height: 60px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top-bar-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 7px 12px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.top-bar-back-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.top-bar-divider {
+  width: 1px;
+  height: 20px;
+  background: #cbd5e1;
+}
+
+.top-bar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-name-tag {
+  font-family: var(--heading, 'Montserrat', sans-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.template-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 3px 8px;
+  border-radius: 50px;
+  text-transform: uppercase;
+}
+
+/* Center: View Switcher (Face / Dos / Rotate) */
+.top-bar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-toggle-pill {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 50px;
+  border: 1px solid #cbd5e1;
+}
+
+.view-pill-btn {
+  padding: 5px 16px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #64748b;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-pill-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.rotate-flip-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rotate-flip-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: rotate(180deg);
+}
+
+/* Right: Price & Add to Cart */
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.live-price-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.live-price-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.live-price-amount {
+  font-family: var(--heading, sans-serif);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.btn-add-cart-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(241, 90, 36, 0.25);
+}
+
+.btn-add-cart-primary:hover {
+  background: #d94e1f;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(241, 90, 36, 0.35);
+}
+
+/* ── 2. CANVAS AREA (MAILLOT EN DIRECT) ─────────────────────────────────── */
+
+.figma-canvas-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 16px;
+}
+
+.canvas-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-size: 24px 24px;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.jersey-canvas-container {
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  max-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.jersey-canvas-container.is-flipping {
+  transform: scale(0.92) rotateY(90deg);
+}
+
+.canvas-jersey-svg {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.12));
+}
+
+/* ── 3. FLOATING POPOVER / SIDE PANEL / BOTTOM SHEET ─────────────────────── */
+
+.sheet-drag-handle {
+  display: none;
+  width: 44px;
+  height: 5px;
+  background: #cbd5e1;
+  border-radius: 10px;
+  margin: 0 auto 12px auto;
+  cursor: pointer;
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.popover-header h4 {
+  font-family: var(--heading, 'Montserrat', sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.popover-close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.popover-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.tool-section-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tool-row-2col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+}
+
+/* Color Swatches */
+.color-swatch-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swatch-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+.swatch-btn:hover {
+  transform: scale(1.18);
+}
+
+.swatch-btn.selected {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.25);
+  transform: scale(1.1);
+}
+
+/* Option Chips */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip-btn {
+  padding: 7px 13px;
+  border-radius: 50px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip-btn:hover {
+  border-color: var(--primary, #f15a24);
+  color: var(--primary, #f15a24);
+}
+
+.chip-btn.active {
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  border-color: var(--primary, #f15a24);
+}
+
+/* Inputs & Select */
+.tool-input-text {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  font-family: Impact, Arial Black, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.tool-input-text:focus {
+  border-color: var(--primary, #f15a24);
+  box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.15);
+}
+
+.input-number-center {
+  text-align: center;
+  font-size: 1.15rem;
+  letter-spacing: 0;
+}
+
+.tool-select {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+}
+
+.tool-view-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  color: #1e40af;
+}
+
+.btn-switch-view-hint {
+  background: #1e40af;
+  color: #ffffff;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+/* Badge Upload Box */
+.upload-badge-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-badge-dropzone:hover {
+  border-color: var(--primary, #f15a24);
+  background: #fff7ed;
+}
+
+.upload-empty-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.uploaded-badge-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploaded-badge-preview img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.uploaded-badge-preview span {
+  font-size: 0.82rem;
+  color: var(--primary, #f15a24);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.btn-remove-badge {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-remove-badge:hover {
+  background: #fef2f2;
+}
+
+/* Quantity Pill */
+.quantity-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-pill-row button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quantity-pill-row span {
+  font-size: 1rem;
+  font-weight: 800;
+  min-width: 24px;
+  text-align: center;
+}
+
+.mini-summary-box {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.total-line {
+  border-top: 1.5px solid #e2e8f0;
+  padding-top: 6px;
+  margin-top: 2px;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.btn-add-cart-popover {
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(241, 90, 36, 0.25);
+  margin-top: 2px;
+}
+
+.btn-add-cart-popover:hover {
+  background: #d94e1f;
+}
+
+/* ── 4. FIGMA-STYLE FLOATING BOTTOM DOCK ───────────────────────────────── */
+
+.figma-bottom-dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.figma-bottom-dock::-webkit-scrollbar {
+  display: none;
+}
+
+.dock-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dock-tab-icon {
+  font-size: 1rem;
+}
+
+.dock-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dock-tab-btn.active {
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(241, 90, 36, 0.4);
+}
+
+/* ── TOAST NOTIFICATION ─────────────────────────────────────────────────── */
+
+.cart-toast-notification {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 200;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  animation: slideDownToast 0.25s ease;
+}
+
+@keyframes slideDownToast {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.toast-link {
+  color: var(--primary, #f15a24);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   ADAPTIVE RESPONSIVENESS (DESKTOP VS MOBILE)
+   ========================================================================== */
+
+/* ── 💻 GRAND ÉCRAN (DESKTOP / TABLET >= 900px) ── */
+@media (min-width: 900px) {
+  /* Le panneau d'options flotte à droite sans jamais masquer le maillot */
+  .figma-popover-container {
+    position: fixed;
+    right: 28px;
+    top: 80px;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    width: 380px;
+    max-height: calc(100vh - 170px);
+    z-index: 90;
+    animation: sideSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes sideSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .figma-popover-card {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
+    max-height: calc(100vh - 180px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tool-section-grid {
+    max-height: calc(100vh - 280px);
+  }
+
+  /* Quand un outil est actif sur desktop, on décale légèrement le maillot pour équilibrer la vue */
+  .has-active-tab .figma-canvas-area {
+    padding-right: 420px;
+  }
+}
+
+/* ── 📱 PETIT ÉCRAN (MOBILE / PETITE TABLETTE < 900px) ── */
+@media (max-width: 899px) {
+  .figma-top-bar {
+    padding: 0 10px;
+    height: 54px;
+  }
+
+  /* Sur mobile : top bar épurée — seulement les icônes, prix, et switcher Face/Dos */
+  .template-name-tag,
+  .live-price-box,
+  .top-bar-divider,
+  .top-bar-back-text,
+  .template-status-pill,
+  .btn-add-cart-text {
+    display: none;
+  }
+
+  /* Si aucun onglet n'est ouvert : Maillot grand et centré */
+  .figma-canvas-area {
+    padding: 10px 10px 90px 10px;
+  }
+
+  .jersey-canvas-container {
+    max-width: 320px;
+    height: calc(100vh - 160px);
+  }
+
+  /* QUAND UN ONGLET EST OUVERT SUR MOBILE : SPLIT VIEW ! */
+  /* Le maillot se positionne en haut (36vh) pour rester TOUJOURS visible et interactif */
+  .has-active-tab .figma-canvas-area {
+    height: 38vh;
+    min-height: 210px;
+    max-height: 38vh;
+    padding: 6px 12px;
+    align-items: center;
+  }
+
+  .has-active-tab .jersey-canvas-container {
+    height: 100%;
+    max-height: 34vh;
+    max-width: 240px;
+  }
+
+  /* Le panneau d'options devient un BOTTOM SHEET ergonomique */
+  .figma-popover-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 95;
+    animation: bottomSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes bottomSheetUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .figma-popover-card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(24px);
+    border-top: 1.5px solid rgba(226, 232, 240, 0.9);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 24px 24px 0 0;
+    padding: 12px 16px 78px 16px;
+    box-shadow: 0 -12px 32px rgba(15, 23, 42, 0.18);
+    max-height: 52vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sheet-drag-handle {
+    display: block;
+  }
+
+  .tool-section-grid {
+    max-height: 36vh;
+  }
+
+  /* Le dock reste accessible en bas pour naviguer au pouce avec scroll fluide */
+  .figma-bottom-dock {
+    bottom: 10px;
+    width: auto;
+    max-width: calc(100vw - 16px);
+    justify-content: flex-start;
+    padding: 5px 8px;
+    z-index: 105;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .figma-bottom-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dock-tab-btn {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .dock-tab-icon {
+    font-size: 0.95rem;
+  }
+}
+
+/* ==========================================================================
+   MENU CONTEXTUEL TAP-TO-EDIT (flottant sur le canvas)
+   ========================================================================== */
+
+/* Overlay invisible pour fermer en cliquant ailleurs */
+.ctx-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 145;
+  background: transparent;
+}
+
+.layer-context-menu {
+  position: fixed;
+  left: var(--ctx-x, 50%);
+  top: var(--ctx-y, 50%);
+  z-index: 150;
+  width: 240px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: ctxMenuPop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top left;
+}
+
+@keyframes ctxMenuPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.ctx-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ctx-menu-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctx-menu-reset,
+.ctx-menu-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #94a3b8;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.ctx-menu-reset:hover { color: #ffd700; background: rgba(255, 215, 0, 0.15); }
+.ctx-menu-close:hover { color: #f87171; background: rgba(248, 113, 113, 0.15); }
+
+/* Grille de couleurs rapides (2 rangées régulières de 6 sans aucun débordement) */
+.ctx-menu-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px 6px;
+  margin-bottom: 12px;
+  justify-items: center;
+  align-items: center;
+  padding: 2px;
+}
+
+.ctx-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ctx-swatch:hover {
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.6);
+  z-index: 2;
+}
+
+.ctx-swatch--active {
+  border-color: #ffffff;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+  z-index: 2;
+}
+
+/* Couleur personnalisée (color picker natif) */
+.ctx-menu-custom-color {
+  margin-bottom: 4px;
+}
+
+.ctx-menu-custom-color label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.ctx-menu-custom-color input[type="color"] {
+  width: 32px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+}
+
+/* Bouton redirection vers flockage */
+.ctx-menu-open-tab {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(241, 90, 36, 0.18);
+  border: 1px solid rgba(241, 90, 36, 0.35);
+  border-radius: 10px;
+  color: #f97316;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+}
+
+.ctx-menu-open-tab:hover {
+  background: rgba(241, 90, 36, 0.28);
+  color: #ffffff;
+}
+
+/* Sur mobile : positionner le menu centré en bas */
+@media (max-width: 899px) {
+  .layer-context-menu {
+    left: 50% !important;
+    top: auto !important;
+    bottom: 95px;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    width: calc(100vw - 32px);
+    max-width: 320px;
+    padding: 14px;
+  }
+
+  .ctx-menu-swatches {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px 6px;
+  }
+}
+
+/* ── NOUVEAUX STYLES MODULAIRES POUR LES PIÈCES ET MOTIFS ────────────────── */
+
+.color-parts-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.part-nav-btn {
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.part-nav-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.part-nav-btn.active {
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  border-color: var(--primary, #f15a24);
+  box-shadow: 0 2px 8px rgba(241, 90, 36, 0.25);
+}
+
+/* Grille de sélection de motif */
+.patterns-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pattern-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pattern-card-btn:hover {
+  border-color: var(--primary, #f15a24);
+  background: #fff7ed;
+}
+
+.pattern-card-btn.active {
+  background: #fff7ed;
+  border-color: var(--primary, #f15a24);
+  box-shadow: 0 0 0 2px rgba(241, 90, 36, 0.25);
+}
+
+.pattern-card-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.pattern-card-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Boîte d'harmonisation */
+.harmonize-box {
+  margin-top: 18px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.harmonize-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.harmonize-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.harmonize-swatch-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.harmonize-swatch-btn:hover {
+  transform: scale(1.15);
+}
+
+/* Sections du menu contextuel */
+.ctx-menu-section {
+  margin-bottom: 10px;
+}
+
+.ctx-section-title {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.ctx-patterns-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.ctx-pattern-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ctx-pattern-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ctx-pattern-btn.active {
+  background: var(--primary, #f15a24);
+  border-color: var(--primary, #f15a24);
+  color: #ffffff;
+}
+
+.ctx-pattern-btn span {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ctx-pattern-btn small {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.ctx-collar-row {
+  display: flex;
+  gap: 4px;
+}
+
+.ctx-collar-row .chip-btn {
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  flex: 1;
+  text-align: center;
+}
+

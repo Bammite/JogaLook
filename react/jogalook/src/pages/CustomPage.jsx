@@ -1,0 +1,255 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { JerseyIcon } from '../components/icons/AppIcons';
+import { MOCK_TEMPLATES } from '../utils/templatePresets';
+import './CustomPage.css';
+
+function CustomPage() {
+  const navigate = useNavigate();
+  const [templates, setTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [modalTemplate, setModalTemplate] = useState(null);
+  const [modalViewSide, setModalViewSide] = useState('front'); // 'front' | 'back'
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Charger la liste des templates depuis l'API ou utiliser les presets
+  useEffect(() => {
+    async function fetchTemplates() {
+      setLoadingTemplates(true);
+      try {
+        const res = await fetch('/api/templates');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setTemplates(json.data);
+        } else {
+          setTemplates(MOCK_TEMPLATES);
+        }
+      } catch (err) {
+        console.error('Erreur chargement templates:', err);
+        setTemplates(MOCK_TEMPLATES);
+      } finally {
+        setLoadingTemplates(false);
+      }
+    }
+    fetchTemplates();
+  }, []);
+
+  const handleOpenModal = (tpl) => {
+    setModalTemplate(tpl);
+    setModalViewSide('front');
+  };
+
+  const handleStartCustomizing = (tplId) => {
+    setModalTemplate(null);
+    navigate(`/custom/${tplId}`);
+  };
+
+  const filteredTemplates = templates.filter((t) =>
+    t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <>
+      <Navbar />
+      <section className="custom-page">
+        <div className="container">
+          <div className="template-selection-section">
+            <div className="custom-header">
+              <h1>Choisissez votre modèle de maillot</h1>
+              <p>
+                Sélectionnez un template vectoriel officiel parmi notre collection pour lancer le studio de création personnalisé.
+              </p>
+            </div>
+
+            {/* Barre de recherche */}
+            <div className="template-search-bar">
+              <input
+                type="text"
+                placeholder="Rechercher un modèle de maillot..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Grille des Cadres Templates */}
+            {loadingTemplates ? (
+              <div className="templates-loading">
+                <div className="spinner"></div>
+                <p>Chargement des modèles...</p>
+              </div>
+            ) : filteredTemplates.length === 0 ? (
+              <div className="templates-empty">
+                <p>Aucun modèle trouvé pour "{searchQuery}".</p>
+              </div>
+            ) : (
+              <div className="templates-grid">
+                {filteredTemplates.map((tpl) => {
+                  const svgPreview = tpl.svg_front || tpl.svg_content;
+                  const editable = tpl.editable_elements || {};
+
+                  return (
+                    <div key={tpl.id} className="template-card">
+                      <div className="template-card__badge">
+                        {tpl.is_free ? 'Gratuit' : `${tpl.price} €`}
+                      </div>
+
+                      {/* Zone d'aperçu SVG du Template */}
+                      <div className="template-card__preview">
+                        {svgPreview ? (
+                          <div
+                            className="template-svg-box"
+                            dangerouslySetInnerHTML={{ __html: svgPreview }}
+                          />
+                        ) : (
+                          <div className="template-fallback-box">
+                            <JerseyIcon size={64} color="#1d3557" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Infos Template */}
+                      <div className="template-card__content">
+                        <h3>{tpl.name}</h3>
+                        <p className="template-card__desc">
+                          {tpl.description || 'Modèle de maillot professionnel personnalisable.'}
+                        </p>
+
+                        {/* Badges de personnalisation activés */}
+                        <div className="template-card-tags">
+                          {editable.body !== false && <span className="custom-feature-tag">🎨 Couleurs</span>}
+                          {editable.collar !== false && <span className="custom-feature-tag">👔 Col</span>}
+                          {editable.badge !== false && <span className="custom-feature-tag">🛡️ Blason</span>}
+                          {(editable.name_zone !== false || editable.number_zone !== false) && (
+                            <span className="custom-feature-tag">✍️ Flockage</span>
+                          )}
+                        </div>
+
+                        <div className="template-card__meta">
+                          <span>🔥 {tpl.usage_count || 0} créations</span>
+                        </div>
+
+                        {/* Boutons d'action : Voir & Personnaliser */}
+                        <div className="template-card__actions">
+                          <button
+                            className="btn-template-voir"
+                            onClick={() => handleOpenModal(tpl)}
+                          >
+                            👁 Voir
+                          </button>
+                          <button
+                            className="btn-template-custom"
+                            onClick={() => handleStartCustomizing(tpl.id)}
+                          >
+                            ✨ Personnaliser
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* MODAL VOIR LE TEMPLATE (DOUBLE FACE) */}
+          {modalTemplate && (
+            <div className="template-modal-overlay" onClick={() => setModalTemplate(null)}>
+              <div className="template-modal-card" onClick={(e) => e.stopPropagation()}>
+                <button className="template-modal-close" onClick={() => setModalTemplate(null)}>
+                  ✕
+                </button>
+
+                <div className="template-modal-body">
+                  <div className="template-modal-preview">
+                    {/* Switcher Face / Dos dans le modal */}
+                    <div className="modal-view-toggle">
+                      <button
+                        className={`modal-view-btn ${modalViewSide === 'front' ? 'active' : ''}`}
+                        onClick={() => setModalViewSide('front')}
+                      >
+                        Face Avant
+                      </button>
+                      <button
+                        className={`modal-view-btn ${modalViewSide === 'back' ? 'active' : ''}`}
+                        onClick={() => setModalViewSide('back')}
+                      >
+                        Dos / Arrière
+                      </button>
+                    </div>
+
+                    <div
+                      className="modal-svg-container"
+                      dangerouslySetInnerHTML={{
+                        __html: modalViewSide === 'front'
+                          ? (modalTemplate.svg_front || modalTemplate.svg_content || '')
+                          : (modalTemplate.svg_back || modalTemplate.svg_front || modalTemplate.svg_content || '')
+                      }}
+                    />
+                  </div>
+
+                  <div className="template-modal-details">
+                    <h2>{modalTemplate.name}</h2>
+                    <span className="template-modal-price">
+                      {modalTemplate.is_free ? 'Template Inclus' : `${modalTemplate.price} €`}
+                    </span>
+
+                    <p className="template-modal-desc">
+                      {modalTemplate.description || 'Maillot vectoriel haute définition prêt pour la personnalisation en direct.'}
+                    </p>
+
+                    <div className="template-modal-stats">
+                      <div className="stat-item">
+                        <span className="stat-label">Utilisations</span>
+                        <span className="stat-value">{modalTemplate.usage_count || 0} créations</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Format</span>
+                        <span className="stat-value">Multi-Face SVG</span>
+                      </div>
+                    </div>
+
+                    {/* Features list */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
+                        Fonctionnalités personnalisables :
+                      </span>
+                      <div className="template-card-tags">
+                        {modalTemplate.editable_elements?.body !== false && <span className="custom-feature-tag">🎨 Couleur Principale</span>}
+                        {modalTemplate.editable_elements?.collar !== false && <span className="custom-feature-tag">👔 Forme de Col</span>}
+                        {modalTemplate.editable_elements?.badge !== false && <span className="custom-feature-tag">🛡️ Import Logo/Blason</span>}
+                        {modalTemplate.editable_elements?.name_zone !== false && <span className="custom-feature-tag">✍️ Nom Joueur</span>}
+                        {modalTemplate.editable_elements?.number_zone !== false && <span className="custom-feature-tag">🔢 Numéro Joueur</span>}
+                      </div>
+                    </div>
+
+                    <div className="template-modal-actions">
+                      <button
+                        className="btn-outline"
+                        onClick={() => setModalTemplate(null)}
+                      >
+                        Fermer
+                      </button>
+                      <button
+                        className="btn-primary"
+                        onClick={() => handleStartCustomizing(modalTemplate.id)}
+                      >
+                        ✨ Personnaliser ce modèle
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </section>
+      <Footer />
+    </>
+  );
+}
+
+export default CustomPage;

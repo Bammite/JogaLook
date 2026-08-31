@@ -1,0 +1,144 @@
+/* ===== ANIMATED JERSEY HERO CUSTOMIZER ===== */
+.hero-jersey-customizer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Live Custom Badge / Pill */
+.live-custom-pill {
+  position: absolute;
+  top: -30px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  padding: 8px 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: pulseGlow 4s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 0 rgba(241, 90, 36, 0); }
+  100% { box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(241, 90, 36, 0.4); }
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary, #f15a24);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+.live-custom-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #ffffff;
+  font-family: var(--font-heading, sans-serif);
+}
+
+.custom-field strong {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.typing-cursor {
+  display: inline-block;
+  font-weight: bold;
+  color: var(--primary, #f15a24);
+  margin-left: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.typing-cursor.visible {
+  opacity: 1;
+}
+
+/* SVG Jersey Wrapper */
+.jersey-svg-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-jersey-svg {
+  width: 330px;
+  max-width: 90%;
+  height: auto;
+  filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5));
+}
+
+.jersey-body-path {
+  transition: fill 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dynamic-jersey-text,
+.dynamic-jersey-number {
+  transition: font-family 0.4s ease, fill 0.5s ease;
+  user-select: none;
+}
+
+/* Preset dots */
+.preset-dots {
+  position: absolute;
+  bottom: -20px;
+  display: flex;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 10;
+}
+
+.preset-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.preset-dot:hover {
+  transform: scale(1.25);
+}
+
+.preset-dot.active {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px currentColor;
+  transform: scale(1.3);
+}
