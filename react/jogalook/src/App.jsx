@@ -63,7 +63,7 @@ function GuestOnly({ children }) {
 
 function AppShell() {
   const location = useLocation();
-  const showFloatingCart = ['/', '/catalogue'].includes(location.pathname);
+  const showFloatingCart = ['/', '/catalogue', '/accueil'].includes(location.pathname);
 
   return (
     <>
@@ -71,6 +71,8 @@ function AppShell() {
         {/* ── Public ── */}
         <Route path="/"                  element={<CatalogPage />} />
         <Route path="/catalogue"         element={<CatalogPage />} />
+        <Route path="/accueil"           element={<HomePage />} />
+        <Route path="/home"              element={<Navigate to="/accueil" replace />} />
         <Route path="/recherche"         element={<SearchPage />} />
         <Route path="/catalogue/:id"     element={<ProductDetailPage />} />
         <Route path="/custom"            element={<CustomPage />} />
