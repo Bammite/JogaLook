@@ -179,9 +179,16 @@
   transition: background 0.15s;
 }
 
-.cart-qty-picker button:hover {
+.cart-qty-picker button:hover:not(:disabled) {
   background: var(--primary, #F15A24);
   color: #fff;
+}
+
+.cart-qty-picker button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  background: transparent !important;
+  color: var(--text-light, #6C757D) !important;
 }
 
 .cart-qty-picker span {

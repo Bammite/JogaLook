@@ -13,7 +13,7 @@ function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const showCart = ['/', '/catalogue'].includes(location.pathname);
+  const showCart = ['/', '/catalogue', '/accueil'].includes(location.pathname);
   const dropRef = useRef(null);
 
   // Fermer le dropdown au clic extérieur
@@ -43,11 +43,27 @@ function Navbar() {
         </Link>
 
         <ul className={`navbar-links ${menuOpen ? 'active' : ''}`}>
-          <li><NavLink to="/" end onClick={() => setMenuOpen(false)}>Accueil</NavLink></li>
-          <li><NavLink to="/catalogue" onClick={() => setMenuOpen(false)}>Catalogue</NavLink></li>
+          <li>
+            <NavLink
+              to="/catalogue"
+              className={({ isActive }) => (isActive || location.pathname === '/' ? 'active' : '')}
+              onClick={() => setMenuOpen(false)}
+            >
+              Catalogue
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/accueil"
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              onClick={() => setMenuOpen(false)}
+            >
+              Accueil
+            </NavLink>
+          </li>
           <li><NavLink to="/custom" onClick={() => setMenuOpen(false)}>Customiser</NavLink></li>
           <li><NavLink to="/actualites" onClick={() => setMenuOpen(false)}>Actus</NavLink></li>
-          <li><a href="/#contact" onClick={() => setMenuOpen(false)}>Contact</a></li>
+          <li><a href="/accueil#contact" onClick={() => setMenuOpen(false)}>Contact</a></li>
           {user && (
             <li className="navbar-mobile-account">
               <div className="navbar-mobile-account__identity">

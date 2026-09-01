@@ -33,7 +33,7 @@ export default function CheckoutModal({ open, onClose }) {
   const [codReason, setCodReason]             = useState('');
 
   const [errors, setErrors]                   = useState({});
-  const [step, setStep]                       = useState('cart'); // 'cart' | 'info' | 'loading' | 'success' | 'error'
+  const [step, setStep]                       = useState('checkout'); // 'checkout' | 'loading' | 'success' | 'error'
   const [errorMsg, setErrorMsg]               = useState('');
   const [paymentData, setPaymentData]         = useState(null);
 
@@ -104,7 +104,7 @@ export default function CheckoutModal({ open, onClose }) {
   useEffect(() => {
     if (!open) {
       const t = setTimeout(() => {
-        setStep('cart'); setErrors({}); setErrorMsg(''); setPaymentData(null);
+        setStep('checkout'); setErrors({}); setErrorMsg(''); setPaymentData(null);
       }, 300);
       return () => clearTimeout(t);
     }
@@ -205,21 +205,15 @@ export default function CheckoutModal({ open, onClose }) {
         {/* HEADER */}
         <div className="cm-header">
           <div className="cm-header__left">
-            {step === 'info' && (
-              <button className="cm-back-btn" onClick={() => setStep('cart')} aria-label="Retour">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              </button>
-            )}
             <div>
               <h2 className="cm-title">
-                {step === 'cart'    && 'Mon panier'}
-                {step === 'info'    && 'Validation de commande'}
-                {step === 'loading' && 'Traitement…'}
-                {step === 'success' && 'Commande confirmée !'}
-                {step === 'error'   && 'Erreur'}
+                {step === 'checkout' && 'Finaliser la commande'}
+                {step === 'loading'  && 'Traitement…'}
+                {step === 'success'  && 'Commande confirmée !'}
+                {step === 'error'    && 'Erreur'}
               </h2>
-              {step === 'cart' && items.length > 0 && (
-                <span className="cm-subtitle">{itemCount} article{itemCount > 1 ? 's' : ''}</span>
+              {step === 'checkout' && items.length > 0 && (
+                <span className="cm-subtitle">{itemCount} article{itemCount > 1 ? 's' : ''} • {totalFcfa.toLocaleString('fr-FR')} FCFA</span>
               )}
             </div>
           </div>
@@ -228,8 +222,8 @@ export default function CheckoutModal({ open, onClose }) {
           </button>
         </div>
 
-        {/* STEP 1 — PANIER & AJUSTEMENT QUANTITÉS */}
-        {step === 'cart' && (
+        {/* CORPS PRINCIPAL : FORMULAIRE DIRECT & RÉCAPITULATIF */}
+        {step === 'checkout' && (
           <>
             {items.length === 0 ? (
               <div className="cm-empty">
@@ -240,198 +234,193 @@ export default function CheckoutModal({ open, onClose }) {
                 <button className="cm-btn cm-btn--outline" onClick={onClose}>Continuer mes achats</button>
               </div>
             ) : (
-              <>
-                <div className="cm-items">
-                  {items.map((item) => (
-                    <div key={item.id} className="cm-item">
-                      <div className="cm-item__img-wrap">
-                        <img src={item.image} alt={item.name} className="cm-item__img" loading="lazy" />
-                      </div>
-                      <div className="cm-item__info">
-                        <p className="cm-item__name">{item.name}</p>
-                        {item.selectedSize && (
-                          <p className="cm-item__variant">Taille : {item.selectedSize}</p>
-                        )}
-                        <p className="cm-item__price">{Number(item.price).toLocaleString('fr-FR')} FCFA</p>
-                      </div>
-                      <div className="cm-item__right">
-                        <div className="cm-qty">
-                          <button className="cm-qty__btn"
-                            onClick={() => item.quantity <= 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1)}
-                            aria-label="Diminuer">−</button>
-                          <span className="cm-qty__val">{item.quantity}</span>
-                          <button className="cm-qty__btn"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            aria-label="Augmenter">+</button>
+              <div className="cm-form">
+                {/* 1. Bloc Articles (compact & interactif) */}
+                <div className="cm-items-preview-box">
+                  <div className="cm-items-preview-header">
+                    <span className="cm-section-label">Articles commandés ({itemCount})</span>
+                    <Link to="/panier" onClick={onClose} className="cm-items-preview-link">
+                      Modifier dans le panier →
+                    </Link>
+                  </div>
+                  <div className="cm-items cm-items--compact">
+                    {items.map((item) => (
+                      <div key={item.id} className="cm-item">
+                        <div className="cm-item__img-wrap">
+                          <img src={item.image} alt={item.name} className="cm-item__img" loading="lazy" />
                         </div>
-                        <p className="cm-item__subtotal">
-                          {(item.quantity * Number(item.price)).toLocaleString('fr-FR')} FCFA
-                        </p>
-                        <button className="cm-item__remove" onClick={() => removeItem(item.id)} aria-label={`Supprimer ${item.name}`}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        </button>
+                        <div className="cm-item__info">
+                          <p className="cm-item__name">{item.name}</p>
+                          {item.selectedSize && (
+                            <p className="cm-item__variant">Taille : {item.selectedSize}</p>
+                          )}
+                          <p className="cm-item__price">{Number(item.price).toLocaleString('fr-FR')} FCFA</p>
+                        </div>
+                        <div className="cm-item__right">
+                          <div className="cm-qty">
+                            <button className="cm-qty__btn"
+                              disabled={item.quantity <= 1}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              aria-label="Diminuer">−
+                            </button>
+                            <span className="cm-qty__val">{item.quantity}</span>
+                            <button className="cm-qty__btn"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              aria-label="Augmenter">+
+                            </button>
+                          </div>
+                          <span className="cm-item__subtotal">
+                            {(item.quantity * Number(item.price)).toLocaleString('fr-FR')} F
+                          </span>
+                          <button
+                            type="button"
+                            className="cm-item__remove"
+                            onClick={() => removeItem(item.id)}
+                            aria-label={`Supprimer ${item.name}`}
+                            title="Supprimer du panier"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </button>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Coordonnées de livraison */}
+                <div className="cm-section-divider">
+                  <span className="cm-section-label">Coordonnées de livraison</span>
+                </div>
+
+                {/* Nom */}
+                <div className={`cm-field${errors.customerName ? ' cm-field--error' : ''}`}>
+                  <label className="cm-field__label" htmlFor="cm-name">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Nom complet
+                  </label>
+                  <input id="cm-name" type="text" className="cm-field__input"
+                    placeholder="Ex : Moussa Diallo" value={customerName}
+                    onChange={(e) => { setCustomerName(e.target.value); setErrors(er => ({ ...er, customerName: '' })); }}
+                    autoComplete="name" />
+                  {errors.customerName && <p className="cm-field__err">{errors.customerName}</p>}
+                </div>
+
+                {/* Téléphone */}
+                <div className={`cm-field${errors.phoneNumber ? ' cm-field--error' : ''}`}>
+                  <label className="cm-field__label" htmlFor="cm-phone">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3-8.58A2 2 0 0 1 3.14 1.34h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    Numéro de téléphone (Mobile Money)
+                  </label>
+                  <div className="cm-phone-wrap">
+                    <span className="cm-phone-prefix">+221</span>
+                    <input id="cm-phone" type="tel" className="cm-field__input cm-field__input--tel"
+                      placeholder="77 000 00 00" value={phoneNumber}
+                      onChange={(e) => { setPhoneNumber(e.target.value); setErrors(er => ({ ...er, phoneNumber: '' })); }}
+                      autoComplete="tel" inputMode="numeric" />
+                  </div>
+                  {errors.phoneNumber && <p className="cm-field__err">{errors.phoneNumber}</p>}
+                </div>
+
+                {/* Adresse */}
+                <div className="cm-field">
+                  <label className="cm-field__label" htmlFor="cm-address">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Adresse / Localisation de livraison
+                  </label>
+                  <input id="cm-address" type="text" className="cm-field__input"
+                    placeholder="Quartier, Ville, Indications..."
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)} />
+                </div>
+
+                {/* 3. Moyen de paiement */}
+                <div className="cm-section-divider">
+                  <span className="cm-section-label">Mode de règlement</span>
+                </div>
+
+                <div className={`cm-field${errors.paymentMethod ? ' cm-field--error' : ''}`}>
+                  <select
+                    id="cm-method-select"
+                    className="cm-field__input cm-select"
+                    value={paymentMethod}
+                    onChange={(e) => { setPaymentMethod(e.target.value); setErrors(er => ({ ...er, paymentMethod: '' })); }}
+                    disabled={isCod}
+                  >
+                    {PAYMENT_METHODS.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.icon || '💳'} {m.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.paymentMethod && <p className="cm-field__err">{errors.paymentMethod}</p>}
+                </div>
+
+                {/* Option Payer à la livraison */}
+                <div className={`cm-cod-box ${!canUseCod ? 'cm-cod-box--disabled' : ''}`}>
+                  <label className="cm-cod-label">
+                    <input
+                      type="checkbox"
+                      checked={isCod}
+                      disabled={!canUseCod}
+                      onChange={e => setIsCod(e.target.checked)}
+                    />
+                    <div>
+                      <strong>
+                        <CreditCardIcon size={16} /> Payer à la livraison
+                      </strong>
+                      <span>Réglez en espèces à la réception de votre colis.</span>
                     </div>
-                  ))}
+                  </label>
+                  {!isCodAmountValid && (
+                    <span className="cm-cod-note">
+                      <InfoIcon size={14} /> Disponible uniquement entre 5 000 et 100 000 FCFA.
+                    </span>
+                  )}
+                  {!codEligible && (
+                    <span className="cm-cod-note cm-cod-note--err">
+                      <AlertTriangleIcon size={14} /> Non disponible pour ce compte ({codReason || 'Non éligible'}).
+                    </span>
+                  )}
                 </div>
 
-                <div className="cm-full-cart-link-box">
-                  <Link to="/panier" onClick={onClose} className="cm-full-cart-link">
-                    <NewspaperIcon size={15} /> Voir la page panier complète (sélection par article) →
-                  </Link>
-                </div>
+                {/* Mémoriser les préférences */}
+                {user && (
+                  <label className="cm-save-pref-label">
+                    <input
+                      type="checkbox"
+                      checked={savePreference}
+                      onChange={e => setSavePreference(e.target.checked)}
+                    />
+                    <span>Mémoriser ces coordonnées pour mes prochains achats</span>
+                  </label>
+                )}
 
-                <div className="cm-total-row">
-                  <span>Total</span>
-                  <strong>{totalFcfa.toLocaleString('fr-FR')} FCFA</strong>
-                </div>
-
+                {/* FOOTER FIXE AVEC BOUTON DIRECT */}
                 <div className="cm-footer">
-                  <button className="cm-btn cm-btn--outline" onClick={onClose}>Continuer</button>
-                  <button className="cm-btn cm-btn--primary" onClick={() => setStep('info')}>
-                    Valider le panier
+                  <div className="cm-footer__total">
+                    <span>Total net</span>
+                    <strong>{totalFcfa.toLocaleString('fr-FR')} FCFA</strong>
+                  </div>
+                  <button className="cm-btn cm-btn--primary cm-btn--pay" onClick={handleSubmit}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    {isCod ? `Confirmer la commande` : `Payer ${totalFcfa.toLocaleString('fr-FR')} FCFA`}
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </>
         )}
 
-        {/* STEP 2 — INFOS CLIENT & SELECTBOX MÉTHODE DE PAIEMENT */}
-        {step === 'info' && (
-          <div className="cm-form">
-            <div className="cm-recap">
-              <span>{itemCount} article{itemCount > 1 ? 's' : ''}</span>
-              <strong>{totalFcfa.toLocaleString('fr-FR')} FCFA</strong>
-            </div>
-
-            {/* Nom */}
-            <div className={`cm-field${errors.customerName ? ' cm-field--error' : ''}`}>
-              <label className="cm-field__label" htmlFor="cm-name">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Nom complet
-              </label>
-              <input id="cm-name" type="text" className="cm-field__input"
-                placeholder="Ex : Moussa Diallo" value={customerName}
-                onChange={(e) => { setCustomerName(e.target.value); setErrors(er => ({ ...er, customerName: '' })); }}
-                autoComplete="name" />
-              {errors.customerName && <p className="cm-field__err">{errors.customerName}</p>}
-            </div>
-
-            {/* Téléphone */}
-            <div className={`cm-field${errors.phoneNumber ? ' cm-field--error' : ''}`}>
-              <label className="cm-field__label" htmlFor="cm-phone">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3-8.58A2 2 0 0 1 3.14 1.34h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Numéro de téléphone
-              </label>
-              <div className="cm-phone-wrap">
-                <span className="cm-phone-prefix">+221</span>
-                <input id="cm-phone" type="tel" className="cm-field__input cm-field__input--tel"
-                  placeholder="77 000 00 00" value={phoneNumber}
-                  onChange={(e) => { setPhoneNumber(e.target.value); setErrors(er => ({ ...er, phoneNumber: '' })); }}
-                  autoComplete="tel" inputMode="numeric" />
-              </div>
-              {errors.phoneNumber && <p className="cm-field__err">{errors.phoneNumber}</p>}
-            </div>
-
-            {/* Adresse */}
-            <div className="cm-field">
-              <label className="cm-field__label" htmlFor="cm-address">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Adresse de livraison (optionnel)
-              </label>
-              <input id="cm-address" type="text" className="cm-field__input"
-                placeholder="Quartier, Ville, Indications..."
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)} />
-            </div>
-
-            {/* Méthode paiement en SELECTBOX */}
-            <div className={`cm-field${errors.paymentMethod ? ' cm-field--error' : ''}`}>
-              <label className="cm-field__label" htmlFor="cm-method-select">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                Mode de règlement
-              </label>
-              <select
-                id="cm-method-select"
-                className="cm-field__input cm-select"
-                value={paymentMethod}
-                onChange={(e) => { setPaymentMethod(e.target.value); setErrors(er => ({ ...er, paymentMethod: '' })); }}
-                disabled={isCod}
-              >
-                {PAYMENT_METHODS.map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.icon} {m.label}
-                  </option>
-                ))}
-              </select>
-              {errors.paymentMethod && <p className="cm-field__err">{errors.paymentMethod}</p>}
-            </div>
-
-            {/* Checkbox Payer à la livraison */}
-            <div className={`cm-cod-box ${!canUseCod ? 'cm-cod-box--disabled' : ''}`}>
-              <label className="cm-cod-label">
-                <input
-                  type="checkbox"
-                  checked={isCod}
-                  disabled={!canUseCod}
-                  onChange={e => setIsCod(e.target.checked)}
-                />
-                <div>
-                  <strong>
-                    <CreditCardIcon size={16} /> Payer à la livraison
-                  </strong>
-                  <span>Réglez en espèces à la réception de votre colis.</span>
-                </div>
-              </label>
-              {!isCodAmountValid && (
-                <span className="cm-cod-note">
-                  <InfoIcon size={14} /> Disponible uniquement entre 5 000 et 100 000 FCFA.
-                </span>
-              )}
-              {!codEligible && (
-                <span className="cm-cod-note cm-cod-note--err">
-                  <AlertTriangleIcon size={14} /> Non disponible pour ce compte ({codReason || 'Non éligible'}).
-                </span>
-              )}
-            </div>
-
-            {/* Mémoriser les préférences */}
-            {user && (
-              <label className="cm-save-pref-label">
-                <input
-                  type="checkbox"
-                  checked={savePreference}
-                  onChange={e => setSavePreference(e.target.checked)}
-                />
-                <span>Mémoriser ce mode de paiement pour mes prochaines commandes</span>
-              </label>
-            )}
-
-            <div className="cm-footer">
-              <div className="cm-footer__total">
-                <span>À payer</span>
-                <strong>{totalFcfa.toLocaleString('fr-FR')} FCFA</strong>
-              </div>
-              <button className="cm-btn cm-btn--primary cm-btn--pay" onClick={handleSubmit}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                {isCod ? `Valider (paiement livraison)` : `Payer ${totalFcfa.toLocaleString('fr-FR')} FCFA`}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3 — LOADING */}
+        {/* STEP 2 — LOADING */}
         {step === 'loading' && (
           <div className="cm-state cm-state--loading">
             <div className="cm-spinner" />
-            <p>{isCod ? 'Enregistrement de la commande…' : 'Connexion à PayBammite…'}</p>
-            <span>Veuillez patienter</span>
+            <p>{isCod ? 'Enregistrement de la commande…' : 'Connexion sécurisée à PayBammite…'}</p>
+            <span>Redirection immédiate en cours…</span>
           </div>
         )}
 
-        {/* STEP 4 — SUCCÈS */}
+        {/* STEP 3 — SUCCÈS (COD ou fallback) */}
         {step === 'success' && (
           <div className="cm-state cm-state--success">
             <div className="cm-state__icon cm-state__icon--success">
@@ -439,9 +428,7 @@ export default function CheckoutModal({ open, onClose }) {
             </div>
             <h3>Commande confirmée !</h3>
             {paymentData?.is_cod || isCod ? (
-              <p>Votre commande #{paymentData?.order_number} a été enregistrée avec succès. Vous réglerez à la livraison.</p>
-            ) : paymentData?.checkout_url ? (
-              <p>Redirection vers la passerelle sécurisée PayBammite…</p>
+              <p>Votre commande #{paymentData?.order_number} a été enregistrée avec succès. Vous réglerez {Number(totalFcfa).toLocaleString('fr-FR')} FCFA à la livraison.</p>
             ) : (
               <p>Votre commande #{paymentData?.order_number} a été validée avec succès.</p>
             )}
@@ -459,7 +446,7 @@ export default function CheckoutModal({ open, onClose }) {
           </div>
         )}
 
-        {/* STEP 5 — ERREUR */}
+        {/* STEP 4 — ERREUR */}
         {step === 'error' && (
           <div className="cm-state cm-state--error">
             <div className="cm-state__icon cm-state__icon--error">
@@ -468,7 +455,7 @@ export default function CheckoutModal({ open, onClose }) {
             <h3>Échec de validation</h3>
             <p>{errorMsg}</p>
             <div className="cm-error-actions">
-              <button className="cm-btn cm-btn--outline" onClick={() => setStep('info')}>Réessayer</button>
+              <button className="cm-btn cm-btn--outline" onClick={() => setStep('checkout')}>Réessayer</button>
               <button className="cm-btn cm-btn--ghost" onClick={onClose}>Annuler</button>
             </div>
           </div>

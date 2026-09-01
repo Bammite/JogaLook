@@ -135,8 +135,9 @@ export default function CartPage() {
     }
 
     const userIdQuery = localUser?.id ? `user_id=${localUser.id}` : '';
-    const phoneQuery = localUser?.phone ? `phone=${encodeURIComponent(localUser.phone)}` : '';
-    const queryParts = [userIdQuery, phoneQuery].filter(Boolean).join('&');
+    const phoneQuery  = localUser?.phone ? `phone=${encodeURIComponent(localUser.phone)}` : '';
+    const emailQuery  = localUser?.email ? `email=${encodeURIComponent(localUser.email)}` : '';
+    const queryParts  = [userIdQuery, phoneQuery, emailQuery].filter(Boolean).join('&');
 
     setLoadingPrefs(true);
     fetch(`/service/payment/user-preferences?${queryParts}`, { headers })
@@ -147,7 +148,10 @@ export default function CartPage() {
           const info = res.data.user_info;
           if (info) {
             if (info.customer_name) setCustomerName(info.customer_name);
-            if (info.phone_number) setPhoneNumber(info.phone_number);
+            if (info.phone_number) {
+              const clean = String(info.phone_number).replace(/^(\+|00)?221/, '').replace(/[\s\-\.]/g, '');
+              setPhoneNumber(clean);
+            }
             if (info.delivery_address) setShippingAddress(info.delivery_address);
             if (info.payment_method) {
               if (info.payment_method === 'cash_on_delivery') {
@@ -160,7 +164,10 @@ export default function CartPage() {
           } else if (res.data.saved_method) {
             // 2. Fallback sur user_payment_methods si disponible
             if (res.data.saved_method.customer_name) setCustomerName(res.data.saved_method.customer_name);
-            if (res.data.saved_method.phone_number && !phoneNumber) setPhoneNumber(res.data.saved_method.phone_number);
+            if (res.data.saved_method.phone_number) {
+              const clean = String(res.data.saved_method.phone_number).replace(/^(\+|00)?221/, '').replace(/[\s\-\.]/g, '');
+              setPhoneNumber(clean);
+            }
             if (res.data.saved_method.payment_method) {
               if (res.data.saved_method.payment_method === 'cash_on_delivery') {
                 setIsCod(true);
@@ -648,7 +655,8 @@ export default function CartPage() {
                           <div className="cart-qty-picker">
                             <button
                               type="button"
-                              onClick={() => item.quantity <= 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               aria-label="Diminuer"
                             >−</button>
                             <span>{item.quantity}</span>

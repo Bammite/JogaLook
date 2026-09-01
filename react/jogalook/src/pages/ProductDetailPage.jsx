@@ -128,10 +128,13 @@ export default function ProductDetailPage() {
 
   const canAddToCart = selectedColor && selectedSize && inStock;
 
-  // Gallery images (use image_url + placeholder thumbnails)
-  const images = [
-    product?.image_url || 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=800&h=900&fit=crop',
-  ];
+  // Gallery images (use product_images if available, fallback to image_url)
+  const images = (product?.product_images && product.product_images.length > 0)
+    ? [...product.product_images]
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+        .map(img => (typeof img === 'string' ? img : img.url))
+        .filter(Boolean)
+    : [product?.image_url || 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=800&h=900&fit=crop'];
 
   const handleAddToCart = () => {
     if (!canAddToCart) return;
