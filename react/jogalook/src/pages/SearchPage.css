@@ -1,6 +1,6 @@
 .search-page { min-height: 100vh; background: #fafafa; color: #1a1a2e; }
 .search-page__inner { width: min(1040px, calc(100% - 40px)); margin: auto; }
-.search-box { position: sticky; top: 72px; z-index: 20; display: flex; align-items: center; gap: 12px; height: 58px; margin: 0 -1px; padding: 0 16px; background: rgba(255,255,255,.97); border: 1px solid #dcdcdc; border-radius: 0 0 8px 8px; box-shadow: 0 5px 18px rgba(0,0,0,.08); }
+.search-box { position: sticky; top: 72px; z-index: 20; display: flex; align-items: center; gap: 12px; height: 58px; margin: 0 -1px; padding: 0 16px; background: rgba(255,255,255,.97); border: 1px solid #dcdcdc; box-shadow: 0 5px 18px rgba(0,0,0,.08); }
 .search-box:focus-within { border-color: #f15a24; }
 .search-box svg { width: 20px; height: 20px; flex: 0 0 auto; color: #777; }
 .search-box input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #1a1a2e; font: inherit; }

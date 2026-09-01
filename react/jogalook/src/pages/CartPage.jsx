@@ -13,8 +13,50 @@ import {
   CreditCardIcon,
   XIcon,
   LockIcon,
+  MapPinIcon,
+  NavigationIcon,
+  PhoneCallIcon,
+  StoreIcon,
 } from '../components/icons/AppIcons';
 import './CartPage.css';
+
+/* ─── Villes disponibles ─── */
+const CITIES = [
+  { id: 'Dakar',       label: 'Dakar (Capitale)' },
+  { id: 'Saint-Louis', label: 'Saint-Louis' },
+  { id: 'Kaolack',     label: 'Kaolack' },
+  { id: 'Thies',       label: 'Thiès' },
+];
+
+/* ─── Modes de localisation / réception ─── */
+const DELIVERY_MODES = [
+  {
+    id: 'gps',
+    label: 'Position GPS actuelle',
+    icon: '📍',
+    badge: '1 Clic',
+    description: 'Localisation automatique par satellite'
+  },
+  {
+    id: 'manual',
+    label: 'Saisie manuelle',
+    icon: '✍️',
+    description: 'Quartier, rue, repère ou indication'
+  },
+  {
+    id: 'phone_call',
+    label: 'Préciser par appel',
+    icon: '📞',
+    description: 'Le livreur vous contacte avant la livraison'
+  },
+  {
+    id: 'pickup',
+    label: 'Retrait en boutique',
+    icon: '🏪',
+    description: 'Click & Collect gratuit (Dakar uniquement)',
+    dakarOnly: true
+  },
+];
 
 const PAYMENT_METHODS = [
   { id: 'wave',                   label: 'Wave (Sénégal 🇸🇳)',              country: 'sn' },
@@ -61,6 +103,14 @@ export default function CartPage() {
   const [isCod, setIsCod]                     = useState(false); // Paiement à la livraison
   const [savePreference, setSavePreference]   = useState(true);
 
+  // ── Localisation & Ville ──
+  const [city, setCity]                       = useState('Dakar');
+  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'manual' | 'phone_call' | 'pickup'
+  const [gpsCoords, setGpsCoords]             = useState(null);
+  const [isLocating, setIsLocating]           = useState(false);
+  const [locationError, setLocationError]     = useState('');
+  const [manualAddress, setManualAddress]     = useState('');
+
   // ── Fiabilité & préférences ──
   const [codEligible, setCodEligible]         = useState(true);
   const [codReason, setCodReason]             = useState('');
@@ -73,6 +123,71 @@ export default function CartPage() {
 
   // ── Retour après paiement PayBammite ──
   const [paymentReturn, setPaymentReturn]     = useState(null); // { status, verifying, data }
+
+  // Si on quitte Dakar et que le mode était Retrait en boutique, basculer sur GPS
+  useEffect(() => {
+    if (city !== 'Dakar' && deliveryMode === 'pickup') {
+      setDeliveryMode('gps');
+    }
+  }, [city, deliveryMode]);
+
+  // Fonction pour capturer la géolocalisation GPS
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('La géolocalisation n’est pas supportée sur ce navigateur.');
+      return;
+    }
+    setIsLocating(true);
+    setLocationError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        const { latitude, longitude, accuracy } = position.coords;
+        setGpsCoords({
+          lat: latitude,
+          lng: longitude,
+          accuracy: Math.round(accuracy)
+        });
+        setLocationError('');
+      },
+      (error) => {
+        setIsLocating(false);
+        let msg = 'Impossible d’obtenir votre position GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Autorisation GPS refusée. Vous pouvez saisir votre adresse manuellement.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Délai GPS dépassé. Veuillez réessayer ou choisir la saisie manuelle.';
+        }
+        setLocationError(msg);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  };
+
+  // Génération de l'adresse formatée complète
+  const getFormattedAddress = () => {
+    if (deliveryMode === 'gps') {
+      if (gpsCoords) {
+        let text = `${city} | GPS: ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lng.toFixed(6)} (±${gpsCoords.accuracy}m) | https://maps.google.com/?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`;
+        if (manualAddress.trim()) {
+          text += ` - Repère: ${manualAddress.trim()}`;
+        }
+        return text;
+      }
+      return `${city} | Position GPS demandée ${manualAddress.trim() ? `- ${manualAddress.trim()}` : ''}`;
+    }
+    if (deliveryMode === 'manual') {
+      return `${city} | ${manualAddress.trim() || 'Adresse à préciser'}`;
+    }
+    if (deliveryMode === 'phone_call') {
+      const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
+      return `${city} | Position à préciser par appel téléphonique (+221 ${cleanPhone || 'client'})`;
+    }
+    if (deliveryMode === 'pickup') {
+      return `Dakar | Retrait en boutique (Boutique JogaLook - Point Relais Sacré-Cœur 3 / VDN Dakar)`;
+    }
+    return `${city} | ${manualAddress.trim() || 'Adresse de livraison'}`;
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -152,7 +267,29 @@ export default function CartPage() {
               const clean = String(info.phone_number).replace(/^(\+|00)?221/, '').replace(/[\s\-\.]/g, '');
               setPhoneNumber(clean);
             }
-            if (info.delivery_address) setShippingAddress(info.delivery_address);
+            if (info.delivery_address) {
+              const rawAddr = info.delivery_address;
+              setShippingAddress(rawAddr);
+              if (rawAddr.includes('Saint-Louis')) setCity('Saint-Louis');
+              else if (rawAddr.includes('Kaolack')) setCity('Kaolack');
+              else if (rawAddr.includes('Thiès') || rawAddr.includes('Thies')) setCity('Thies');
+              else setCity('Dakar');
+
+              if (rawAddr.includes('GPS:')) {
+                setDeliveryMode('gps');
+                const match = rawAddr.match(/GPS:\s*([0-9\.\-]+),\s*([0-9\.\-]+)/);
+                if (match) {
+                  setGpsCoords({ lat: parseFloat(match[1]), lng: parseFloat(match[2]), accuracy: 15 });
+                }
+              } else if (rawAddr.toLowerCase().includes('appel') || rawAddr.toLowerCase().includes('phone')) {
+                setDeliveryMode('phone_call');
+              } else if (rawAddr.toLowerCase().includes('retrait') || rawAddr.toLowerCase().includes('boutique') || rawAddr.toLowerCase().includes('collect')) {
+                setDeliveryMode('pickup');
+              } else {
+                setDeliveryMode('manual');
+                setManualAddress(rawAddr.replace(/^(Dakar|Saint-Louis|Kaolack|Thiès|Thies)\s*\|\s*/i, ''));
+              }
+            }
             if (info.payment_method) {
               if (info.payment_method === 'cash_on_delivery') {
                 setIsCod(true);
@@ -266,6 +403,7 @@ export default function CartPage() {
     try {
       const selectedMethodObj = PAYMENT_METHODS.find(m => m.id === paymentMethod);
       const country = selectedMethodObj?.country || 'sn';
+      const formattedAddress = getFormattedAddress();
 
       const payload = {
         amount: Math.round(totalFcfa),
@@ -277,8 +415,12 @@ export default function CartPage() {
         country,
         payment_method: isCod ? 'cash_on_delivery' : paymentMethod,
         is_cod: isCod,
-        delivery_address: shippingAddress.trim() || undefined,
-        shipping_address: shippingAddress.trim() || undefined,
+        delivery_address: formattedAddress,
+        shipping_address: formattedAddress,
+        city,
+        delivery_type: deliveryMode,
+        latitude: gpsCoords?.lat || undefined,
+        longitude: gpsCoords?.lng || undefined,
         save_payment_method: savePreference,
         description: `Achat JogaLook (${selectedItems.length} article${selectedItems.length > 1 ? 's' : ''}) - ${customerName.trim()}`,
         items: selectedItems.map(item => ({
@@ -378,16 +520,167 @@ export default function CartPage() {
           />
         </div>
 
-        {/* Adresse de livraison */}
+        {/* Ville de livraison */}
         <div className="cart-form-group">
-          <label htmlFor={`shippingAddress-${isModal ? 'm' : 'd'}`}>Adresse de livraison (optionnel)</label>
-          <input
-            id={`shippingAddress-${isModal ? 'm' : 'd'}`}
-            type="text"
-            placeholder="Quartier, Rue, Ville..."
-            value={shippingAddress}
-            onChange={e => setShippingAddress(e.target.value)}
-          />
+          <label htmlFor={`city-${isModal ? 'm' : 'd'}`}>
+            <MapPinIcon size={14} /> Ville de livraison
+          </label>
+          <select
+            id={`city-${isModal ? 'm' : 'd'}`}
+            value={city}
+            onChange={e => setCity(e.target.value)}
+            className="cart-select"
+          >
+            {CITIES.map(c => (
+              <option key={c.id} value={c.id}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Mode de localisation / Réception */}
+        <div className="cart-form-group">
+          <label>
+            <NavigationIcon size={14} /> Mode de localisation / Réception
+          </label>
+          
+          <div className="cart-delivery-options">
+            {DELIVERY_MODES.map((mode) => {
+              const isUnavailable = mode.dakarOnly && city !== 'Dakar';
+              const isSelected = deliveryMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={`cart-delivery-opt ${isSelected ? 'cart-delivery-opt--active' : ''} ${isUnavailable ? 'cart-delivery-opt--disabled' : ''}`}
+                  onClick={() => {
+                    if (isUnavailable) return;
+                    setDeliveryMode(mode.id);
+                    if (mode.id === 'gps' && !gpsCoords && !isLocating) {
+                      handleGetLocation();
+                    }
+                  }}
+                  disabled={isUnavailable}
+                >
+                  <span className="cart-delivery-opt__icon">{mode.icon}</span>
+                  <div className="cart-delivery-opt__content">
+                    <div className="cart-delivery-opt__header">
+                      <strong>{mode.label}</strong>
+                      {mode.badge && <span className="cart-delivery-badge">{mode.badge}</span>}
+                      {isUnavailable && <span className="cart-delivery-badge cart-delivery-badge--warn">Dakar uniquement</span>}
+                    </div>
+                    <span className="cart-delivery-opt__desc">{mode.description}</span>
+                  </div>
+                  <div className="cart-delivery-radio">
+                    {isSelected && <div className="cart-delivery-radio__dot" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Vues détaillées du mode de livraison */}
+          {deliveryMode === 'gps' && (
+            <div className="cart-loc-card cart-loc-card--gps">
+              {gpsCoords ? (
+                <div className="cart-gps-status">
+                  <div className="cart-gps-header">
+                    <span className="cart-gps-pulse" />
+                    <strong>Position GPS enregistrée</strong>
+                    <span className="cart-gps-acc">±{gpsCoords.accuracy}m</span>
+                  </div>
+                  <div className="cart-gps-coords-text">
+                    Lat: {gpsCoords.lat.toFixed(5)} • Lng: {gpsCoords.lng.toFixed(5)}
+                  </div>
+                  <div className="cart-gps-btns">
+                    <a
+                      href={`https://maps.google.com/?q=${gpsCoords.lat},${gpsCoords.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cart-gps-map-link"
+                    >
+                      📍 Voir sur Google Maps →
+                    </a>
+                    <button
+                      type="button"
+                      className="cart-gps-rebtn"
+                      onClick={handleGetLocation}
+                      disabled={isLocating}
+                    >
+                      {isLocating ? 'Détection…' : '🔄 Réactualiser'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="cart-gps-act-btn"
+                  onClick={handleGetLocation}
+                  disabled={isLocating}
+                >
+                  {isLocating ? (
+                    <>
+                      <div className="cart-spinner-sm" />
+                      <span>Détection du signal GPS…</span>
+                    </>
+                  ) : (
+                    <>
+                      <NavigationIcon size={16} />
+                      <span>Activer et capturer ma position GPS exacte</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {locationError && (
+                <p className="cart-error-hint" style={{ marginTop: '6px' }}>{locationError}</p>
+              )}
+
+              <input
+                type="text"
+                placeholder="Repère facultatif (ex: Villa 12, près de la boulangerie)"
+                value={manualAddress}
+                onChange={e => setManualAddress(e.target.value)}
+                style={{ marginTop: '8px' }}
+              />
+            </div>
+          )}
+
+          {deliveryMode === 'manual' && (
+            <div className="cart-loc-card">
+              <input
+                type="text"
+                placeholder="Quartier, Rue, N° de villa, repère..."
+                value={manualAddress}
+                onChange={e => setManualAddress(e.target.value)}
+                required
+              />
+            </div>
+          )}
+
+          {deliveryMode === 'phone_call' && (
+            <div className="cart-loc-card cart-loc-card--call">
+              <div className="cart-call-box">
+                <PhoneCallIcon size={20} color="var(--primary, #F15A24)" />
+                <div>
+                  <strong>Coordination par téléphone</strong>
+                  <p>Notre livreur vous appellera directement au <strong>+221 {phoneNumber || 'numéro renseigné'}</strong> pour convenir du lieu exact.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {deliveryMode === 'pickup' && (
+            <div className="cart-loc-card cart-loc-card--pickup">
+              <div className="cart-pickup-box">
+                <StoreIcon size={20} color="var(--primary, #F15A24)" />
+                <div>
+                  <strong>Boutique JogaLook - Point Relais Dakar</strong>
+                  <p>Sacré-Cœur 3 / VDN, Dakar • Ouvert du Lundi au Samedi de 9h à 20h</p>
+                  <span className="cart-pickup-tag">✨ Retrait 100% Gratuit</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Méthode de paiement en SELECTBOX */}

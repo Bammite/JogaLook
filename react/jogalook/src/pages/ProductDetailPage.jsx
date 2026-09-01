@@ -127,6 +127,7 @@ export default function ProductDetailPage() {
     : Number(product?.base_price ?? 0);
 
   const canAddToCart = selectedColor && selectedSize && inStock;
+  const customizeRoute = product?.template_id ? `/custom/${product.template_id}` : product?.id ? `/custom/${product.id}` : '/custom';
 
   // Gallery images (use product_images if available, fallback to image_url)
   const images = (product?.product_images && product.product_images.length > 0)
@@ -378,7 +379,7 @@ export default function ProductDetailPage() {
               </button>
 
               {product?.is_customizable && (
-                <Link to="/custom" className="pdp-custom-btn">
+                <Link to={customizeRoute} className="pdp-custom-btn">
                   <PencilIcon size={16} /> Personnaliser
                 </Link>
               )}

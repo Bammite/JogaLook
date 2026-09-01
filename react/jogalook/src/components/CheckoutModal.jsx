@@ -2,21 +2,58 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { CartIcon, InfoIcon, AlertTriangleIcon, CreditCardIcon, NewspaperIcon } from './icons/AppIcons';
+import { 
+  CartIcon, 
+  InfoIcon, 
+  AlertTriangleIcon, 
+  CreditCardIcon, 
+  MapPinIcon, 
+  NavigationIcon, 
+  PhoneCallIcon, 
+  StoreIcon 
+} from './icons/AppIcons';
 import './CheckoutModal.css';
+
+/* ─── Villes disponibles ─── */
+const CITIES = [
+  { id: 'Dakar',       label: 'Dakar' },
+  { id: 'Saint-Louis', label: 'Saint-Louis' },
+  { id: 'Kaolack',     label: 'Kaolack' },
+  { id: 'Thies',       label: 'Thiès' },
+];
+
+/* ─── Modes de localisation / réception ─── */
+const DELIVERY_MODES = [
+  {
+    id: 'gps',
+    label: 'Position GPS actuelle',
+    description: 'Localisation automatique par satellite'
+  },
+  {
+    id: 'phone_call',
+    label: 'Préciser par appel',
+    description: 'Le livreur vous contacte avant la livraison'
+  },
+  {
+    id: 'pickup',
+    label: 'Retrait en boutique',
+    description: 'Click & Collect gratuit (Dakar uniquement)',
+    dakarOnly: true
+  },
+];
 
 /* ─── Méthodes de paiement disponibles ─── */
 const PAYMENT_METHODS = [
-  { id: 'wave',                   label: 'Wave (Sénégal 🇸🇳)',              country: 'sn' },
-  { id: 'orange_money',           label: 'Orange Money (Sénégal 🇸🇳)',       country: 'sn' },
-  { id: 'free_money',             label: 'Free Money (Sénégal 🇸🇳)',         country: 'sn' },
-  { id: 'wave_ci',                label: 'Wave (Côte d\'Ivoire 🇨🇮)',       country: 'ci' },
-  { id: 'orange_money_ci',        label: 'Orange Money (Côte d\'Ivoire 🇨🇮)',country: 'ci' },
-  { id: 'mtn_ci',                 label: 'MTN Mobile (Côte d\'Ivoire 🇨🇮)',  country: 'ci' },
-  { id: 'moov_ci',                label: 'Moov (Côte d\'Ivoire 🇨🇮)',        country: 'ci' },
-  { id: 'orange_money_burkina',   label: 'Orange Money (Burkina Faso 🇧🇫)', country: 'bf' },
-  { id: 'moov_burkina',           label: 'Moov Money (Burkina Faso 🇧🇫)',   country: 'bf' },
-  { id: 'card',                   label: 'Carte bancaire (Visa / MasterCard 💳)', country: 'sn' },
+  { id: 'wave',                   label: 'Wave (Sénégal)',              country: 'sn' },
+  { id: 'orange_money',           label: 'Orange Money (Sénégal)',       country: 'sn' },
+  { id: 'free_money',             label: 'Free Money (Sénégal)',         country: 'sn' },
+  { id: 'wave_ci',                label: 'Wave (Côte d\'Ivoire)',       country: 'ci' },
+  { id: 'orange_money_ci',        label: 'Orange Money (Côte d\'Ivoire)',country: 'ci' },
+  { id: 'mtn_ci',                 label: 'MTN Mobile (Côte d\'Ivoire)',  country: 'ci' },
+  { id: 'moov_ci',                label: 'Moov (Côte d\'Ivoire)',        country: 'ci' },
+  { id: 'orange_money_burkina',   label: 'Orange Money (Burkina Faso)', country: 'bf' },
+  { id: 'moov_burkina',           label: 'Moov Money (Burkina Faso)',   country: 'bf' },
+  { id: 'card',                   label: 'Carte bancaire (Visa / MasterCard)', country: 'sn' },
 ];
 
 export default function CheckoutModal({ open, onClose }) {
@@ -25,7 +62,15 @@ export default function CheckoutModal({ open, onClose }) {
 
   const [customerName, setCustomerName]       = useState('');
   const [phoneNumber, setPhoneNumber]         = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
+  
+  // Localisation & Ville
+  const [city, setCity]                       = useState('Dakar');
+  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'manual' | 'phone_call' | 'pickup'
+  const [gpsCoords, setGpsCoords]             = useState(null);
+  const [isLocating, setIsLocating]           = useState(false);
+  const [locationError, setLocationError]     = useState('');
+  const [manualAddress, setManualAddress]     = useState('');
+
   const [paymentMethod, setPaymentMethod]     = useState('wave');
   const [isCod, setIsCod]                     = useState(false);
   const [savePreference, setSavePreference]   = useState(true);
@@ -36,6 +81,39 @@ export default function CheckoutModal({ open, onClose }) {
   const [step, setStep]                       = useState('checkout'); // 'checkout' | 'loading' | 'success' | 'error'
   const [errorMsg, setErrorMsg]               = useState('');
   const [paymentData, setPaymentData]         = useState(null);
+
+  // Fonction pour capturer la géolocalisation GPS
+  const handleGetLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('La géolocalisation n’est pas supportée sur ce navigateur.');
+      return;
+    }
+    setIsLocating(true);
+    setLocationError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        const { latitude, longitude, accuracy } = position.coords;
+        setGpsCoords({
+          lat: latitude,
+          lng: longitude,
+          accuracy: Math.round(accuracy)
+        });
+        setLocationError('');
+      },
+      (error) => {
+        setIsLocating(false);
+        let msg = 'Impossible d’obtenir votre position GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Autorisation GPS refusée. Veuillez réessayer.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Délai GPS dépassé. Veuillez réessayer.';
+        }
+        setLocationError(msg);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  }, []);
 
   // Pré-remplissage avec l'utilisateur connecté (table userinfo)
   useEffect(() => {
@@ -66,7 +144,27 @@ export default function CheckoutModal({ open, onClose }) {
                 const clean = String(info.phone_number).replace(/^(\+|00)?221/, '').replace(/[\s\-\.]/g, '');
                 setPhoneNumber(clean);
               }
-              if (info.delivery_address) setShippingAddress(info.delivery_address);
+              if (info.delivery_address) {
+                const rawAddr = info.delivery_address;
+                if (rawAddr.includes('Saint-Louis')) setCity('Saint-Louis');
+                else if (rawAddr.includes('Kaolack')) setCity('Kaolack');
+                else if (rawAddr.includes('Thiès') || rawAddr.includes('Thies')) setCity('Thies');
+                else setCity('Dakar');
+
+                if (rawAddr.includes('GPS:')) {
+                  setDeliveryMode('gps');
+                  const match = rawAddr.match(/GPS:\s*([0-9\.\-]+),\s*([0-9\.\-]+)/);
+                  if (match) {
+                    setGpsCoords({ lat: parseFloat(match[1]), lng: parseFloat(match[2]), accuracy: 15 });
+                  }
+                } else if (rawAddr.toLowerCase().includes('appel') || rawAddr.toLowerCase().includes('phone')) {
+                  setDeliveryMode('phone_call');
+                } else if (rawAddr.toLowerCase().includes('retrait') || rawAddr.toLowerCase().includes('boutique') || rawAddr.toLowerCase().includes('collect')) {
+                  setDeliveryMode('pickup');
+                } else {
+                  setDeliveryMode('gps');
+                }
+              }
               if (info.payment_method) {
                 if (info.payment_method === 'cash_on_delivery') {
                   setIsCod(true);
@@ -124,12 +222,48 @@ export default function CheckoutModal({ open, onClose }) {
     if (isCod && !canUseCod) setIsCod(false);
   }, [isCod, canUseCod]);
 
+  // Si on quitte Dakar et que le mode était Retrait en boutique, basculer sur GPS
+  useEffect(() => {
+    if (city !== 'Dakar' && deliveryMode === 'pickup') {
+      setDeliveryMode('gps');
+    }
+  }, [city, deliveryMode]);
+
+  useEffect(() => {
+    if (deliveryMode === 'manual') {
+      setDeliveryMode('gps');
+    }
+  }, [deliveryMode]);
+
+  // Génération de l'adresse formatée complète
+  const getFormattedAddress = () => {
+    if (deliveryMode === 'gps') {
+      if (gpsCoords) {
+        return `${city} | GPS: ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lng.toFixed(6)} (±${gpsCoords.accuracy}m) | https://maps.google.com/?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`;
+      }
+      return `${city} | Position GPS demandée`;
+    }
+    if (deliveryMode === 'phone_call') {
+      const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
+      return `${city} | Position à préciser par appel téléphonique (+221 ${cleanPhone || 'client'})`;
+    }
+    if (deliveryMode === 'pickup') {
+      return `Dakar | Retrait en boutique (Boutique JogaLook - Point Relais Sacré-Cœur 3 / VDN Dakar)`;
+    }
+    return `${city} | Adresse de livraison`;
+  };
+
   const validate = () => {
     const errs = {};
     if (!customerName.trim()) errs.customerName = 'Le nom est requis.';
     if (!phoneNumber.trim())  errs.phoneNumber  = 'Le numéro est requis.';
     else if (!/^\d{7,15}$/.test(phoneNumber.replace(/\s/g, '')))
       errs.phoneNumber = 'Numéro invalide (7 à 15 chiffres).';
+    
+    if (deliveryMode === 'gps' && !gpsCoords) {
+      errs.location = 'Veuillez activer votre position GPS pour continuer.';
+    }
+
     if (!isCod && !paymentMethod) errs.paymentMethod = 'Choisissez une méthode.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -143,6 +277,7 @@ export default function CheckoutModal({ open, onClose }) {
       const chosenMethod = isCod ? 'cash_on_delivery' : paymentMethod;
       const selectedMethodObj = PAYMENT_METHODS.find(m => m.id === paymentMethod);
       const country = selectedMethodObj?.country || 'sn';
+      const formattedAddress = getFormattedAddress();
 
       const res = await fetch('/service/payment/initiate', {
         method: 'POST',
@@ -154,7 +289,12 @@ export default function CheckoutModal({ open, onClose }) {
           customer_name:  customerName.trim(),
           phone_number:   cleanPhone,
           customer_phone: cleanPhone,
-          shipping_address: shippingAddress.trim() || null,
+          shipping_address: formattedAddress,
+          delivery_address: formattedAddress,
+          city,
+          delivery_type: deliveryMode,
+          latitude: gpsCoords?.lat || null,
+          longitude: gpsCoords?.lng || null,
           country,
           customer_email: user?.email || null,
           save_payment_method: savePreference,
@@ -188,7 +328,7 @@ export default function CheckoutModal({ open, onClose }) {
       setErrorMsg('Impossible de contacter le serveur. Vérifiez votre connexion.');
       setStep('error');
     }
-  }, [validate, customerName, phoneNumber, paymentMethod, isCod, shippingAddress, savePreference, totalFcfa, items, user, clearCart]);
+  }, [validate, customerName, phoneNumber, paymentMethod, isCod, city, deliveryMode, gpsCoords, manualAddress, savePreference, totalFcfa, items, user, clearCart]);
 
   if (!open) return null;
 
@@ -321,16 +461,138 @@ export default function CheckoutModal({ open, onClose }) {
                   {errors.phoneNumber && <p className="cm-field__err">{errors.phoneNumber}</p>}
                 </div>
 
-                {/* Adresse */}
+                {/* Ville de livraison */}
                 <div className="cm-field">
-                  <label className="cm-field__label" htmlFor="cm-address">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Adresse / Localisation de livraison
+                  <label className="cm-field__label" htmlFor="cm-city">
+                    <MapPinIcon size={14} />
+                    Ville de livraison
                   </label>
-                  <input id="cm-address" type="text" className="cm-field__input"
-                    placeholder="Quartier, Ville, Indications..."
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)} />
+                  <select
+                    id="cm-city"
+                    className="cm-field__input cm-select"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  >
+                    {CITIES.map(c => (
+                      <option key={c.id} value={c.id}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Options de localisation / Mode de réception */}
+                <div className="cm-field">
+                  <label className="cm-field__label" htmlFor="cm-delivery-mode">
+                    <NavigationIcon size={14} />
+                    Mode de localisation / Réception
+                  </label>
+                  <select
+                    id="cm-delivery-mode"
+                    className="cm-field__input cm-select"
+                    value={deliveryMode}
+                    onChange={(e) => {
+                      const nextMode = e.target.value;
+                      setDeliveryMode(nextMode);
+                      setErrors(er => ({ ...er, location: '', manualAddress: '' }));
+                      if (nextMode === 'gps' && !gpsCoords && !isLocating) {
+                        handleGetLocation();
+                      }
+                    }}
+                  >
+                    {DELIVERY_MODES.filter((mode) => !mode.dakarOnly || city === 'Dakar').map((mode) => (
+                      <option key={mode.id} value={mode.id}>{mode.label}</option>
+                    ))}
+                  </select>
+
+                  {/* Vues détaillées selon l'option choisie */}
+                  
+                  {/* 1. Mode GPS */}
+                  {deliveryMode === 'gps' && (
+                    <div className="cm-loc-card cm-loc-card--gps">
+                      {gpsCoords ? (
+                        <div className="cm-gps-status cm-gps-status--success">
+                          <div className="cm-gps-header">
+                            <span className="cm-gps-pulse" />
+                            <strong>Position GPS enregistrée</strong>
+                            <span className="cm-gps-acc">Précision: ±{gpsCoords.accuracy}m</span>
+                          </div>
+                          <div className="cm-gps-coords-text">
+                            Lat: {gpsCoords.lat.toFixed(5)} • Lng: {gpsCoords.lng.toFixed(5)}
+                          </div>
+                          <div className="cm-gps-btns">
+                            <a
+                              href={`https://maps.google.com/?q=${gpsCoords.lat},${gpsCoords.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="cm-gps-map-link"
+                            >
+                              Visualiser sur Google Maps →
+                            </a>
+                            <button
+                              type="button"
+                              className="cm-gps-rebtn"
+                              onClick={handleGetLocation}
+                              disabled={isLocating}
+                            >
+                              {isLocating ? 'Détection…' : 'Réactualiser'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="cm-gps-act-btn"
+                          onClick={handleGetLocation}
+                          disabled={isLocating}
+                        >
+                          {isLocating ? (
+                            <>
+                              <div className="cm-spinner-sm" />
+                              <span>Recherche du signal satellite en cours…</span>
+                            </>
+                          ) : (
+                            <>
+                              <NavigationIcon size={16} />
+                              <span>Activer et capturer ma position GPS exacte</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+
+                      {locationError && (
+                        <p className="cm-field__err" style={{ marginTop: '6px' }}>{locationError}</p>
+                      )}
+                      {errors.location && (
+                        <p className="cm-field__err" style={{ marginTop: '6px' }}>{errors.location}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. Mode Appel téléphonique */}
+                  {deliveryMode === 'phone_call' && (
+                    <div className="cm-loc-card cm-loc-card--call">
+                      <div className="cm-call-box">
+                        <PhoneCallIcon size={22} color="var(--primary, #F15A24)" />
+                        <div>
+                          <strong>Coordination directe par téléphone</strong>
+                          <p>Notre livreur vous appellera directement au <strong>+221 {phoneNumber || 'numéro renseigné'}</strong> pour convenir de l'endroit exact au moment de la livraison.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Mode Retrait Boutique (Dakar) */}
+                  {deliveryMode === 'pickup' && (
+                    <div className="cm-loc-card cm-loc-card--pickup">
+                      <div className="cm-pickup-box">
+                        <StoreIcon size={22} color="var(--primary, #F15A24)" />
+                        <div>
+                          <strong>Boutique JogaLook - Point Relais Dakar</strong>
+                          <p>Sacré-Cœur 3 / VDN, Dakar • Ouvert du Lundi au Samedi de 9h à 20h</p>
+                          <span className="cm-pickup-tag">Retrait 100% gratuit sans frais de livraison</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 3. Moyen de paiement */}
@@ -348,7 +610,7 @@ export default function CheckoutModal({ open, onClose }) {
                   >
                     {PAYMENT_METHODS.map(m => (
                       <option key={m.id} value={m.id}>
-                        {m.icon || '💳'} {m.label}
+                        {m.label}
                       </option>
                     ))}
                   </select>

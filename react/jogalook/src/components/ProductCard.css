@@ -50,6 +50,17 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   z-index: 2;
+  border: none;
+  cursor: default;
+}
+
+.product-badge--custom {
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(241, 90, 36, 0.18);
+}
+
+.product-badge--custom:hover {
+  filter: brightness(1.05);
 }
 
 .product-badge.new {

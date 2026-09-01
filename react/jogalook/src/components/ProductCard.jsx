@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './ProductCard.css';
 import { useCart } from '../context/CartContext';
 import SizePickerModal from './SizePickerModal';
 
 function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const name = product?.name || 'Produit';
   const team = product?.team || product?.category || 'Collection';
   const price = Number(product?.price ?? product?.base_price ?? 0);
@@ -13,6 +14,7 @@ function ProductCard({ product }) {
   const image = product?.image || product?.image_url || 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=400&h=500&fit=crop';
   const badge = product?.badge || (product?.is_customizable ? { type: 'new', text: 'Personnalisable' } : null);
   const detailUrl = product?.id ? `/catalogue/${product.id}` : '/catalogue';
+  const customizeRoute = product?.template_id ? `/custom/${product.template_id}` : product?.id ? `/custom/${product.id}` : '/custom';
 
   // Variantes du produit
   const variants = product?.product_variants ?? [];
@@ -77,11 +79,44 @@ function ProductCard({ product }) {
     e.stopPropagation();
   };
 
+  const handleCustomize = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(customizeRoute);
+  };
+
+  const handleCardClick = () => {
+    navigate(detailUrl);
+  };
+
+  const handleCardKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(detailUrl);
+    }
+  };
+
   return (
     <>
-      <Link to={detailUrl} className="product-card" aria-label={`Voir ${name}`}>
+      <div
+        className="product-card"
+        aria-label={`Voir ${name}`}
+        role="link"
+        tabIndex={0}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+      >
         <div className="product-image-wrapper">
-          {badge && <span className={`product-badge ${badge.type}`}>{badge.text}</span>}
+          {badge && (
+            <button
+              type="button"
+              className={`product-badge ${badge.type}${product?.is_customizable ? ' product-badge--custom' : ''}`}
+              onClick={product?.is_customizable ? handleCustomize : undefined}
+              aria-label={product?.is_customizable ? `Personnaliser ${name}` : badge.text}
+            >
+              {badge.text}
+            </button>
+          )}
           <img src={image} alt={name} className="product-image" loading="lazy" />
           <div className="product-actions">
             <button className="action-btn" aria-label="Ajouter aux favoris" onClick={handleWishlist}>
@@ -89,17 +124,21 @@ function ProductCard({ product }) {
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </button>
-            <Link
-              to={detailUrl}
+            <button
+              type="button"
               className="action-btn"
               aria-label="Vue rapide"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(detailUrl);
+              }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
-            </Link>
+            </button>
           </div>
         </div>
         <div className="product-info">
@@ -157,7 +196,7 @@ function ProductCard({ product }) {
             )}
           </button>
         </div>
-      </Link>
+      </div>
 
       {/* Modal sélection de taille */}
       <SizePickerModal

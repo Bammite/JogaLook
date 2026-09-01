@@ -239,17 +239,32 @@ exports.initiatePayment = async (req, res) => {
     if (resolvedUserId) {
       try {
         const addressToSave = (delivery_address || shipping_address || '').trim();
-        await supabaseAdmin
+        const { city, delivery_type, latitude, longitude } = req.body;
+        
+        const upsertPayload = {
+          user_id: resolvedUserId,
+          customer_name: customer_name.trim(),
+          phone_number: phone_number.replace(/\s/g, ''),
+          delivery_address: addressToSave || null,
+          payment_method: (payment_method === 'cash_on_delivery' || payment_method === 'cod') ? 'cash_on_delivery' : payment_method,
+          country: country || 'sn',
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error: fullUpsertErr } = await supabaseAdmin
           .from('userinfo')
           .upsert([{
-            user_id: resolvedUserId,
-            customer_name: customer_name.trim(),
-            phone_number: phone_number.replace(/\s/g, ''),
-            delivery_address: addressToSave || null,
-            payment_method: (payment_method === 'cash_on_delivery' || payment_method === 'cod') ? 'cash_on_delivery' : payment_method,
-            country: country || 'sn',
-            updated_at: new Date().toISOString(),
+            ...upsertPayload,
+            ...(city ? { city } : {}),
+            ...(delivery_type ? { delivery_type } : {}),
+            ...(latitude != null ? { latitude: Number(latitude) } : {}),
+            ...(longitude != null ? { longitude: Number(longitude) } : {}),
           }], { onConflict: 'user_id' });
+
+        if (fullUpsertErr) {
+          // Fallback sur le schéma de base si les colonnes spécifiques ne sont pas encore créées
+          await supabaseAdmin.from('userinfo').upsert([upsertPayload], { onConflict: 'user_id' });
+        }
         console.log(`👤 [userinfo] Informations du client ${resolvedUserId} enregistrées.`);
       } catch (infoErr) {
         console.warn('⚠️ [userinfo] Notice enregistrement:', infoErr.message);
