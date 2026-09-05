@@ -13,13 +13,14 @@ import {
   StoreIcon 
 } from './icons/AppIcons';
 import './CheckoutModal.css';
+import JerseyPreview from './JerseyPreview';
 
 /* ─── Villes disponibles ─── */
 const CITIES = [
-  { id: 'Dakar',       label: 'Dakar' },
-  { id: 'Saint-Louis', label: 'Saint-Louis' },
-  { id: 'Kaolack',     label: 'Kaolack' },
-  { id: 'Thies',       label: 'Thiès' },
+  { id: 'Dakar',       label: 'Dakar',       fee: 1000 },
+  { id: 'Saint-Louis', label: 'Saint-Louis', fee: 5000 },
+  { id: 'Kaolack',     label: 'Kaolack',     fee: 5000 },
+  { id: 'Thies',       label: 'Thiès',       fee: 5000 },
 ];
 
 /* ─── Modes de localisation / réception ─── */
@@ -65,11 +66,10 @@ export default function CheckoutModal({ open, onClose }) {
   
   // Localisation & Ville
   const [city, setCity]                       = useState('Dakar');
-  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'manual' | 'phone_call' | 'pickup'
+  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'phone_call' | 'pickup'
   const [gpsCoords, setGpsCoords]             = useState(null);
   const [isLocating, setIsLocating]           = useState(false);
   const [locationError, setLocationError]     = useState('');
-  const [manualAddress, setManualAddress]     = useState('');
 
   const [paymentMethod, setPaymentMethod]     = useState('wave');
   const [isCod, setIsCod]                     = useState(false);
@@ -214,7 +214,13 @@ export default function CheckoutModal({ open, onClose }) {
     return () => window.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  const totalFcfa = Math.round(total);
+  const getDeliveryFee = (cityName = city, mode = deliveryMode) => {
+    if (mode === 'pickup') return 0;
+    return cityName === 'Dakar' ? 1000 : 5000;
+  };
+
+  const deliveryFee = getDeliveryFee(city, deliveryMode);
+  const totalFcfa = Math.round(total + deliveryFee);
   const isCodAmountValid = totalFcfa >= 5000 && totalFcfa <= 100000;
   const canUseCod = isCodAmountValid && codEligible;
 
@@ -228,12 +234,6 @@ export default function CheckoutModal({ open, onClose }) {
       setDeliveryMode('gps');
     }
   }, [city, deliveryMode]);
-
-  useEffect(() => {
-    if (deliveryMode === 'manual') {
-      setDeliveryMode('gps');
-    }
-  }, [deliveryMode]);
 
   // Génération de l'adresse formatée complète
   const getFormattedAddress = () => {
@@ -299,6 +299,7 @@ export default function CheckoutModal({ open, onClose }) {
           customer_email: user?.email || null,
           save_payment_method: savePreference,
           amount: totalFcfa,
+          shipping_fee: deliveryFee,
           return_url: `${window.location.origin}/panier?payment_status=success`,
           cancel_url: `${window.location.origin}/panier?payment_status=cancelled`,
         }),
@@ -328,7 +329,7 @@ export default function CheckoutModal({ open, onClose }) {
       setErrorMsg('Impossible de contacter le serveur. Vérifiez votre connexion.');
       setStep('error');
     }
-  }, [validate, customerName, phoneNumber, paymentMethod, isCod, city, deliveryMode, gpsCoords, manualAddress, savePreference, totalFcfa, items, user, clearCart]);
+  }, [validate, customerName, phoneNumber, paymentMethod, isCod, city, deliveryMode, gpsCoords, savePreference, totalFcfa, items, user, clearCart]);
 
   if (!open) return null;
 
@@ -387,7 +388,7 @@ export default function CheckoutModal({ open, onClose }) {
                     {items.map((item) => (
                       <div key={item.id} className="cm-item">
                         <div className="cm-item__img-wrap">
-                          <img src={item.image} alt={item.name} className="cm-item__img" loading="lazy" />
+                          <JerseyPreview item={item} side="front" alt={item.name} className="cm-item__img" />
                         </div>
                         <div className="cm-item__info">
                           <p className="cm-item__name">{item.name}</p>
@@ -472,9 +473,10 @@ export default function CheckoutModal({ open, onClose }) {
                     className="cm-field__input cm-select"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
+                    disabled={deliveryMode === 'pickup'}
                   >
                     {CITIES.map(c => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
+                      <option key={c.id} value={c.id}>{c.label} ({c.fee.toLocaleString('fr-FR')} FCFA)</option>
                     ))}
                   </select>
                 </div>

@@ -3,6 +3,10 @@
  * Exploitation des calques SVG, variables CSS (--jersey-base, --jersey-accent, etc.)
  */
 
+// Import des SVG locaux réels via Vite (traités comme des chaînes brutes)
+import faceBlanc from '../assets/tamplate/maillot/blanc/face.svg?raw';
+import dosBlanc from '../assets/tamplate/maillot/blanc/dos.svg?raw';
+
 export const MOCK_TEMPLATES = [
   {
     id: 'tpl-1',
@@ -254,5 +258,84 @@ export const MOCK_TEMPLATES = [
         <text x="150" y="230" text-anchor="middle" fill="var(--jersey-text, #111111)" font-family="var(--jersey-font, 'Impact', sans-serif)" font-size="90" font-weight="900">11</text>
       </g>
     </svg>`
+  },
+
+  // ── TEMPLATE RÉEL — SVG IMPORTÉ DEPUIS LES ASSETS (interprétation automatique) ──
+  {
+    id: 'tpl-blanc-001',
+    name: 'Maillot Blanc Épuré (Pro)',
+    description: 'Template professionnel haute fidélité. Corps en blanc cassé, col contrasté, manches sombres. Entièrement personnalisable grâce au moteur d\'interprétation SVG.',
+    is_free: true,
+    price: 49.99,
+    usage_count: 0,
+    // Couleurs de base extraites visuellement depuis le SVG réel
+    baseColor: '#E9EDF0',
+    accentColor: '#252626',
+    collarColor: '#262727',
+    sleevesColor: '#252626',
+    stripesColor: '#252626',
+    pattern: 'solid',
+    collar: 'round',
+    defaultName: '',
+    defaultNumber: '',
+    // Interprétation automatique activée : pas besoin d'IDs dans le SVG source
+    requires_interpretation: true,
+    editable_elements: {
+      body: true,
+      collar: true,
+      sleeves: true,
+      stripes: true,
+      badge: true,
+      name_zone: true,
+      number_zone: true
+    },
+    // layers_config sera déduit automatiquement par l'interpréteur SVG
+    layers_config: {
+      body_id: 'jersey-body',
+      collar_id: 'jersey-collar',
+      sleeves_id: 'jersey-sleeves',
+      stripes_id: 'jersey-stripes',
+      badge_zone_id: 'badge-zone',
+      name_zone_id: 'name-zone',
+      number_zone_id: 'number-zone'
+    },
+    // SVG réels importés depuis les assets (517×543 face, 517×539 dos)
+    svg_front: faceBlanc,
+    svg_back: dosBlanc,
+  },
+
+  // ── TEMPLATE PHOTO / MOCKUP RÉALISTE (FLOCKAGE DYNAMIQUE DOS) ──
+  {
+    id: 'tpl-mockup-001',
+    name: 'Maillot Pro Black Edition (Photo HD)',
+    description: 'Modèle haute définition en tissu aéré réaliste. Personnalisez directement le flocage officiel du nom et du numéro au dos par-dessus la photo.',
+    template_type: 'MOCKUP',
+    is_free: false,
+    price: 59.99,
+    usage_count: 84,
+    // Photos réalistes Face et Dos vierge (sans aucun marquage résiduel)
+    image_front: 'https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&w=800&q=80',
+    image_back: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    thumbnail_url: 'https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&w=600&q=80',
+    flocking_config: {
+      name: { x_percent: 50, y_percent: 24, font_family: 'Impact', font_size: 32, default_color: '#ffffff', letter_spacing: 4 },
+      number: { x_percent: 50, y_percent: 50, font_family: 'Impact', font_size: 115, default_color: '#ffffff' },
+      allowed_colors: ['#ffffff', '#ffd700', '#e63946', '#00b4d8', '#111111']
+    },
+    defaultName: 'MBAPPÉ',
+    defaultNumber: '10',
+    editable_elements: {
+      body: false,
+      collar: false,
+      sleeves: false,
+      stripes: false,
+      badge: false,
+      name_zone: true,
+      number_zone: true
+    },
+    layers_config: {
+      name_zone_id: 'name-zone',
+      number_zone_id: 'number-zone'
+    }
   }
 ];

@@ -1,8 +1,75 @@
+const jwt = require('jsonwebtoken');
 const { supabaseAdmin } = require('../supabaseClient');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'jogalook_dev_secret';
+
+function getUserIdFromReq(req) {
+  if (req.body?.user_id) return req.body.user_id;
+  const auth = req.headers?.authorization;
+  if (auth?.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(auth.split(' ')[1], JWT_SECRET);
+      if (decoded?.user_id) return decoded.user_id;
+    } catch (_) {}
+  }
+  return null;
+}
 
 // ==============================================================================
 // PERSONNALISATIONS SVG CLIENT - CONTROLLER CRUD
 // ==============================================================================
+
+// 0. Lister toutes les personnalisations (avec filtres optionnels)
+exports.getAllCustomizations = async (req, res) => {
+  try {
+    const { user_id, template_id } = req.query;
+
+    let query = supabaseAdmin
+      .from('customizations')
+      .select(`
+        *,
+        templates ( id, name, thumbnail_url, image_front, image_back, template_type )
+      `)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (user_id) query = query.eq('user_id', user_id);
+    if (template_id) query = query.eq('template_id', template_id);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 0.1 Lister les personnalisations de l'utilisateur connecté
+exports.getMyCustomizations = async (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentification requise pour accéder à vos créations' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('customizations')
+      .select(`
+        *,
+        templates ( id, name, thumbnail_url, image_front, image_back, template_type )
+      `)
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // 1. Lister les personnalisations d'un utilisateur spécifique
 exports.getUserCustomizations = async (req, res) => {
@@ -13,7 +80,7 @@ exports.getUserCustomizations = async (req, res) => {
       .from('customizations')
       .select(`
         *,
-        templates ( id, name, thumbnail_url )
+        templates ( id, name, thumbnail_url, image_front, image_back, template_type )
       `)
       .eq('user_id', userId)
       .is('deleted_at', null)
@@ -73,12 +140,13 @@ exports.createCustomization = async (req, res) => {
 
     // Vérifier si template_id ressemble à un UUID valide
     const isUuid = template_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(template_id);
+    const resolvedUserId = user_id || getUserIdFromReq(req);
 
     // Insertion de la personnalisation
     const { data, error } = await supabaseAdmin
       .from('customizations')
       .insert([{
-        user_id: user_id || null,
+        user_id: resolvedUserId || null,
         template_id: isUuid ? template_id : null,
         title: title || `Maillot ${custom_name || ''} #${custom_number || ''}`.trim(),
         svg_content: svg_front || svg_content || '',

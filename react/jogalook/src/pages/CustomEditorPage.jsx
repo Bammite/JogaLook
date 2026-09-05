@@ -1,9 +1,34 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { CheckIcon } from '../components/icons/AppIcons';
 import { MOCK_TEMPLATES } from '../utils/templatePresets';
+import { normalizeSvgForDisplay, calculateDynamicPlacements, prepareTemplateForEditing } from '../utils/svgUtils';
 import './CustomEditorPage.css';
+
+const BADGE_PRESETS = [
+  {
+    id: 'shield',
+    name: 'Écusson Club',
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 8 L85 24 V52 C85 74 50 94 50 94 C50 94 15 74 15 52 V24 Z' fill='%23f15a24' stroke='%23ffffff' stroke-width='4'/><circle cx='50' cy='46' r='18' fill='%23ffffff'/><path d='M50 34 L54 42 L63 43 L56 50 L58 58 L50 53 L42 58 L44 50 L37 43 L46 42 Z' fill='%231d3557'/></svg>"
+  },
+  {
+    id: 'lion',
+    name: 'Lion Royal',
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%231d3557' stroke='%23ffd700' stroke-width='4'/><path d='M50 20 L58 35 L75 38 L62 50 L65 67 L50 58 L35 67 L38 50 L25 38 L42 35 Z' fill='%23ffd700'/></svg>"
+  },
+  {
+    id: 'eagle',
+    name: 'Aigle Sport',
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,10 90,40 75,90 25,90 10,40' fill='%23e63946' stroke='%23ffffff' stroke-width='4'/><text x='50' y='60' text-anchor='middle' font-family='Impact' font-size='32' fill='%23ffffff'>JL</text></svg>"
+  },
+  {
+    id: 'star',
+    name: 'Étoile Champion',
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%230f172a' stroke='%2300b4d8' stroke-width='4'/><polygon points='50,18 59,38 80,41 65,56 69,76 50,66 31,76 35,56 20,41 41,38' fill='%2300b4d8'/></svg>"
+  }
+];
 
 const baseColors = [
   { name: 'Rouge Flash', hex: '#e63946' },
@@ -36,17 +61,53 @@ const collarStyles = [
 ];
 
 const fontFamilies = [
-  { name: 'Impact / Sport', value: "'Impact', 'Arial Black', sans-serif" },
-  { name: 'Montserrat / Moderne', value: "'Montserrat', sans-serif" },
-  { name: 'Classique / Serif', value: "'Georgia', serif" },
-  { name: 'Tech / Mono', value: "'Courier New', monospace" },
-  { name: 'Clean / Sans', value: "'Verdana', sans-serif" },
+  // ── Styles Foot Pro & Athletic ──
+  { name: 'Bebas Neue (Football Pro / Officiel)', value: "'Bebas Neue', sans-serif" },
+  { name: 'Impact (Classique Musclé)', value: "'Impact', 'Arial Black', sans-serif" },
+  { name: 'Anton (Massif / Premier League)', value: "'Anton', sans-serif" },
+  { name: 'Oswald (Élancé / Serie A)', value: "'Oswald', sans-serif" },
+  { name: 'Barlow Condensed (Moderne Pro)', value: "'Barlow Condensed', sans-serif" },
+  { name: 'Teko (Athlétique Haute Lisibilité)', value: "'Teko', sans-serif" },
+  { name: 'Russo One (Puissant / Power Sport)', value: "'Russo One', sans-serif" },
+  { name: 'Staatliches (Urbain / Street Football)', value: "'Staatliches', sans-serif" },
+  { name: 'Archivo Black (Robuste & Plein)', value: "'Archivo Black', sans-serif" },
+
+  // ── Styles Esport & Moderne ──
+  { name: 'Montserrat (Clean / Géométrique)', value: "'Montserrat', sans-serif" },
+  { name: 'Chakra Petch (Racing & Esport)', value: "'Chakra Petch', sans-serif" },
+  { name: 'Orbitron (Futuriste / Gaming)', value: "'Orbitron', sans-serif" },
+
+  // ── Styles Rétro & Signature ──
+  { name: 'Playfair (Vintage / Luxe)', value: "'Playfair Display', serif" },
+  { name: 'Georgia (Rétro / Héritage)', value: "'Georgia', serif" },
+  { name: 'Permanent Marker (Graffiti / Street)', value: "'Permanent Marker', cursive" },
+  { name: 'Courier New (Technique / Monospace)', value: "'Courier New', monospace" },
+];
+
+const flockingPalette = [
+  { name: 'Blanc Pur', hex: '#ffffff' },
+  { name: 'Noir Carbone', hex: '#111111' },
+  { name: 'Or Métal', hex: '#ffd700' },
+  { name: 'Argent / Gris', hex: '#cbd5e1' },
+  { name: 'Rouge Cardinal', hex: '#e63946' },
+  { name: 'Bordeaux Profond', hex: '#800020' },
+  { name: 'Orange Vif', hex: '#f97316' },
+  { name: 'Jaune Fluo', hex: '#ccff00' },
+  { name: 'Vert Pelouse', hex: '#16a34a' },
+  { name: 'Vert Fluo', hex: '#00ff66' },
+  { name: 'Bleu Royal', hex: '#2563eb' },
+  { name: 'Bleu Ciel', hex: '#38bdf8' },
+  { name: 'Bleu Marine', hex: '#0f172a' },
+  { name: 'Violet Électrique', hex: '#7c3aed' },
+  { name: 'Rose Fluo', hex: '#f43f5e' },
+  { name: 'Cuivre Ambré', hex: '#b45309' },
 ];
 
 export default function CustomEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
 
   const [template, setTemplate] = useState(null);
@@ -74,6 +135,15 @@ export default function CustomEditorPage() {
   const [playerNumber, setPlayerNumber] = useState('');
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState("'Impact', 'Arial Black', sans-serif");
+
+  // Flockage Position (X, Y) & Size States (Initialisés avec flocking_config du template)
+  const [nameXPercent, setNameXPercent] = useState(50);
+  const [nameYPercent, setNameYPercent] = useState(26);
+  const [numberXPercent, setNumberXPercent] = useState(50);
+  const [numberYPercent, setNumberYPercent] = useState(52);
+  const [nameFontSize, setNameFontSize] = useState(28);
+  const [numberFontSize, setNumberFontSize] = useState(110);
+  const [letterSpacing, setLetterSpacing] = useState(4);
 
   // Club Badge / Logo States
   const [clubBadgeUrl, setClubBadgeUrl] = useState(null);
@@ -106,7 +176,7 @@ export default function CustomEditorPage() {
       if (mockFound) {
         foundTemplate = mockFound;
       } else {
-        // 2. Tenter de charger depuis l'API backend si c'est un UUID
+        // 2. Tenter de charger depuis l'API backend /api/templates/:id
         try {
           const res = await fetch(`/api/templates/${id}`);
           if (res.ok) {
@@ -116,11 +186,26 @@ export default function CustomEditorPage() {
             }
           }
         } catch (err) {
-          console.warn('Template API fetch error:', err);
+          console.warn('Template API single fetch error:', err);
+        }
+
+        // 3. Si non trouvé, tenter de charger depuis la liste complète /api/templates
+        if (!foundTemplate) {
+          try {
+            const resList = await fetch('/api/templates');
+            if (resList.ok) {
+              const jsonList = await resList.json();
+              if (jsonList.success && Array.isArray(jsonList.data)) {
+                foundTemplate = jsonList.data.find((t) => String(t.id) === String(id));
+              }
+            }
+          } catch (err) {
+            console.warn('Template API list fetch error:', err);
+          }
         }
       }
 
-      // 3. Fallback sur le premier template
+      // 4. Fallback sur le premier template
       const activeTpl = foundTemplate || MOCK_TEMPLATES[0];
       setTemplate(activeTpl);
 
@@ -134,7 +219,30 @@ export default function CustomEditorPage() {
       setCollar(activeTpl.collar || 'round');
       setPlayerName(activeTpl.defaultName || '');
       setPlayerNumber(activeTpl.defaultNumber || '');
-      if (activeTpl.badge_url) setClubBadgeUrl(activeTpl.badge_url);
+      setClubBadgeUrl(activeTpl.badge_url || null);
+
+      // Charger les préférences de positionnement et typographie enregistrées en BD
+      const flockConf = activeTpl.flocking_config || {};
+      setNameXPercent(flockConf.name?.x_percent ?? 50);
+      setNameYPercent(flockConf.name?.y_percent ?? 26);
+      setNumberXPercent(flockConf.number?.x_percent ?? 50);
+      setNumberYPercent(flockConf.number?.y_percent ?? 52);
+      setNameFontSize(flockConf.name?.font_size || 28);
+      setNumberFontSize(flockConf.number?.font_size || 110);
+      setLetterSpacing(flockConf.name?.letter_spacing || 4);
+
+      if (flockConf.name?.default_color) {
+        setTextColor(flockConf.name.default_color);
+      }
+      if (flockConf.name?.font_family) {
+        setFontFamily(flockConf.name.font_family);
+      }
+
+      // Si template de type MOCKUP (Photo HD + Flockage), basculer sur l'onglet flockage
+      const isMock = activeTpl.template_type === 'MOCKUP' || (!activeTpl.svg_front && !!activeTpl.image_front);
+      if (isMock) {
+        setActiveTab('flockage');
+      }
 
       setLoading(false);
     }
@@ -142,13 +250,16 @@ export default function CustomEditorPage() {
     loadTemplate();
   }, [id]);
 
+  // Détection du mode Mockup Photo HD
+  const isMockup = template?.template_type === 'MOCKUP' || (!template?.svg_front && !!template?.image_front);
+
   // Permissions d'édition issues du template
   const editable = template?.editable_elements || {
-    body: true,
-    collar: true,
-    sleeves: true,
-    stripes: true,
-    badge: true,
+    body: !isMockup,
+    collar: !isMockup,
+    sleeves: !isMockup,
+    stripes: !isMockup,
+    badge: !isMockup,
     name_zone: true,
     number_zone: true
   };
@@ -163,9 +274,9 @@ export default function CustomEditorPage() {
     number_zone_id: 'number-zone'
   };
 
-  const showColorsTab = editable.body !== false || editable.collar !== false || editable.sleeves !== false || editable.stripes !== false;
+  const showColorsTab = !isMockup && (editable.body !== false || editable.collar !== false || editable.sleeves !== false || editable.stripes !== false);
   const showFlockageTab = editable.name_zone !== false || editable.number_zone !== false;
-  const showBadgeTab = editable.badge !== false;
+  const showBadgeTab = !isMockup && (editable.badge !== false);
 
   // ── MAPPING TAP-TO-EDIT SUR TOUS LES IDS DE LA FACE ET DU DOS ──
   const LAYER_TOUCH_CONFIG = {
@@ -274,28 +385,6 @@ export default function CustomEditorPage() {
     }, 280);
   };
 
-  // Badge coordinates
-  const getBadgeCoordinates = () => {
-    const sizeMap = { small: 26, medium: 36, large: 48 };
-    const width = sizeMap[badgeSize] || 36;
-    const height = width;
-
-    let x = 108 - width / 2;
-    const y = 94 - height / 2;
-
-    if (badgePosition === 'left') {
-      x = 108 - width / 2;
-    } else if (badgePosition === 'center') {
-      x = 150 - width / 2;
-    } else if (badgePosition === 'right') {
-      x = 192 - width / 2;
-    }
-
-    return { x, y, width, height };
-  };
-
-  const badgeCoords = getBadgeCoordinates();
-
   // Price Calculation
   const basePrice = template?.price ? parseFloat(template.price) : 49.99;
   const flockingPrice = (playerName ? 9.99 : 0) + (playerNumber ? 4.99 : 0);
@@ -303,155 +392,217 @@ export default function CustomEditorPage() {
   const unitPrice = basePrice + flockingPrice + badgePrice;
   const totalPrice = (unitPrice * quantity).toFixed(2);
 
-  // ── MOTEUR MODULAIRE DE GÉNÉRATION VECTORIELLE (FACE & DOS) ──
+  // ── MOTEUR DE RENDU FIDÈLE ET RESPONSIVE (FACE & DOS) ──
   const buildSvgString = (side) => {
     const isFront = side === 'front';
 
-    // Gradients et Patterns dynamiques
-    const defs = `
-      <defs>
-        <filter id="jersey-dyn-shadow-${side}" x="-10%" y="-10%" width="130%" height="130%">
-          <feDropShadow dx="0" dy="12" stdDeviation="16" floodColor="rgba(0,0,0,0.18)" />
-        </filter>
-        <linearGradient id="dyn-gradient-${side}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${bodyColor}" />
-          <stop offset="100%" stop-color="${bodyColor2}" />
-        </linearGradient>
-        <pattern id="dyn-checker-${side}" width="36" height="36" patternUnits="userSpaceOnUse">
-          <rect width="18" height="18" fill="${bodyColor}" />
-          <rect x="18" width="18" height="18" fill="${stripesColor}" />
-          <rect y="18" width="18" height="18" fill="${stripesColor}" />
-          <rect x="18" y="18" width="18" height="18" fill="${bodyColor}" />
-        </pattern>
-      </defs>
+    // 0. Si le template est de type MOCKUP (Photo HD + Flockage Dynamique)
+    if (isMockup) {
+      const imgSrc = isFront
+        ? (template?.image_front || template?.thumbnail_url || '')
+        : (template?.image_back || template?.image_front || template?.thumbnail_url || '');
+
+      const nameX = (500 * nameXPercent) / 100;
+      const nameY = (500 * nameYPercent) / 100;
+      const numX = (500 * numberXPercent) / 100;
+      const numY = (500 * numberYPercent) / 100;
+      const nameFs = nameFontSize;
+      const numFs = numberFontSize;
+      const letterSp = letterSpacing;
+
+      return `<svg viewBox="0 0 500 500" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <image href="${imgSrc}" x="0" y="0" width="500" height="500" preserveAspectRatio="xMidYMid meet" />
+        ${!isFront ? `
+          <g id="mockup-flockage">
+            <text x="${nameX}" y="${nameY}" text-anchor="middle" fill="${textColor}" stroke="none" font-family="${fontFamily}" font-size="${nameFs}" font-weight="bold" letter-spacing="${letterSp}">${playerName || ''}</text>
+            <text x="${numX}" y="${numY}" text-anchor="middle" fill="${textColor}" stroke="none" font-family="${fontFamily}" font-size="${numFs}" font-weight="900">${playerNumber || ''}</text>
+          </g>
+        ` : ''}
+      </svg>`;
+    }
+
+    // 1. Récupérer le code SVG vectoriel propre au template chargé
+    let rawSvg = isFront
+      ? (template?.svg_front || template?.svg_content || '')
+      : (template?.svg_back || template?.svg_front || template?.svg_content || '');
+
+    // Fallback si le template n'a pas encore de SVG valide
+    if (!rawSvg || !rawSvg.includes('<svg')) {
+      rawSvg = `<svg viewBox="0 0 300 360" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <path id="${isFront ? 'jersey-body' : 'jersey-body-back'}" d="M60 40 L100 20 L200 20 L240 40 L280 120 L240 140 L230 110 L230 340 L70 340 L70 110 L60 140 L20 120 Z" fill="${bodyColor}" stroke="#0f172a" stroke-width="2.5"/>
+        <g id="${isFront ? 'jersey-collar' : 'jersey-collar-back'}"><path d="M120 20 Q150 50 180 20" fill="none" stroke="${collarColor}" stroke-width="8"/></g>
+        <g id="${isFront ? 'jersey-sleeves' : 'jersey-sleeves-back'}"><path d="M20 120 L60 140" stroke="${sleevesColor}" stroke-width="6"/><path d="M280 120 L240 140" stroke="${sleevesColor}" stroke-width="6"/></g>
+        ${isFront ? '<g id="badge-zone"><circle cx="108" cy="94" r="14" fill="#ffd700"/></g>' : ''}
+        ${!isFront ? '<g id="name-zone"></g><g id="number-zone"></g>' : ''}
+      </svg>`;
+    }
+
+    // Préparer le SVG pour l'édition :
+    // - Si anonyme (sans IDs sémantiques) → interprète et injecte les IDs automatiquement
+    // - Si déjà sémantique → normalise simplement (responsive 100%)
+    const prepared = prepareTemplateForEditing(rawSvg, isFront ? 'front' : 'back');
+    let processed = prepared.svg;
+
+    // Calculer les coordonnées dynamiques adaptées au viewBox réel du SVG (ex: 520x542, 518x532, 300x360)
+    const { viewBox: vb, badgeCoords: dynBadge, flockingCoords: dynFlock } = calculateDynamicPlacements(processed, {
+      badgePosition,
+      badgeSize
+    });
+
+    // 2. Remplacement des variables CSS dans le SVG du template
+    processed = processed
+      .replace(/var\(--jersey-base[^)]*\)/g, bodyColor)
+      .replace(/var\(--jersey-accent[^)]*\)/g, stripesColor || sleevesColor || collarColor)
+      .replace(/var\(--jersey-text[^)]*\)/g, textColor)
+      .replace(/var\(--jersey-font[^)]*\)/g, fontFamily);
+
+    // 3. Définition des dégradés dynamiques et patterns proportionnels
+    const scaleFactor = vb.width / 300;
+    const dynamicDefs = `
+      <linearGradient id="dyn-gradient-${side}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${bodyColor}" />
+        <stop offset="100%" stop-color="${bodyColor2 || stripesColor}" />
+      </linearGradient>
+      <pattern id="dyn-checker-${side}" width="${Math.round(36 * scaleFactor)}" height="${Math.round(36 * scaleFactor)}" patternUnits="userSpaceOnUse">
+        <rect width="${Math.round(18 * scaleFactor)}" height="${Math.round(18 * scaleFactor)}" fill="${bodyColor}" />
+        <rect x="${Math.round(18 * scaleFactor)}" width="${Math.round(18 * scaleFactor)}" height="${Math.round(18 * scaleFactor)}" fill="${stripesColor}" />
+        <rect y="${Math.round(18 * scaleFactor)}" width="${Math.round(18 * scaleFactor)}" height="${Math.round(18 * scaleFactor)}" fill="${stripesColor}" />
+        <rect x="${Math.round(18 * scaleFactor)}" y="${Math.round(18 * scaleFactor)}" width="${Math.round(18 * scaleFactor)}" height="${Math.round(18 * scaleFactor)}" fill="${bodyColor}" />
+      </pattern>
     `;
 
-    // 1. Rendu du Corps selon le motif choisi (Uni, Dégradé, Rayures, Moitié, Slash, Damier)
-    let bodyMarkup = '';
-    const bodyPathD = "M60 40 L100 20 L200 20 L240 40 L280 120 L240 140 L230 110 L230 340 L70 340 L70 110 L60 140 L20 120 Z";
-    const bodyId = isFront ? 'jersey-body' : 'jersey-body-back';
+    if (processed.includes('</defs>')) {
+      processed = processed.replace('</defs>', `${dynamicDefs}</defs>`);
+    } else {
+      processed = processed.replace(/<svg[^>]*>/i, `$&\n<defs>${dynamicDefs}</defs>`);
+    }
 
+    // 4. Injection des styles dynamiques ciblant précisément les calques du template
+    const bodyId = isFront ? (layers.body_id || 'jersey-body') : `${layers.body_id || 'jersey-body'}-back`;
+    const collarId = isFront ? (layers.collar_id || 'jersey-collar') : `${layers.collar_id || 'jersey-collar'}-back`;
+    const sleevesId = isFront ? (layers.sleeves_id || 'jersey-sleeves') : `${layers.sleeves_id || 'jersey-sleeves'}-back`;
+    const stripesId = isFront ? (layers.stripes_id || 'jersey-stripes') : `${layers.stripes_id || 'jersey-stripes'}-back`;
+    const badgeZoneId = layers.badge_zone_id || 'badge-zone';
+
+    let bodyFillRule = `fill: ${bodyColor} !important;`;
     if (pattern === 'gradient') {
-      bodyMarkup = `<path id="${bodyId}" d="${bodyPathD}" fill="url(#dyn-gradient-${side})" stroke="#0f172a" stroke-width="2.5" filter="url(#jersey-dyn-shadow-${side})"/>`;
+      bodyFillRule = `fill: url(#dyn-gradient-${side}) !important;`;
     } else if (pattern === 'checker') {
-      bodyMarkup = `<path id="${bodyId}" d="${bodyPathD}" fill="url(#dyn-checker-${side})" stroke="#0f172a" stroke-width="2.5" filter="url(#jersey-dyn-shadow-${side})"/>`;
-    } else if (pattern === 'half') {
-      bodyMarkup = `
-        <g id="${bodyId}" filter="url(#jersey-dyn-shadow-${side})">
-          <path d="M60 40 L100 20 L150 20 L150 340 L70 340 L70 110 L60 140 L20 120 Z" fill="${bodyColor}" stroke="#0f172a" stroke-width="2.5"/>
-          <path d="M150 20 L200 20 L240 40 L280 120 L240 140 L230 110 L230 340 L150 340 Z" fill="${bodyColor2}" stroke="#0f172a" stroke-width="2.5"/>
-        </g>
-      `;
-    } else {
-      // Solid / Rayures / Slash base
-      bodyMarkup = `<path id="${bodyId}" d="${bodyPathD}" fill="${bodyColor}" stroke="#0f172a" stroke-width="2.5" filter="url(#jersey-dyn-shadow-${side})"/>`;
+      bodyFillRule = `fill: url(#dyn-checker-${side}) !important;`;
     }
 
-    // 2. Rendu des Motifs / Rayures / Bandes
-    let stripesMarkup = '';
-    const stripesId = isFront ? 'jersey-stripes' : 'jersey-stripes-back';
+    const badgeDisplayRule = isFront
+      ? (clubBadgeUrl ? `#${badgeZoneId} { display: block !important; }` : `#${badgeZoneId} { display: none !important; }`)
+      : '';
 
-    if (pattern === 'stripes') {
-      stripesMarkup = `
-        <g id="${stripesId}">
-          <rect x="95" y="20" width="22" height="320" fill="${stripesColor}"/>
-          <rect x="139" y="20" width="22" height="320" fill="${stripesColor}"/>
-          <rect x="183" y="20" width="22" height="320" fill="${stripesColor}"/>
-        </g>
-      `;
-    } else if (pattern === 'slash') {
-      stripesMarkup = `
-        <g id="${stripesId}">
-          <polygon points="70,100 230,220 230,260 70,140" fill="${stripesColor}"/>
-        </g>
-      `;
-    }
-
-    // 3. Rendu du Col (Forme & Couleur indépendante)
-    let collarMarkup = '';
-    const collarId = isFront ? 'jersey-collar' : 'jersey-collar-back';
-
-    if (collar === 'vneck') {
-      collarMarkup = isFront
-        ? `<path id="${collarId}" d="M120 20 L150 60 L180 20" fill="none" stroke="${collarColor}" stroke-width="8"/>`
-        : `<path id="${collarId}" d="M120 20 L150 45 L180 20" fill="none" stroke="${collarColor}" stroke-width="8"/>`;
-    } else if (collar === 'polo') {
-      collarMarkup = isFront
-        ? `<path id="${collarId}" d="M110 20 L150 70 L190 20 L170 20 L150 50 L130 20 Z" fill="${collarColor}"/>`
-        : `<path id="${collarId}" d="M110 20 L150 45 L190 20 Z" fill="${collarColor}"/>`;
-    } else {
-      // Round collar
-      collarMarkup = isFront
-        ? `<path id="${collarId}" d="M120 20 Q150 50 180 20" fill="none" stroke="${collarColor}" stroke-width="8"/>`
-        : `<path id="${collarId}" d="M120 20 Q150 35 180 20" fill="none" stroke="${collarColor}" stroke-width="8"/>`;
-    }
-
-    // 4. Rendu des Manches et Bordures
-    const sleevesId = isFront ? 'jersey-sleeves' : 'jersey-sleeves-back';
-    const sleevesMarkup = `
-      <g id="${sleevesId}">
-        <path d="M20 120 L60 140" stroke="${sleevesColor}" stroke-width="6"/>
-        <path d="M280 120 L240 140" stroke="${sleevesColor}" stroke-width="6"/>
-      </g>
-      <line x1="70" y1="337" x2="230" y2="337" stroke="${sleevesColor}" stroke-width="6"/>
+    const dynamicStyle = `
+      <style>
+        #${bodyId}, #${layers.body_id || 'jersey-body'},
+        #${bodyId} path, #${layers.body_id || 'jersey-body'} path,
+        #${bodyId} polygon, #${layers.body_id || 'jersey-body'} polygon,
+        #${bodyId} rect, #${layers.body_id || 'jersey-body'} rect {
+          ${bodyFillRule}
+        }
+        #${collarId}, #${layers.collar_id || 'jersey-collar'},
+        #${collarId} path, #${layers.collar_id || 'jersey-collar'} path,
+        #${collarId} polygon, #${layers.collar_id || 'jersey-collar'} polygon {
+          fill: ${collarColor} !important;
+          stroke: ${collarColor} !important;
+        }
+        #${collarId}[fill="none"], #${layers.collar_id || 'jersey-collar'}[fill="none"],
+        #${collarId} path[fill="none"], #${layers.collar_id || 'jersey-collar'} path[fill="none"] {
+          fill: none !important;
+        }
+        #${sleevesId}, #${layers.sleeves_id || 'jersey-sleeves'},
+        #${sleevesId} path, #${layers.sleeves_id || 'jersey-sleeves'} path,
+        #${sleevesId} polygon, #${layers.sleeves_id || 'jersey-sleeves'} polygon,
+        #${sleevesId} rect, #${layers.sleeves_id || 'jersey-sleeves'} rect,
+        #${sleevesId} line, #${layers.sleeves_id || 'jersey-sleeves'} line {
+          fill: ${sleevesColor} !important;
+          stroke: ${sleevesColor} !important;
+        }
+        #${sleevesId}[fill="none"], #${layers.sleeves_id || 'jersey-sleeves'}[fill="none"],
+        #${sleevesId} path[fill="none"], #${layers.sleeves_id || 'jersey-sleeves'} path[fill="none"],
+        #${sleevesId} line, #${layers.sleeves_id || 'jersey-sleeves'} line {
+          fill: none !important;
+        }
+        #${stripesId}, #${layers.stripes_id || 'jersey-stripes'},
+        #${stripesId} path, #${layers.stripes_id || 'jersey-stripes'} path,
+        #${stripesId} rect, #${layers.stripes_id || 'jersey-stripes'} rect,
+        #${stripesId} polygon, #${layers.stripes_id || 'jersey-stripes'} polygon {
+          ${pattern === 'solid' ? 'display: none !important;' : `fill: ${stripesColor} !important; stroke: ${stripesColor} !important; display: block;`}
+        }
+        ${badgeDisplayRule}
+        ${!isFront ? `
+        [id^="jersey-existing-text"], .jersey-existing-text {
+          display: none !important;
+        }` : ''}
+      </style>
     `;
 
-    // 5. Blason / Logo (Face avant)
-    let badgeMarkup = '';
+    // Si le template n'a pas déjà un dégradé natif (comme grad-tpl-2), on applique le style
+    if (!processed.includes('url(#grad-tpl-') || pattern !== 'gradient') {
+      processed = processed.replace(/<svg[^>]*>/i, `$&\n${dynamicStyle}`);
+    }
+
+    // 5. Blason (Face avant) - GESTION PRÉSENCE / ABSENCE DU LOGO
     if (isFront) {
+      const badgeRegex = new RegExp(`(<g[^>]*id=["']${badgeZoneId}["'][^>]*>)([\\s\\S]*?)(<\\/g>)`, 'i');
+
       if (clubBadgeUrl) {
-        badgeMarkup = `
-          <g id="badge-zone">
-            <image href="${clubBadgeUrl}" x="${badgeCoords.x}" y="${badgeCoords.y}" width="${badgeCoords.width}" height="${badgeCoords.height}" preserveAspectRatio="xMidYMid meet"/>
-          </g>
-        `;
+        // Logo présent : injecter le blason dimensionné et positionné
+        const badgeElem = `<image href="${clubBadgeUrl}" x="${dynBadge.x}" y="${dynBadge.y}" width="${dynBadge.width}" height="${dynBadge.height}" preserveAspectRatio="xMidYMid meet" />`;
+        if (badgeRegex.test(processed)) {
+          processed = processed.replace(badgeRegex, `$1${badgeElem}$3`);
+        } else {
+          processed = processed.replace(/<\/svg>/i, `<g id="${badgeZoneId}">${badgeElem}</g>\n</svg>`);
+        }
       } else {
-        badgeMarkup = `
-          <g id="badge-zone">
-            <circle cx="108" cy="94" r="14" fill="${stripesColor || '#ffd700'}"/>
-          </g>
-        `;
+        // Logo absent : vider le contenu du badge pour qu'aucun logo résiduel ne soit visible
+        if (badgeRegex.test(processed)) {
+          processed = processed.replace(badgeRegex, `$1$3`);
+        }
       }
     }
 
-    // 6. Sponsor Central (Face avant)
-    const sponsorMarkup = isFront
-      ? `<text x="150" y="190" text-anchor="middle" fill="${textColor}" font-family="Impact, Arial Black, sans-serif" font-size="22" font-weight="bold" letter-spacing="3">JOGALOOK</text>`
-      : '';
-
-    // 7. Flockage Nom & Numéro (Dos)
-    let flockageMarkup = '';
+    // 6. Flockage Nom & Numéro (Dos) - POSITIONNEMENT PROPORTIONNEL AU VIEWBOX
     if (!isFront) {
       const nameText = playerName || 'JOUEUR';
       const numberText = playerNumber || '10';
       const nameOpacity = playerName ? '1' : '0.4';
       const numberOpacity = playerNumber ? '1' : '0.4';
 
-      flockageMarkup = `
-        <g id="name-zone">
-          <text x="150" y="110" text-anchor="middle" fill="${textColor}" opacity="${nameOpacity}" font-family="${fontFamily}" font-size="22" font-weight="bold" letter-spacing="4">${nameText}</text>
-        </g>
-        <g id="number-zone">
-          <text x="150" y="230" text-anchor="middle" fill="${textColor}" opacity="${numberOpacity}" font-family="${fontFamily}" font-size="90" font-weight="900">${numberText}</text>
-        </g>
-      `;
+      const flockXName = (vb.width * nameXPercent) / 100;
+      const flockYName = (vb.height * nameYPercent) / 100;
+      const flockXNumber = (vb.width * numberXPercent) / 100;
+      const flockYNumber = (vb.height * numberYPercent) / 100;
+      const flockNameSize = Math.round(dynFlock.nameFontSize * (nameFontSize / 28));
+      const flockNumSize = Math.round(dynFlock.numberFontSize * (numberFontSize / 110));
+
+      const nameElem = `<text x="${flockXName}" y="${flockYName}" text-anchor="middle" fill="${textColor}" stroke="none" opacity="${nameOpacity}" font-family="${fontFamily}" font-size="${flockNameSize}" font-weight="bold" letter-spacing="${letterSpacing}">${nameText}</text>`;
+      const numberElem = `<text x="${flockXNumber}" y="${flockYNumber}" text-anchor="middle" fill="${textColor}" stroke="none" opacity="${numberOpacity}" font-family="${fontFamily}" font-size="${flockNumSize}" font-weight="900">${numberText}</text>`;
+
+      const nameRegex = new RegExp(`(<g[^>]*id=["']${layers.name_zone_id || 'name-zone'}["'][^>]*>)([\\s\\S]*?)(<\\/g>)`, 'i');
+      const numberRegex = new RegExp(`(<g[^>]*id=["']${layers.number_zone_id || 'number-zone'}["'][^>]*>)([\\s\\S]*?)(<\\/g>)`, 'i');
+
+      if (nameRegex.test(processed)) {
+        processed = processed.replace(nameRegex, `$1${nameElem}$3`);
+      } else {
+        processed = processed.replace(/<\/svg>/i, `<g id="${layers.name_zone_id || 'name-zone'}">${nameElem}</g>\n</svg>`);
+      }
+
+      if (numberRegex.test(processed)) {
+        processed = processed.replace(numberRegex, `$1${numberElem}$3`);
+      } else {
+        processed = processed.replace(/<\/svg>/i, `<g id="${layers.number_zone_id || 'number-zone'}">${numberElem}</g>\n</svg>`);
+      }
     }
 
-    return `
-      <svg viewBox="0 0 300 360" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        ${defs}
-        ${bodyMarkup}
-        ${stripesMarkup}
-        ${sleevesMarkup}
-        ${collarMarkup}
-        ${badgeMarkup}
-        ${sponsorMarkup}
-        ${flockageMarkup}
-      </svg>
-    `;
+    return processed;
   };
 
   const renderedSvgString = useMemo(() => buildSvgString(view), [
+    template,
     view,
     bodyColor,
     bodyColor2,
@@ -464,15 +615,37 @@ export default function CustomEditorPage() {
     fontFamily,
     playerName,
     playerNumber,
+    nameXPercent,
+    nameYPercent,
+    numberXPercent,
+    numberYPercent,
+    nameFontSize,
+    numberFontSize,
+    letterSpacing,
     clubBadgeUrl,
-    badgeCoords
+    badgePosition,
+    badgeSize,
+    layers
   ]);
 
   // ── AJOUT AU PANIER AVEC SAUVEGARDE DE LA PERSONNALISATION ──
   const handleAddToCart = async () => {
     const frontSvg = buildSvgString('front');
     const backSvg = buildSvgString('back');
-    const previewDataUri = `data:image/svg+xml;utf8,${encodeURIComponent(frontSvg)}`;
+
+    // Pour les mockups :
+    // - Face : URL directe de l'image (rapide, sans wrapper SVG)
+    // - Dos : SVG complet intégrant l'image d'arrière-plan ET le flocage dynamique
+    const frontPreview = isMockup
+      ? (template?.image_front || template?.thumbnail_url || frontSvg)
+      : frontSvg;
+
+    const backPreview = backSvg;
+
+    // preview_image_url en base : on n'envoie que l'URL externe du template (pas de data-URL géante)
+    const dbPreviewUrl = isMockup
+      ? (template?.image_front || template?.thumbnail_url || null)
+      : null; // Pour SVG vectoriel, pas d'URL externe disponible
 
     const extraConfig = {
       bodyColor,
@@ -484,6 +657,13 @@ export default function CustomEditorPage() {
       collar,
       playerName,
       playerNumber,
+      nameXPercent,
+      nameYPercent,
+      numberXPercent,
+      numberYPercent,
+      nameFontSize,
+      numberFontSize,
+      letterSpacing,
       textColor,
       fontFamily,
       badgeAttached: !!clubBadgeUrl,
@@ -504,16 +684,21 @@ export default function CustomEditorPage() {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      // On n'envoie pas svg_front/svg_back s'ils sont trop volumineux (>500KB)
+      const svgFrontSafe = frontSvg && frontSvg.length < 500_000 ? frontSvg : null;
+      const svgBackSafe = backSvg && backSvg.length < 500_000 ? backSvg : null;
+
       const res = await fetch('/api/customizations', {
         method: 'POST',
         headers,
         body: JSON.stringify({
+          user_id: user?.id || null,
           template_id: template?.id || id,
           title: `${template?.name || 'Maillot Custom'} - ${playerName || 'Personnalisé'} ${playerNumber ? '#' + playerNumber : ''}`.trim(),
-          svg_content: frontSvg,
-          svg_front: frontSvg,
-          svg_back: backSvg,
-          preview_image_url: previewDataUri,
+          svg_content: svgFrontSafe,
+          svg_front: svgFrontSafe,
+          svg_back: svgBackSafe,
+          preview_image_url: dbPreviewUrl,
           custom_name: playerName || null,
           custom_number: playerNumber || null,
           font_family: fontFamily,
@@ -526,27 +711,62 @@ export default function CustomEditorPage() {
         })
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data?.id) {
-          customizationId = json.data.id;
-        }
+      const json = await res.json();
+      if (res.ok && json.success && json.data?.id) {
+        customizationId = json.data.id;
+      } else {
+        console.warn('Sauvegarde distante échouée :', json.message || res.status);
       }
     } catch (err) {
       console.warn('Sauvegarde distante de la personnalisation (fallback local) :', err);
     }
 
-    // 2. Ajout au panier avec image vectorielle et tous les détails
+    // 2. Sauvegarde en cache local (localStorage 'jogalook-customizations')
+    try {
+      const localCustoms = JSON.parse(localStorage.getItem('jogalook-customizations') || '[]');
+      const newCustomItem = {
+        id: customizationId || `local-custom-${Date.now()}`,
+        user_id: user?.id || null,
+        template_id: template?.id || id,
+        template_name: template?.name || 'Maillot personnalisé',
+        template_type: template?.template_type || (isMockup ? 'MOCKUP' : 'SVG'),
+        title: `${template?.name || 'Maillot Custom'} - ${playerName || 'Personnalisé'} ${playerNumber ? '#' + playerNumber : ''}`.trim(),
+        svg_front: frontSvg,
+        svg_back: backSvg,
+        preview_front: frontPreview,
+        preview_back: backPreview,
+        custom_name: playerName || '',
+        custom_number: playerNumber || '',
+        font_family: fontFamily,
+        primary_color: bodyColor,
+        secondary_color: bodyColor2 || stripesColor,
+        size,
+        quantity,
+        price: unitPrice,
+        extra_config: extraConfig,
+        created_at: new Date().toISOString()
+      };
+      const updatedCustoms = [newCustomItem, ...localCustoms.filter(c => c.id !== newCustomItem.id)].slice(0, 50);
+      localStorage.setItem('jogalook-customizations', JSON.stringify(updatedCustoms));
+    } catch (e) {
+      console.warn('Erreur sauvegarde locale jogalook-customizations :', e);
+    }
+
+    // 3. Ajout au panier avec images Face & Dos et toutes les options
     addToCart({
       id: customizationId ? `custom-${customizationId}` : `custom-${template?.id || id}-${Date.now()}`,
       customization_id: customizationId,
+      template_id: template?.id || id,
+      template_type: template?.template_type || (isMockup ? 'MOCKUP' : 'SVG'),
       name: `${template?.name || 'Maillot Custom'} - ${playerName || 'Personnalisé'}`,
       price: unitPrice,
       quantity,
       selectedSize: size,
       selectedColor: bodyColor,
       category: 'Maillot Personnalisé',
-      image: previewDataUri,
+      image: frontPreview,
+      preview_front: frontPreview,
+      preview_back: backPreview,
       svg_front: frontSvg,
       svg_back: backSvg,
       extra_details: extraConfig
@@ -1020,29 +1240,209 @@ export default function CustomEditorPage() {
                   </div>
 
                   <div className="tool-group">
-                    <label className="tool-label">Police de caractère</label>
+                    <label className="tool-label">Police de caractère ({fontFamilies.length} styles disponibles)</label>
                     <select
                       className="tool-select"
                       value={fontFamily}
                       onChange={(e) => setFontFamily(e.target.value)}
+                      style={{ fontSize: '0.92rem', fontWeight: 'bold' }}
                     >
                       {fontFamilies.map((f) => (
-                        <option key={f.value} value={f.value}>{f.name}</option>
+                        <option key={f.value} value={f.value} style={{ fontFamily: f.value, fontSize: '1rem' }}>
+                          {f.name}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   <div className="tool-group">
-                    <label className="tool-label">Couleur du flockage</label>
-                    <div className="color-swatch-row">
-                      {['#ffffff', '#111111', '#ffd700', '#e63946', '#1d3557', '#2a9d8f'].map((hex) => (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <label className="tool-label" style={{ margin: 0 }}>Couleur du flockage (Personnalisable à 100%)</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Sélecteur de couleur infini (Pipette libre) */}
+                        <div
+                          style={{
+                            position: 'relative',
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            border: '2px solid #cbd5e1',
+                            backgroundColor: textColor,
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                          }}
+                          title="Choisir n'importe quelle couleur (Pipette libre)"
+                        >
+                          <input
+                            type="color"
+                            value={textColor.startsWith('#') && textColor.length === 7 ? textColor : '#ffffff'}
+                            onChange={(e) => setTextColor(e.target.value)}
+                            style={{
+                              position: 'absolute',
+                              top: '-10px',
+                              left: '-10px',
+                              width: '50px',
+                              height: '50px',
+                              opacity: 0,
+                              cursor: 'pointer'
+                            }}
+                          />
+                        </div>
+                        {/* Code HEX modifiable à la main */}
+                        <input
+                          type="text"
+                          value={textColor}
+                          onChange={(e) => setTextColor(e.target.value)}
+                          placeholder="#ffffff"
+                          style={{
+                            width: '84px',
+                            padding: '4px 8px',
+                            fontSize: '0.8rem',
+                            fontFamily: 'monospace',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            background: '#fff',
+                            textTransform: 'uppercase',
+                            fontWeight: 'bold',
+                            textAlign: 'center'
+                          }}
+                          maxLength={7}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Nuancier sport étendu avec 16 teintes officielles */}
+                    <div className="color-swatch-row" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                      {flockingPalette.map((item) => (
                         <button
-                          key={hex}
-                          className={`swatch-btn ${textColor === hex ? 'selected' : ''}`}
-                          style={{ backgroundColor: hex }}
-                          onClick={() => setTextColor(hex)}
+                          key={item.hex}
+                          className={`swatch-btn ${textColor.toLowerCase() === item.hex.toLowerCase() ? 'selected' : ''}`}
+                          style={{ backgroundColor: item.hex }}
+                          onClick={() => setTextColor(item.hex)}
+                          title={item.name}
                         />
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Positionnement & Tailles Personnalisables (Préférences par défaut issues de la BD) */}
+                  <div style={{ marginTop: '14px', background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>📐 Position & Taille du Flockage</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const flockConf = template?.flocking_config || {};
+                          setNameXPercent(flockConf.name?.x_percent ?? 50);
+                          setNameYPercent(flockConf.name?.y_percent ?? 26);
+                          setNumberXPercent(flockConf.number?.x_percent ?? 50);
+                          setNumberYPercent(flockConf.number?.y_percent ?? 52);
+                          setNameFontSize(flockConf.name?.font_size || 28);
+                          setNumberFontSize(flockConf.number?.font_size || 110);
+                          setLetterSpacing(flockConf.name?.letter_spacing || 4);
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.74rem', cursor: 'pointer', textDecoration: 'underline' }}
+                        title="Rétablir les positions configurées par défaut pour ce modèle"
+                      >
+                        ↺ Réinitialiser
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      {/* Position X Nom */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Position X Nom</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{nameXPercent}% {nameXPercent === 50 ? '(Centré)' : ''}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="80"
+                          value={nameXPercent}
+                          onChange={(e) => setNameXPercent(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      {/* Hauteur Y Nom */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Hauteur Y Nom</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{nameYPercent}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="15"
+                          max="45"
+                          value={nameYPercent}
+                          onChange={(e) => setNameYPercent(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      {/* Position X Numéro */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Position X Numéro</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{numberXPercent}% {numberXPercent === 50 ? '(Centré)' : ''}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="80"
+                          value={numberXPercent}
+                          onChange={(e) => setNumberXPercent(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      {/* Hauteur Y Numéro */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Hauteur Y Numéro</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{numberYPercent}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="35"
+                          max="75"
+                          value={numberYPercent}
+                          onChange={(e) => setNumberYPercent(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Taille Nom</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{nameFontSize}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="16"
+                          max="48"
+                          value={nameFontSize}
+                          onChange={(e) => setNameFontSize(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '3px' }}>
+                          <span style={{ color: '#475569', fontWeight: 600 }}>Taille Numéro</span>
+                          <span style={{ color: '#f15a24', fontWeight: 700 }}>{numberFontSize}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="60"
+                          max="160"
+                          value={numberFontSize}
+                          onChange={(e) => setNumberFontSize(parseInt(e.target.value, 10))}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1060,81 +1460,144 @@ export default function CustomEditorPage() {
                     )}
                   </div>
 
+                  {/* Contrôle de Présence / Absence du Logo */}
                   <div className="tool-group">
-                    <label className="tool-label">Charger une image (PNG, SVG, JPG)</label>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      style={{ display: 'none' }}
-                      accept="image/*"
-                      onChange={handleBadgeUpload}
-                    />
-
-                    <div className="upload-badge-dropzone" onClick={() => fileInputRef.current?.click()}>
-                      {clubBadgeUrl ? (
-                        <div className="uploaded-badge-preview">
-                          <img src={clubBadgeUrl} alt="Blason club" />
-                          <span>Changer l'image</span>
-                        </div>
-                      ) : (
-                        <div className="upload-empty-prompt">
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                          </svg>
-                          <span>Cliquez pour importer votre blason</span>
-                        </div>
-                      )}
+                    <label className="tool-label">Option Blason & Logo</label>
+                    <div className="badge-presence-toggle">
+                      <button
+                        type="button"
+                        className={`toggle-option-btn ${!clubBadgeUrl ? 'active' : ''}`}
+                        onClick={() => setClubBadgeUrl(null)}
+                      >
+                        <span>🚫 Sans blason</span>
+                        <small>Épuré (Inclus 0 €)</small>
+                      </button>
+                      <button
+                        type="button"
+                        className={`toggle-option-btn ${clubBadgeUrl ? 'active' : ''}`}
+                        onClick={() => {
+                          if (!clubBadgeUrl) {
+                            setClubBadgeUrl(template?.badge_url || BADGE_PRESETS[0].url);
+                            setView('front');
+                          }
+                        }}
+                      >
+                        <span>🛡️ Avec blason</span>
+                        <small>Personnalisé (+4.99 €)</small>
+                      </button>
                     </div>
                   </div>
 
-                  {clubBadgeUrl && (
+                  {clubBadgeUrl ? (
                     <>
+                      {/* Upload personnalisé */}
                       <div className="tool-group">
-                        <label className="tool-label">Position du blason</label>
+                        <label className="tool-label">Importer votre image (PNG, SVG, JPG)</label>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          style={{ display: 'none' }}
+                          accept="image/*"
+                          onChange={handleBadgeUpload}
+                        />
+
+                        <div className="upload-badge-dropzone" onClick={() => fileInputRef.current?.click()}>
+                          <div className="uploaded-badge-preview">
+                            <img src={clubBadgeUrl} alt="Blason club" />
+                            <span>Remplacer l'image</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Blasons et Écussons Prédéfinis */}
+                      <div className="tool-group">
+                        <label className="tool-label">Ou sélectionner un blason officiel</label>
+                        <div className="badge-presets-row">
+                          {BADGE_PRESETS.map((bp) => (
+                            <button
+                              key={bp.id}
+                              type="button"
+                              className={`badge-preset-item ${clubBadgeUrl === bp.url ? 'active' : ''}`}
+                              title={bp.name}
+                              onClick={() => {
+                                setClubBadgeUrl(bp.url);
+                                setView('front');
+                              }}
+                            >
+                              <img src={bp.url} alt={bp.name} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Position du blason */}
+                      <div className="tool-group">
+                        <label className="tool-label">Position sur la poitrine</label>
                         <div className="chip-row">
                           <button
                             className={`chip-btn ${badgePosition === 'left' ? 'active' : ''}`}
-                            onClick={() => setBadgePosition('left')}
+                            onClick={() => { setBadgePosition('left'); setView('front'); }}
                           >
-                            Poitrine Gauche
+                            Poitrine Gauche (Cœur)
                           </button>
                           <button
                             className={`chip-btn ${badgePosition === 'center' ? 'active' : ''}`}
-                            onClick={() => setBadgePosition('center')}
+                            onClick={() => { setBadgePosition('center'); setView('front'); }}
                           >
                             Centre
                           </button>
                           <button
                             className={`chip-btn ${badgePosition === 'right' ? 'active' : ''}`}
-                            onClick={() => setBadgePosition('right')}
+                            onClick={() => { setBadgePosition('right'); setView('front'); }}
                           >
                             Poitrine Droite
                           </button>
                         </div>
                       </div>
 
+                      {/* Taille du blason */}
                       <div className="tool-group">
                         <label className="tool-label">Taille du blason</label>
                         <div className="chip-row">
-                          {['small', 'medium', 'large'].map((s) => (
+                          {[
+                            { key: 'small', label: 'Discret (Petit)' },
+                            { key: 'medium', label: 'Standard (Moyen)' },
+                            { key: 'large', label: 'Imposant (Grand)' }
+                          ].map((s) => (
                             <button
-                              key={s}
-                              className={`chip-btn ${badgeSize === s ? 'active' : ''}`}
-                              onClick={() => setBadgeSize(s)}
+                              key={s.key}
+                              className={`chip-btn ${badgeSize === s.key ? 'active' : ''}`}
+                              onClick={() => { setBadgeSize(s.key); setView('front'); }}
                             >
-                              {s === 'small' ? 'Petit' : s === 'medium' ? 'Moyen' : 'Grand'}
+                              {s.label}
                             </button>
                           ))}
                         </div>
                       </div>
 
                       <button
+                        type="button"
                         className="btn-remove-badge"
                         onClick={() => setClubBadgeUrl(null)}
                       >
-                        Supprimer le blason
+                        🗑️ Retirer le blason du maillot
                       </button>
                     </>
+                  ) : (
+                    <div className="badge-absent-notice">
+                      <p>Ce maillot est actuellement configuré <strong>sans blason</strong> sur la poitrine.</p>
+                      <button
+                        type="button"
+                        className="chip-btn active"
+                        style={{ padding: '8px 16px', borderRadius: '50px' }}
+                        onClick={() => {
+                          setClubBadgeUrl(template?.badge_url || BADGE_PRESETS[0].url);
+                          setView('front');
+                        }}
+                      >
+                        + Ajouter un blason (+4.99 €)
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

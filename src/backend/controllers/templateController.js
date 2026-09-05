@@ -56,6 +56,10 @@ exports.createTemplate = async (req, res) => {
     const {
       name,
       description,
+      template_type,
+      image_front,
+      image_back,
+      flocking_config,
       svg_content,
       svg_front,
       svg_back,
@@ -78,16 +82,24 @@ exports.createTemplate = async (req, res) => {
         owner_id: owner_id || null, // NULL = Appartient au site
         name,
         description,
+        template_type: template_type || (image_front ? 'MOCKUP' : 'SVG'),
+        image_front: image_front || null,
+        image_back: image_back || null,
+        flocking_config: flocking_config || (template_type === 'MOCKUP' ? {
+          name: { x_percent: 50, y_percent: 28, font_family: 'Impact', font_size: 28, default_color: '#ffffff', letter_spacing: 4 },
+          number: { x_percent: 50, y_percent: 55, font_family: 'Impact', font_size: 110, default_color: '#ffffff' },
+          allowed_colors: ['#ffffff', '#111111', '#ffd700', '#e63946', '#1d3557']
+        } : null),
         svg_content: frontContent,
         svg_front: frontContent,
         svg_back: svg_back || null,
         badge_url: badge_url || null,
         badge_svg: badge_svg || null,
         editable_elements: editable_elements || {
-          body: true,
-          collar: true,
-          sleeves: true,
-          stripes: true,
+          body: template_type !== 'MOCKUP',
+          collar: template_type !== 'MOCKUP',
+          sleeves: template_type !== 'MOCKUP',
+          stripes: template_type !== 'MOCKUP',
           badge: true,
           name_zone: true,
           number_zone: true
@@ -101,7 +113,7 @@ exports.createTemplate = async (req, res) => {
           name_zone_id: 'name-zone',
           number_zone_id: 'number-zone'
         },
-        thumbnail_url,
+        thumbnail_url: thumbnail_url || image_front || null,
         visibility: visibility || 'PUBLIC',
         is_free: is_free !== undefined ? is_free : true,
         price: price || 0.00

@@ -228,9 +228,23 @@
 .canvas-jersey-svg {
   width: 100%;
   height: 100%;
+  max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.12));
+}
+
+.canvas-jersey-svg svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+  margin: auto !important;
 }
 
 /* ── 3. FLOATING POPOVER / SIDE PANEL / BOTTOM SHEET ─────────────────────── */
@@ -1185,4 +1199,100 @@
   flex: 1;
   text-align: center;
 }
+
+/* ── PRÉSENCE / ABSENCE DU BLASON & PRESETS ── */
+.badge-presence-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.toggle-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-option-btn span {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.toggle-option-btn small {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.toggle-option-btn.active {
+  border-color: var(--primary, #f15a24);
+  background: rgba(241, 90, 36, 0.08);
+}
+
+.toggle-option-btn.active span {
+  color: var(--primary, #f15a24);
+}
+
+.badge-presets-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+  scrollbar-width: thin;
+}
+
+.badge-preset-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.badge-preset-item:hover,
+.badge-preset-item.active {
+  border-color: var(--primary, #f15a24);
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.badge-preset-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.badge-absent-notice {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-absent-notice p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
 

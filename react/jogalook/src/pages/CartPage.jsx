@@ -19,13 +19,14 @@ import {
   StoreIcon,
 } from '../components/icons/AppIcons';
 import './CartPage.css';
+import JerseyPreview from '../components/JerseyPreview';
 
 /* ─── Villes disponibles ─── */
 const CITIES = [
-  { id: 'Dakar',       label: 'Dakar (Capitale)' },
-  { id: 'Saint-Louis', label: 'Saint-Louis' },
-  { id: 'Kaolack',     label: 'Kaolack' },
-  { id: 'Thies',       label: 'Thiès' },
+  { id: 'Dakar',       label: 'Dakar',       fee: 1000 },
+  { id: 'Saint-Louis', label: 'Saint-Louis', fee: 5000 },
+  { id: 'Kaolack',     label: 'Kaolack',     fee: 5000 },
+  { id: 'Thies',       label: 'Thiès',       fee: 5000 },
 ];
 
 /* ─── Modes de localisation / réception ─── */
@@ -33,43 +34,90 @@ const DELIVERY_MODES = [
   {
     id: 'gps',
     label: 'Position GPS actuelle',
-    icon: '📍',
-    badge: '1 Clic',
     description: 'Localisation automatique par satellite'
-  },
-  {
-    id: 'manual',
-    label: 'Saisie manuelle',
-    icon: '✍️',
-    description: 'Quartier, rue, repère ou indication'
   },
   {
     id: 'phone_call',
     label: 'Préciser par appel',
-    icon: '📞',
     description: 'Le livreur vous contacte avant la livraison'
   },
   {
     id: 'pickup',
     label: 'Retrait en boutique',
-    icon: '🏪',
     description: 'Click & Collect gratuit (Dakar uniquement)',
     dakarOnly: true
   },
 ];
 
 const PAYMENT_METHODS = [
-  { id: 'wave',                   label: 'Wave (Sénégal 🇸🇳)',              country: 'sn' },
-  { id: 'orange_money',           label: 'Orange Money (Sénégal 🇸🇳)',       country: 'sn' },
-  { id: 'free_money',             label: 'Free Money (Sénégal 🇸🇳)',         country: 'sn' },
-  { id: 'wave_ci',                label: 'Wave (Côte d\'Ivoire 🇨🇮)',       country: 'ci' },
-  { id: 'orange_money_ci',        label: 'Orange Money (Côte d\'Ivoire 🇨🇮)',country: 'ci' },
-  { id: 'mtn_ci',                 label: 'MTN Mobile (Côte d\'Ivoire 🇨🇮)',  country: 'ci' },
-  { id: 'moov_ci',                label: 'Moov (Côte d\'Ivoire 🇨🇮)',        country: 'ci' },
-  { id: 'orange_money_burkina',   label: 'Orange Money (Burkina Faso 🇧🇫)', country: 'bf' },
-  { id: 'moov_burkina',           label: 'Moov Money (Burkina Faso 🇧🇫)',   country: 'bf' },
-  { id: 'card',                   label: 'Carte bancaire (Visa / MasterCard 💳)', country: 'sn' },
+  { id: 'wave',                   label: 'Wave (Sénégal)',              country: 'sn' },
+  { id: 'orange_money',           label: 'Orange Money (Sénégal)',       country: 'sn' },
+  { id: 'free_money',             label: 'Free Money (Sénégal)',         country: 'sn' },
+  { id: 'wave_ci',                label: 'Wave (Côte d\'Ivoire)',       country: 'ci' },
+  { id: 'orange_money_ci',        label: 'Orange Money (Côte d\'Ivoire)',country: 'ci' },
+  { id: 'mtn_ci',                 label: 'MTN Mobile (Côte d\'Ivoire)',  country: 'ci' },
+  { id: 'moov_ci',                label: 'Moov (Côte d\'Ivoire)',        country: 'ci' },
+  { id: 'orange_money_burkina',   label: 'Orange Money (Burkina Faso)', country: 'bf' },
+  { id: 'moov_burkina',           label: 'Moov Money (Burkina Faso)',   country: 'bf' },
+  { id: 'card',                   label: 'Carte bancaire (Visa / MasterCard)', country: 'sn' },
 ];
+
+// ─── Composant mini-aperçu Face/Dos pour les articles du panier ───────────
+function CartItemPreview({ item, onOpenModal }) {
+  const [side, setSide] = useState('front');
+  const hasBack = Boolean(item.preview_back || item.svg_back);
+
+  return (
+    <div
+      style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+      onClick={() => onOpenModal && onOpenModal(side)}
+      title="Cliquer pour voir en grand"
+    >
+      <JerseyPreview item={item} side={side} alt={item.name} />
+      <span
+        style={{
+          position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,0.55)', color: '#fff',
+          borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '0.6rem', pointerEvents: 'none', zIndex: 2
+        }}
+      >
+        🔍
+      </span>
+      {hasBack && (
+        <div
+          style={{
+            position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 2, background: 'rgba(0,0,0,0.65)', borderRadius: 20, padding: '2px 4px', zIndex: 3
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSide('front');
+            }}
+            style={{
+              border: 'none', cursor: 'pointer', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem',
+              fontWeight: 700, background: side === 'front' ? '#f15a24' : 'transparent', color: '#fff'
+            }}
+          >Face</button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSide('back');
+            }}
+            style={{
+              border: 'none', cursor: 'pointer', padding: '2px 8px', borderRadius: 12, fontSize: '0.65rem',
+              fontWeight: 700, background: side === 'back' ? '#f15a24' : 'transparent', color: '#fff'
+            }}
+          >Dos</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart } = useCart();
@@ -105,11 +153,10 @@ export default function CartPage() {
 
   // ── Localisation & Ville ──
   const [city, setCity]                       = useState('Dakar');
-  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'manual' | 'phone_call' | 'pickup'
+  const [deliveryMode, setDeliveryMode]       = useState('gps'); // 'gps' | 'phone_call' | 'pickup'
   const [gpsCoords, setGpsCoords]             = useState(null);
   const [isLocating, setIsLocating]           = useState(false);
   const [locationError, setLocationError]     = useState('');
-  const [manualAddress, setManualAddress]     = useState('');
 
   // ── Fiabilité & préférences ──
   const [codEligible, setCodEligible]         = useState(true);
@@ -154,9 +201,9 @@ export default function CartPage() {
         setIsLocating(false);
         let msg = 'Impossible d’obtenir votre position GPS.';
         if (error.code === error.PERMISSION_DENIED) {
-          msg = 'Autorisation GPS refusée. Vous pouvez saisir votre adresse manuellement.';
+          msg = 'Autorisation GPS refusée. Veuillez réessayer.';
         } else if (error.code === error.TIMEOUT) {
-          msg = 'Délai GPS dépassé. Veuillez réessayer ou choisir la saisie manuelle.';
+          msg = 'Délai GPS dépassé. Veuillez réessayer.';
         }
         setLocationError(msg);
       },
@@ -168,16 +215,9 @@ export default function CartPage() {
   const getFormattedAddress = () => {
     if (deliveryMode === 'gps') {
       if (gpsCoords) {
-        let text = `${city} | GPS: ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lng.toFixed(6)} (±${gpsCoords.accuracy}m) | https://maps.google.com/?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`;
-        if (manualAddress.trim()) {
-          text += ` - Repère: ${manualAddress.trim()}`;
-        }
-        return text;
+        return `${city} | GPS: ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lng.toFixed(6)} (±${gpsCoords.accuracy}m) | https://maps.google.com/?q=${gpsCoords.lat.toFixed(6)},${gpsCoords.lng.toFixed(6)}`;
       }
-      return `${city} | Position GPS demandée ${manualAddress.trim() ? `- ${manualAddress.trim()}` : ''}`;
-    }
-    if (deliveryMode === 'manual') {
-      return `${city} | ${manualAddress.trim() || 'Adresse à préciser'}`;
+      return `${city} | Position GPS demandée`;
     }
     if (deliveryMode === 'phone_call') {
       const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
@@ -186,7 +226,7 @@ export default function CartPage() {
     if (deliveryMode === 'pickup') {
       return `Dakar | Retrait en boutique (Boutique JogaLook - Point Relais Sacré-Cœur 3 / VDN Dakar)`;
     }
-    return `${city} | ${manualAddress.trim() || 'Adresse de livraison'}`;
+    return `${city} | Adresse de livraison`;
   };
 
   useEffect(() => {
@@ -286,8 +326,7 @@ export default function CartPage() {
               } else if (rawAddr.toLowerCase().includes('retrait') || rawAddr.toLowerCase().includes('boutique') || rawAddr.toLowerCase().includes('collect')) {
                 setDeliveryMode('pickup');
               } else {
-                setDeliveryMode('manual');
-                setManualAddress(rawAddr.replace(/^(Dakar|Saint-Louis|Kaolack|Thiès|Thies)\s*\|\s*/i, ''));
+                setDeliveryMode('gps');
               }
             }
             if (info.payment_method) {
@@ -334,7 +373,13 @@ export default function CartPage() {
     return selectedItems.reduce((sum, it) => sum + (Number(it.price || 0) * (it.quantity || 1)), 0);
   }, [selectedItems]);
 
-  const totalFcfa = Math.round(selectedTotal);
+  const getDeliveryFee = (cityName = city, mode = deliveryMode) => {
+    if (mode === 'pickup') return 0;
+    return cityName === 'Dakar' ? 1000 : 5000;
+  };
+
+  const deliveryFee = useMemo(() => getDeliveryFee(city, deliveryMode), [city, deliveryMode]);
+  const totalFcfa = Math.round(selectedTotal + deliveryFee);
 
   // ── Validation de l'éligibilité COD (Paiement à la livraison) ──
   const isCodAmountValid = totalFcfa >= 5000 && totalFcfa <= 100000;
@@ -407,6 +452,7 @@ export default function CartPage() {
 
       const payload = {
         amount: Math.round(totalFcfa),
+        shipping_fee: deliveryFee,
         customer_name: customerName.trim(),
         phone_number: cleanPhone,
         customer_phone: cleanPhone,
@@ -431,6 +477,13 @@ export default function CartPage() {
           size: item.selectedSize || undefined,
           variant_id: item.variantId || undefined,
           customization_id: item.customization_id || undefined,
+          image: item.image || item.image_url || undefined,
+          image_url: item.image_url || item.image || undefined,
+          preview_front: (item.customization_id || item.extra_details || item.svg_front) ? item.preview_front : undefined,
+          preview_back: (item.customization_id || item.extra_details || item.svg_back) ? item.preview_back : undefined,
+          svg_front: item.svg_front || undefined,
+          svg_back: item.svg_back || undefined,
+          extra_details: item.extra_details || undefined,
           customization: item.extra_details || item.customization || undefined,
         })),
         return_url: `${window.location.origin}/panier?payment_status=success`,
@@ -530,53 +583,35 @@ export default function CartPage() {
             value={city}
             onChange={e => setCity(e.target.value)}
             className="cart-select"
+            disabled={deliveryMode === 'pickup'}
           >
             {CITIES.map(c => (
-              <option key={c.id} value={c.id}>{c.label}</option>
+              <option key={c.id} value={c.id}>{c.label} ({c.fee.toLocaleString('fr-FR')} FCFA)</option>
             ))}
           </select>
         </div>
 
         {/* Mode de localisation / Réception */}
         <div className="cart-form-group">
-          <label>
+          <label htmlFor={`deliveryMode-${isModal ? 'm' : 'd'}`}>
             <NavigationIcon size={14} /> Mode de localisation / Réception
           </label>
-          
-          <div className="cart-delivery-options">
-            {DELIVERY_MODES.map((mode) => {
-              const isUnavailable = mode.dakarOnly && city !== 'Dakar';
-              const isSelected = deliveryMode === mode.id;
-              return (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={`cart-delivery-opt ${isSelected ? 'cart-delivery-opt--active' : ''} ${isUnavailable ? 'cart-delivery-opt--disabled' : ''}`}
-                  onClick={() => {
-                    if (isUnavailable) return;
-                    setDeliveryMode(mode.id);
-                    if (mode.id === 'gps' && !gpsCoords && !isLocating) {
-                      handleGetLocation();
-                    }
-                  }}
-                  disabled={isUnavailable}
-                >
-                  <span className="cart-delivery-opt__icon">{mode.icon}</span>
-                  <div className="cart-delivery-opt__content">
-                    <div className="cart-delivery-opt__header">
-                      <strong>{mode.label}</strong>
-                      {mode.badge && <span className="cart-delivery-badge">{mode.badge}</span>}
-                      {isUnavailable && <span className="cart-delivery-badge cart-delivery-badge--warn">Dakar uniquement</span>}
-                    </div>
-                    <span className="cart-delivery-opt__desc">{mode.description}</span>
-                  </div>
-                  <div className="cart-delivery-radio">
-                    {isSelected && <div className="cart-delivery-radio__dot" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <select
+            id={`deliveryMode-${isModal ? 'm' : 'd'}`}
+            className="cart-select"
+            value={deliveryMode}
+            onChange={(e) => {
+              const nextMode = e.target.value;
+              setDeliveryMode(nextMode);
+              if (nextMode === 'gps' && !gpsCoords && !isLocating) {
+                handleGetLocation();
+              }
+            }}
+          >
+            {DELIVERY_MODES.filter(mode => !mode.dakarOnly || city === 'Dakar').map(mode => (
+              <option key={mode.id} value={mode.id}>{mode.label}</option>
+            ))}
+          </select>
 
           {/* Vues détaillées du mode de livraison */}
           {deliveryMode === 'gps' && (
@@ -634,26 +669,6 @@ export default function CartPage() {
               {locationError && (
                 <p className="cart-error-hint" style={{ marginTop: '6px' }}>{locationError}</p>
               )}
-
-              <input
-                type="text"
-                placeholder="Repère facultatif (ex: Villa 12, près de la boulangerie)"
-                value={manualAddress}
-                onChange={e => setManualAddress(e.target.value)}
-                style={{ marginTop: '8px' }}
-              />
-            </div>
-          )}
-
-          {deliveryMode === 'manual' && (
-            <div className="cart-loc-card">
-              <input
-                type="text"
-                placeholder="Quartier, Rue, N° de villa, repère..."
-                value={manualAddress}
-                onChange={e => setManualAddress(e.target.value)}
-                required
-              />
             </div>
           )}
 
@@ -676,7 +691,7 @@ export default function CartPage() {
                 <div>
                   <strong>Boutique JogaLook - Point Relais Dakar</strong>
                   <p>Sacré-Cœur 3 / VDN, Dakar • Ouvert du Lundi au Samedi de 9h à 20h</p>
-                  <span className="cart-pickup-tag">✨ Retrait 100% Gratuit</span>
+                  <span className="cart-pickup-tag">Retrait 100% gratuit</span>
                 </div>
               </div>
             </div>
@@ -749,7 +764,7 @@ export default function CartPage() {
           </div>
           <div className="cart-total-row">
             <span>Frais de livraison</span>
-            <span className="cart-free-delivery">Gratuit</span>
+            <span className={deliveryFee === 0 ? 'cart-free-delivery' : ''}>{deliveryFee === 0 ? 'Gratuit' : `${deliveryFee.toLocaleString('fr-FR')} FCFA`}</span>
           </div>
           <div className="cart-total-row cart-total-row--final">
             <span>Total à payer</span>
@@ -784,6 +799,12 @@ export default function CartPage() {
           <div className="cart-page__header">
             <h1>Mon Panier</h1>
             <p>Gérez vos articles, choisissez ceux que vous souhaitez commander et validez en un clic.</p>
+          </div>
+
+          <div className="cart-page__actions">
+            <Link to="/mes-commandes" className="cart-btn cart-orders-link">
+              <span aria-hidden="true">→</span> Voir mes commandes
+            </Link>
           </div>
 
           {/* ── Retour depuis PayBammite ── */}
@@ -897,9 +918,10 @@ export default function CartPage() {
                   {items.map(item => {
                     const isSelected = selectedIds.includes(item.id);
                     const itemTotal = (Number(item.price || 0) * (item.quantity || 1));
+                    const isCustom = item.category === 'Maillot Personnalisé' || !!item.customization_id || !!item.extra_details?.playerName;
 
                     return (
-                      <div key={item.id} className={`cart-item-card ${isSelected ? 'cart-item-card--selected' : ''}`}>
+                      <div key={item.id} className={`cart-item-card ${isSelected ? 'cart-item-card--selected' : ''} ${isCustom ? 'cart-item-card--custom' : ''}`}>
                         {/* Checkbox de sélection individuelle */}
                         <div className="cart-item-check">
                           <input
@@ -910,14 +932,17 @@ export default function CartPage() {
                           />
                         </div>
 
-                        {/* Image */}
+                        {/* Image — avec toggle Face/Dos si maillot personnalisé */}
                         <div className="cart-item-img-wrap">
-                          <img src={item.image} alt={item.name} />
+                          <CartItemPreview item={item} />
                         </div>
 
                         {/* Détails produit */}
                         <div className="cart-item-details">
-                          <h3 className="cart-item-title">{item.name}</h3>
+                          <h3 className="cart-item-title">
+                            {isCustom && <span className="cart-custom-badge">🎨 Personnalisé</span>}
+                            {item.name}
+                          </h3>
                           <div className="cart-item-tags-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: '4px 0' }}>
                             {item.selectedSize && (
                               <span className="cart-item-tag">Taille : {item.selectedSize}</span>
@@ -927,20 +952,36 @@ export default function CartPage() {
                                 ✍️ {item.extra_details.playerName} {item.extra_details.playerNumber ? `#${item.extra_details.playerNumber}` : ''}
                               </span>
                             )}
-                            {item.extra_details?.pattern && item.extra_details.pattern !== 'solid' && (
-                              <span className="cart-item-tag">
-                                🎨 Motif : {item.extra_details.pattern}
+                            {item.extra_details?.textColor && item.extra_details?.playerName && (
+                              <span className="cart-item-tag" style={{ background: '#f0f9ff', color: '#0369a1', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: item.extra_details.textColor, border: '1px solid #ccc', display: 'inline-block' }} />
+                                Flocage
+                              </span>
+                            )}
+                            {item.extra_details?.selectedColor && (
+                              <span className="cart-item-tag" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: item.extra_details.bodyColor || item.extra_details.selectedColor, border: '1px solid #ccc', display: 'inline-block' }} />
+                                Corps
                               </span>
                             )}
                             {item.extra_details?.badgeAttached && (
                               <span className="cart-item-tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
-                                🛡️ Blason Club inclus
+                                🛡️ Blason Club
                               </span>
                             )}
                           </div>
                           <div className="cart-item-price-unit">
                             {Math.round(Number(item.price)).toLocaleString('fr-FR')} FCFA / unité
                           </div>
+                          {isCustom && item.template_id && (
+                            <Link
+                              to={`/custom/${item.template_id}`}
+                              className="cart-item-edit-link"
+                              style={{ fontSize: '0.76rem', color: '#f15a24', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}
+                            >
+                              ✏️ Modifier dans l'atelier
+                            </Link>
+                          )}
                         </div>
 
                         {/* Quantité & Sous-total */}

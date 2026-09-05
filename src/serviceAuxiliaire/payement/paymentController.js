@@ -176,7 +176,9 @@ exports.initiatePayment = async (req, res) => {
 
         // Insertion des articles commandés si présents
         if (items && Array.isArray(items) && items.length > 0) {
+          const isValidUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
           const orderItemsData = [];
+
           for (const it of items) {
             let variantId = it.variant_id || it.product_variant_id || null;
 
@@ -205,31 +207,64 @@ exports.initiatePayment = async (req, res) => {
               } catch (_) {}
             }
 
-            if (!variantId) {
-              const { data: anyVar } = await supabaseAdmin
-                .from('product_variants')
-                .select('id')
-                .limit(1)
-                .maybeSingle();
-              if (anyVar) variantId = anyVar.id;
-            }
-
             if (variantId) {
+              const sizeStr = it.size || it.selectedSize || 'M';
+              const customName = it.custom_name || it.extra_details?.playerName || null;
+              const customNumber = it.custom_number || it.extra_details?.playerNumber || null;
+              
+              let variantInfo = `Taille: ${sizeStr}`;
+              if (customName || customNumber) {
+                variantInfo += ` | Flocage: ${[customName, customNumber ? '#' + customNumber : ''].filter(Boolean).join(' ')}`;
+              } else if (it.category) {
+                variantInfo += ` | ${it.category}`;
+              }
+
+              const customDetailsObj = (it.preview_front || it.preview_back || it.svg_front || it.svg_back || it.extra_details || customName || customNumber) ? {
+                custom_name: customName,
+                custom_number: customNumber,
+                font_family: it.font_family || it.extra_details?.fontFamily || null,
+                primary_color: it.selectedColor || it.extra_details?.bodyColor || null,
+                secondary_color: it.extra_details?.stripesColor || it.extra_details?.bodyColor2 || null,
+                preview_front: it.preview_front || it.image || null,
+                preview_back: it.preview_back || null,
+                svg_front: it.svg_front || null,
+                svg_back: it.svg_back || null,
+                extra_details: it.extra_details || null,
+              } : null;
+
+              // Ne passer customization_id QUE si c'est un UUID v4 valide en base
+              const validCustomId = (it.customization_id && isValidUUID(it.customization_id)) ? it.customization_id : null;
+
               orderItemsData.push({
                 order_id: targetOrder.id,
                 product_variant_id: variantId,
+                customization_id: validCustomId,
                 product_name: it.product_name || it.name || 'Produit JogaLook',
-                variant_info: it.size || it.selectedSize ? `Taille: ${it.size || it.selectedSize}` : (it.category || null),
+                variant_info: variantInfo,
                 quantity: it.quantity || 1,
                 unit_price: Number(it.unit_price || it.price || 0),
                 total_price: (it.quantity || 1) * Number(it.unit_price || it.price || 0),
+                // Champs étendus pour atelier
+                custom_details: customDetailsObj,
+                preview_front: it.preview_front || it.image || null,
+                preview_back: it.preview_back || null,
+                custom_name: customName,
+                custom_number: customNumber,
               });
             }
           }
 
           if (orderItemsData.length > 0) {
-            const { error: itemsErr } = await supabaseAdmin.from('order_items').insert(orderItemsData);
-            if (itemsErr) console.warn('Item insert warning:', itemsErr.message);
+            // Tentative 1 : avec les colonnes étendues
+            let { error: itemsErr } = await supabaseAdmin.from('order_items').insert(orderItemsData);
+            
+            // Si la table n'a pas encore les colonnes de customisation, fallback sur le schéma standard
+            if (itemsErr) {
+              console.warn('Tentative insertion standard order_items (fallback) :', itemsErr.message);
+              const fallbackData = orderItemsData.map(({ custom_details, preview_front, preview_back, custom_name, custom_number, ...rest }) => rest);
+              const { error: fallbackErr } = await supabaseAdmin.from('order_items').insert(fallbackData);
+              if (fallbackErr) console.warn('Item fallback insert warning:', fallbackErr.message);
+            }
           }
         }
       }
@@ -323,7 +358,7 @@ exports.initiatePayment = async (req, res) => {
         }
       }
 
-      // 3. Enregistrement du paiement en mode PENDING / COD
+      // 3. Enregistrement du paiement en mode paiement à la livraison
       let paymentRecord = null;
       try {
         const { data: pData } = await supabaseAdmin
@@ -332,13 +367,14 @@ exports.initiatePayment = async (req, res) => {
             order_id: targetOrder.id,
             payment_method: 'cash_on_delivery',
             amount: totalAmount,
-            status: 'PENDING',
+            status: 'ON_DELIVERY',
             payload: {
               type: 'cash_on_delivery',
               customer_name: customer_name.trim(),
               phone_number: phone_number.replace(/\s/g, ''),
-              shipping_address: shipping_address || null,
+              shipping_address: shipping_address || delivery_address || null,
               created_at: new Date().toISOString(),
+              items: items || [],
             },
           }])
           .select()
@@ -359,7 +395,7 @@ exports.initiatePayment = async (req, res) => {
           order_id:     targetOrder.id,
           order_number: targetOrder.order_number,
           amount:       totalAmount,
-          status:       'PENDING',
+          status:       'ON_DELIVERY',
           payment_method: 'cash_on_delivery',
         },
       });
@@ -378,7 +414,13 @@ exports.initiatePayment = async (req, res) => {
           payment_method,
           amount: totalAmount,
           status: 'PENDING',
-          payload: { initiated_at: new Date().toISOString() },
+          payload: { 
+            initiated_at: new Date().toISOString(),
+            customer_name: customer_name ? customer_name.trim() : null,
+            phone_number: phone_number ? phone_number.replace(/\s/g, '') : null,
+            shipping_address: shipping_address || delivery_address || null,
+            items: items || [],
+          },
         }])
         .select()
         .single();

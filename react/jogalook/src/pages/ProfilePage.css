@@ -1,0 +1,527 @@
+/* ==========================================================================
+   ProfilePage.css — Page Profil & Créations JogaLook
+   ========================================================================== */
+
+.profile-page {
+  padding: 40px 0 80px;
+  background: var(--bg-alt, #f8f9fa);
+  min-height: calc(100vh - 200px);
+}
+
+/* ── Spinner de chargement global ── */
+.profile-page__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: var(--text-light, #6C757D);
+}
+
+.profile-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border, #e9ecef);
+  border-top-color: var(--primary, #F15A24);
+  border-radius: 50%;
+  animation: profile-spin 0.75s linear infinite;
+}
+
+@keyframes profile-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Hero ── */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #fff;
+  border-radius: var(--radius, 12px);
+  padding: 28px 32px;
+  box-shadow: var(--shadow, 0 4px 20px rgba(0,0,0,0.06));
+  margin-bottom: 28px;
+}
+
+.profile-hero__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f15a24, #ff8c42);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: -1px;
+}
+
+.profile-hero__name {
+  font-family: var(--heading, 'Montserrat', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--secondary, #1A1A2E);
+  margin: 0 0 4px;
+}
+
+.profile-hero__email {
+  color: var(--text-light, #6C757D);
+  font-size: 0.9rem;
+  margin: 0 0 2px;
+}
+
+.profile-hero__meta {
+  color: var(--text-light, #6C757D);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* ── Notification ── */
+.profile-notification {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px 18px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  animation: fadeInNotif 0.3s ease;
+}
+
+@keyframes fadeInNotif {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Onglets ── */
+.profile-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border, #e9ecef);
+  overflow-x: auto;
+}
+
+.profile-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-light, #6C757D);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.profile-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.profile-tab--active {
+  color: var(--primary, #F15A24);
+}
+
+.profile-tab--active::after {
+  background: var(--primary, #F15A24);
+}
+
+.profile-tab__badge {
+  background: var(--primary, #F15A24);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Panels ── */
+.profile-panel {
+  background: #fff;
+  border-radius: var(--radius, 12px);
+  padding: 28px 32px;
+  box-shadow: var(--shadow, 0 4px 20px rgba(0,0,0,0.06));
+}
+
+.profile-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile-panel__header h2 {
+  font-family: var(--heading, 'Montserrat', sans-serif);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--secondary, #1A1A2E);
+  margin: 0;
+}
+
+/* ── Grille créations ── */
+.profile-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ── Carte de customisation ── */
+.profile-custom-card {
+  background: var(--bg-alt, #f8f9fa);
+  border: 1.5px solid var(--border, #e9ecef);
+  border-radius: var(--radius, 12px);
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-custom-card:hover {
+  box-shadow: 0 8px 24px rgba(241, 90, 36, 0.12);
+  transform: translateY(-2px);
+}
+
+.profile-custom-card__img {
+  position: relative;
+  height: 180px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.profile-custom-card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.profile-custom-card__toggle {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 20px;
+  padding: 2px 4px;
+}
+
+.profile-custom-card__toggle button {
+  border: none;
+  cursor: pointer;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: transparent;
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.profile-custom-card__toggle button.active {
+  background: var(--primary, #F15A24);
+}
+
+.profile-custom-card__local-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #fbbf24;
+  color: #78350f;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.profile-custom-card__info {
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.profile-custom-card__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--secondary, #1A1A2E);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-custom-card__date {
+  font-size: 0.75rem;
+  color: var(--text-light, #6C757D);
+  margin: 0;
+}
+
+.profile-custom-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.profile-custom-card__tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #f3f4f6;
+  color: var(--secondary, #1A1A2E);
+}
+
+.profile-custom-card__tag--name {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.profile-custom-card__tag--number {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.profile-custom-card__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--border, #e9ecef);
+}
+
+/* ── Boutons profil ── */
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.18s;
+}
+
+.profile-btn--primary {
+  background: var(--secondary, #1A1A2E);
+  color: #fff;
+}
+
+.profile-btn--primary:hover {
+  background: #2d2d4e;
+}
+
+.profile-btn--secondary {
+  background: var(--border, #e9ecef);
+  color: var(--secondary, #1A1A2E);
+}
+
+.profile-btn--secondary:hover {
+  background: #d1d5db;
+}
+
+.profile-btn--orange {
+  background: var(--primary, #F15A24);
+  color: #fff;
+}
+
+.profile-btn--orange:hover {
+  background: #d94d1a;
+}
+
+.profile-btn--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 6px 10px;
+}
+
+.profile-btn--danger:hover {
+  background: #fecaca;
+}
+
+/* ── État vide / chargement ── */
+.profile-empty-state,
+.profile-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+  color: var(--text-light, #6C757D);
+}
+
+.profile-empty-state h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--secondary, #1A1A2E);
+  margin: 0;
+}
+
+.profile-empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Commandes shortcut ── */
+.profile-orders-shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-alt, #f8f9fa);
+  border-radius: var(--radius-sm, 8px);
+  border: 1.5px solid var(--border, #e9ecef);
+}
+
+.profile-orders-shortcut p {
+  color: var(--text-light, #6C757D);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Compte : grille de champs ── */
+.profile-account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.profile-account-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--bg-alt, #f8f9fa);
+  border: 1px solid var(--border, #e9ecef);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.profile-account-field label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light, #6C757D);
+}
+
+.profile-account-field span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--secondary, #1A1A2E);
+}
+
+.profile-account-hint {
+  font-size: 0.8rem;
+  color: var(--text-light, #6C757D);
+  margin: 0;
+}
+
+/* ── Modale de confirmation ── */
+.profile-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.profile-confirm-modal {
+  background: #fff;
+  border-radius: var(--radius, 12px);
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.profile-confirm-modal h3 {
+  font-family: var(--heading, 'Montserrat', sans-serif);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--secondary, #1A1A2E);
+  margin: 0 0 12px;
+}
+
+.profile-confirm-modal p {
+  color: var(--text-light, #6C757D);
+  font-size: 0.9rem;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.profile-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .profile-hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .profile-panel {
+    padding: 20px 16px;
+  }
+
+  .profile-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-custom-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .profile-custom-card__img {
+    height: 150px;
+  }
+
+  .profile-tabs {
+    gap: 4px;
+  }
+
+  .profile-tab {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+}

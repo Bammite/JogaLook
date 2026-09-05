@@ -78,6 +78,12 @@ function Navbar() {
                   <SettingsIcon size={16} /> Administration
                 </Link>
               )}
+              <Link to="/mes-commandes" className="navbar-dropdown__item" onClick={() => setMenuOpen(false)}>
+                📦 Mes commandes
+              </Link>
+              <Link to="/profil" className="navbar-dropdown__item" onClick={() => setMenuOpen(false)}>
+                🎨 Mes créations & profil
+              </Link>
               <button className="navbar-dropdown__item navbar-dropdown__logout" onClick={() => { handleLogout(); setMenuOpen(false); }}>
                 <LogOutIcon size={16} /> Se déconnecter
               </button>
@@ -116,6 +122,12 @@ function Navbar() {
                       <SettingsIcon size={16} /> Administration
                     </Link>
                   )}
+                  <Link to="/mes-commandes" className="navbar-dropdown__item" onClick={() => setDropOpen(false)}>
+                    📦 Mes commandes
+                  </Link>
+                  <Link to="/profil" className="navbar-dropdown__item" onClick={() => setDropOpen(false)}>
+                    🎨 Mes créations & profil
+                  </Link>
                   <button className="navbar-dropdown__item navbar-dropdown__logout" onClick={handleLogout}>
                     <LogOutIcon size={16} /> Se déconnecter
                   </button>

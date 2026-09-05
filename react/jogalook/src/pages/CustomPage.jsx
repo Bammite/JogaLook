@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { JerseyIcon } from '../components/icons/AppIcons';
 import { MOCK_TEMPLATES } from '../utils/templatePresets';
+import { normalizeSvgForDisplay } from '../utils/svgUtils';
 import './CustomPage.css';
 
 function CustomPage() {
@@ -87,7 +88,7 @@ function CustomPage() {
             ) : (
               <div className="templates-grid">
                 {filteredTemplates.map((tpl) => {
-                  const svgPreview = tpl.svg_front || tpl.svg_content;
+                  const svgPreview = normalizeSvgForDisplay(tpl.svg_front || tpl.svg_content);
                   const editable = tpl.editable_elements || {};
 
                   return (
@@ -96,9 +97,13 @@ function CustomPage() {
                         {tpl.is_free ? 'Gratuit' : `${tpl.price} €`}
                       </div>
 
-                      {/* Zone d'aperçu SVG du Template */}
+                      {/* Zone d'aperçu du Template (Photo HD ou SVG) */}
                       <div className="template-card__preview">
-                        {svgPreview ? (
+                        {tpl.template_type === 'MOCKUP' && tpl.image_front ? (
+                          <div className="template-mockup-box" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
+                            <img src={tpl.image_front} alt={tpl.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                          </div>
+                        ) : svgPreview ? (
                           <div
                             className="template-svg-box"
                             dangerouslySetInnerHTML={{ __html: svgPreview }}
@@ -119,11 +124,20 @@ function CustomPage() {
 
                         {/* Badges de personnalisation activés */}
                         <div className="template-card-tags">
-                          {editable.body !== false && <span className="custom-feature-tag">🎨 Couleurs</span>}
-                          {editable.collar !== false && <span className="custom-feature-tag">👔 Col</span>}
-                          {editable.badge !== false && <span className="custom-feature-tag">🛡️ Blason</span>}
-                          {(editable.name_zone !== false || editable.number_zone !== false) && (
-                            <span className="custom-feature-tag">✍️ Flockage</span>
+                          {tpl.template_type === 'MOCKUP' ? (
+                            <>
+                              <span className="custom-feature-tag" style={{ background: '#f3e8ff', color: '#7e22ce', borderColor: '#d8b4fe' }}>📸 Photo HD</span>
+                              <span className="custom-feature-tag">✍️ Flockage Nom & N°</span>
+                            </>
+                          ) : (
+                            <>
+                              {editable.body !== false && <span className="custom-feature-tag">🎨 Couleurs</span>}
+                              {editable.collar !== false && <span className="custom-feature-tag">👔 Col</span>}
+                              {editable.badge !== false && <span className="custom-feature-tag">🛡️ Blason</span>}
+                              {(editable.name_zone !== false || editable.number_zone !== false) && (
+                                <span className="custom-feature-tag">✍️ Flockage</span>
+                              )}
+                            </>
                           )}
                         </div>
 
@@ -180,14 +194,26 @@ function CustomPage() {
                       </button>
                     </div>
 
-                    <div
-                      className="modal-svg-container"
-                      dangerouslySetInnerHTML={{
-                        __html: modalViewSide === 'front'
-                          ? (modalTemplate.svg_front || modalTemplate.svg_content || '')
-                          : (modalTemplate.svg_back || modalTemplate.svg_front || modalTemplate.svg_content || '')
-                      }}
-                    />
+                    {modalTemplate.template_type === 'MOCKUP' && modalTemplate.image_front ? (
+                      <div className="modal-svg-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img
+                          src={modalViewSide === 'front' ? modalTemplate.image_front : (modalTemplate.image_back || modalTemplate.image_front)}
+                          alt={modalTemplate.name}
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="modal-svg-container"
+                        dangerouslySetInnerHTML={{
+                          __html: normalizeSvgForDisplay(
+                            modalViewSide === 'front'
+                              ? (modalTemplate.svg_front || modalTemplate.svg_content || '')
+                              : (modalTemplate.svg_back || modalTemplate.svg_front || modalTemplate.svg_content || '')
+                          )
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="template-modal-details">
@@ -207,7 +233,7 @@ function CustomPage() {
                       </div>
                       <div className="stat-item">
                         <span className="stat-label">Format</span>
-                        <span className="stat-value">Multi-Face SVG</span>
+                        <span className="stat-value">{modalTemplate.template_type === 'MOCKUP' ? 'Photo HD & Flockage' : 'Multi-Face SVG'}</span>
                       </div>
                     </div>
 

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { AddIcon, CloseIcon, EditIcon, EyeIcon, SearchIcon, TemplateIcon, EmptyIcon, TrashIcon } from './AdminIcons';
 import { AdminModal } from './AdminModal';
 import { uploadImageFile } from '../../utils/uploadUtil';
+import { normalizeSvgForDisplay } from '../../utils/svgUtils';
+import { AdminSvgMapperModal } from './AdminSvgMapperModal';
 
 const API = '/api/templates';
 
@@ -52,9 +54,19 @@ const DEFAULT_BACK_SVG = `<svg viewBox="0 0 300 360" width="100%" height="100%" 
   </g>
 </svg>`;
 
+const DEFAULT_FLOCKING_CONFIG = {
+  name: { x_percent: 50, y_percent: 26, font_family: 'Impact', font_size: 28, default_color: '#ffffff', letter_spacing: 4 },
+  number: { x_percent: 50, y_percent: 52, font_family: 'Impact', font_size: 110, default_color: '#ffffff' },
+  allowed_colors: ['#ffffff', '#111111', '#ffd700', '#e63946', '#1d3557']
+};
+
 const EMPTY_TEMPLATE = {
   name: '',
   description: '',
+  template_type: 'SVG', // 'SVG' | 'MOCKUP'
+  image_front: '',
+  image_back: '',
+  flocking_config: DEFAULT_FLOCKING_CONFIG,
   is_free: true,
   price: 0.00,
   visibility: 'PUBLIC',
@@ -90,12 +102,62 @@ export default function AdminTemplates() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_TEMPLATE);
-  const [activeFormTab, setActiveFormTab] = useState('general'); // 'general' | 'front' | 'back' | 'badge' | 'layers'
+  const [activeFormTab, setActiveFormTab] = useState('general'); // 'general' | 'front' | 'back' | 'badge' | 'layers' | 'mockup_images' | 'mockup_flocking'
   const [saving, setSaving] = useState(false);
   const [uploadingBadge, setUploadingBadge] = useState(false);
+  const [uploadingFrontImage, setUploadingFrontImage] = useState(false);
+  const [uploadingBackImage, setUploadingBackImage] = useState(false);
   const [preview, setPreview] = useState(null);
   const [previewSide, setPreviewSide] = useState('front'); // 'front' | 'back'
+  const [mapperOpen, setMapperOpen] = useState(false);
+  const [mapperSide, setMapperSide] = useState('front'); // 'front' | 'back'
   const badgeFileRef = useRef(null);
+  const frontImageRef = useRef(null);
+  const backImageRef = useRef(null);
+
+  const handleFrontImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFrontImage(true);
+    try {
+      const result = await uploadImageFile(file, 'templates');
+      setForm(prev => ({ ...prev, image_front: result.publicUrl, thumbnail_url: prev.thumbnail_url || result.publicUrl }));
+    } catch (err) {
+      alert(err.message || "Échec de l'upload de l'image face");
+    } finally {
+      setUploadingFrontImage(false);
+    }
+  };
+
+  const handleBackImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBackImage(true);
+    try {
+      const result = await uploadImageFile(file, 'templates');
+      setForm(prev => ({ ...prev, image_back: result.publicUrl }));
+    } catch (err) {
+      alert(err.message || "Échec de l'upload de l'image dos");
+    } finally {
+      setUploadingBackImage(false);
+    }
+  };
+
+  const handleMapperSave = ({ finalSvg, layersConfig, side }) => {
+    if (side === 'front') {
+      setForm(prev => ({
+        ...prev,
+        svg_front: finalSvg,
+        layers_config: { ...prev.layers_config, ...layersConfig }
+      }));
+    } else {
+      setForm(prev => ({
+        ...prev,
+        svg_back: finalSvg,
+        layers_config: { ...prev.layers_config, ...layersConfig }
+      }));
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -129,6 +191,10 @@ export default function AdminTemplates() {
     setForm({
       ...EMPTY_TEMPLATE,
       ...t,
+      template_type: t.template_type || (t.image_front ? 'MOCKUP' : 'SVG'),
+      image_front: t.image_front || '',
+      image_back: t.image_back || '',
+      flocking_config: t.flocking_config || DEFAULT_FLOCKING_CONFIG,
       svg_front: t.svg_front || t.svg_content || DEFAULT_FRONT_SVG,
       svg_back: t.svg_back || DEFAULT_BACK_SVG,
       editable_elements: t.editable_elements || EMPTY_TEMPLATE.editable_elements,
@@ -294,9 +360,11 @@ export default function AdminTemplates() {
                 justifyContent: 'center'
               }}
               dangerouslySetInnerHTML={{
-                __html: previewSide === 'front'
-                  ? (preview.svg_front || preview.svg_content || DEFAULT_FRONT_SVG)
-                  : (preview.svg_back || DEFAULT_BACK_SVG)
+                __html: normalizeSvgForDisplay(
+                  previewSide === 'front'
+                    ? (preview.svg_front || preview.svg_content || DEFAULT_FRONT_SVG)
+                    : (preview.svg_back || DEFAULT_BACK_SVG)
+                )
               }}
             />
           </div>
@@ -311,15 +379,22 @@ export default function AdminTemplates() {
         size="lg"
         loading={saving}
       >
-        {/* Navigation par Onglets */}
+        {/* Navigation par Onglets (S'adapte dynamiquement selon le format SVG ou MOCKUP) */}
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--admin-border)', paddingBottom: '12px', marginBottom: '20px', overflowX: 'auto' }}>
-          {[
-            { id: 'general', label: '1. Général & Tarifs' },
-            { id: 'front',   label: '2. Face Avant (SVG)' },
-            { id: 'back',    label: '3. Dos / Arrière (SVG)' },
-            { id: 'badge',   label: '4. Blason / Logo' },
-            { id: 'layers',  label: '5. Calques & IDs Modifiables' },
-          ].map(tab => (
+          {(form.template_type === 'MOCKUP'
+            ? [
+                { id: 'general',         label: '1. Général & Format' },
+                { id: 'mockup_images',   label: '2. Photos du Maillot (Face & Dos)' },
+                { id: 'mockup_flocking', label: '3. Réglage Flockage (Nom & Numéro)' },
+              ]
+            : [
+                { id: 'general', label: '1. Général & Format' },
+                { id: 'front',   label: '2. Face Avant (SVG)' },
+                { id: 'back',    label: '3. Dos / Arrière (SVG)' },
+                { id: 'badge',   label: '4. Blason / Logo' },
+                { id: 'layers',  label: '5. Calques & IDs Modifiables' },
+              ]
+          ).map(tab => (
             <button
               key={tab.id}
               type="button"
@@ -333,9 +408,67 @@ export default function AdminTemplates() {
         </div>
 
         <form onSubmit={save} className="admin-form-grid">
-          {/* ── ONGLET 1 : GÉNÉRAL ── */}
+          {/* ── ONGLET 1 : GÉNÉRAL & FORMAT ── */}
           {activeFormTab === 'general' && (
             <>
+              {/* SÉLECTEUR DU FORMAT DE TEMPLATE */}
+              <div className="admin-form-group admin-form-group--full">
+                <label className="admin-form-label" style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: '8px' }}>
+                  Format de Conception du Template *
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, template_type: 'SVG' }));
+                      if (activeFormTab === 'mockup_images' || activeFormTab === 'mockup_flocking') {
+                        setActiveFormTab('general');
+                      }
+                    }}
+                    style={{
+                      border: `2px solid ${form.template_type !== 'MOCKUP' ? '#f15a24' : '#e2e8f0'}`,
+                      background: form.template_type !== 'MOCKUP' ? 'rgba(241, 90, 36, 0.05)' : '#fff',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.92rem', color: form.template_type !== 'MOCKUP' ? '#f15a24' : '#1e293b' }}>
+                      <span>🎨</span>
+                      <span>Modèle Vectoriel SVG</span>
+                    </div>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Personnalisation intégrale : couleurs du corps, col, manches, rayures et flockage.
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, template_type: 'MOCKUP' }));
+                      if (activeFormTab === 'front' || activeFormTab === 'back' || activeFormTab === 'badge' || activeFormTab === 'layers') {
+                        setActiveFormTab('general');
+                      }
+                    }}
+                    style={{
+                      border: `2px solid ${form.template_type === 'MOCKUP' ? '#f15a24' : '#e2e8f0'}`,
+                      background: form.template_type === 'MOCKUP' ? 'rgba(241, 90, 36, 0.05)' : '#fff',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.92rem', color: form.template_type === 'MOCKUP' ? '#f15a24' : '#1e293b' }}>
+                      <span>📸</span>
+                      <span>Photo / Mockup Réaliste (Recommandé)</span>
+                    </div>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
+                      Ultra-rapide : uploadez les vraies photos face & dos vierge, le client personnalise nom et numéro.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="admin-form-group">
                 <label className="admin-form-label">Nom du Template *</label>
                 <input
@@ -399,13 +532,394 @@ export default function AdminTemplates() {
             </>
           )}
 
+          {/* ── ONGLET MOCKUP 2 : PHOTOS DU MAILLOT (FACE & DOS) ── */}
+          {activeFormTab === 'mockup_images' && (
+            <>
+              {/* FACE AVANT */}
+              <div className="admin-form-group admin-form-group--full">
+                <label className="admin-form-label" style={{ fontWeight: 700 }}>1. Photo Face Avant du Maillot *</label>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={frontImageRef}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={handleFrontImageUpload}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--ghost"
+                    onClick={() => frontImageRef.current?.click()}
+                    disabled={uploadingFrontImage}
+                  >
+                    {uploadingFrontImage ? 'Téléversement…' : '📁 Téléverser la photo Face'}
+                  </button>
+                  <input
+                    className="admin-form-input"
+                    style={{ flex: 1, minWidth: '240px' }}
+                    value={form.image_front || ''}
+                    onChange={e => setForm({ ...form, image_front: e.target.value, thumbnail_url: form.thumbnail_url || e.target.value })}
+                    placeholder="Ou collez une URL : https://.../maillot-face.png"
+                  />
+                </div>
+
+                {form.image_front && (
+                  <div style={{ marginTop: '12px', padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <img src={form.image_front} alt="Face" style={{ width: '80px', height: '95px', objectFit: 'contain', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <div>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#16a34a' }}>✓ Photo Face prête</span>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>Affichée côté client lors de la vue face.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* DOS VIERGE */}
+              <div className="admin-form-group admin-form-group--full" style={{ marginTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="admin-form-label" style={{ fontWeight: 700, margin: 0 }}>2. Photo Dos Vierge du Maillot *</label>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>⚠️ Le dos ne doit comporter aucun nom ni numéro</span>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    ref={backImageRef}
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={handleBackImageUpload}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--ghost"
+                    onClick={() => backImageRef.current?.click()}
+                    disabled={uploadingBackImage}
+                  >
+                    {uploadingBackImage ? 'Téléversement…' : '📁 Téléverser la photo Dos Vierge'}
+                  </button>
+                  <input
+                    className="admin-form-input"
+                    style={{ flex: 1, minWidth: '240px' }}
+                    value={form.image_back || ''}
+                    onChange={e => setForm({ ...form, image_back: e.target.value })}
+                    placeholder="Ou collez une URL : https://.../maillot-dos-vierge.png"
+                  />
+                </div>
+
+                {form.image_back && (
+                  <div style={{ marginTop: '12px', padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <img src={form.image_back} alt="Dos" style={{ width: '80px', height: '95px', objectFit: 'contain', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <div>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#16a34a' }}>✓ Photo Dos Vierge prête</span>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>Prête pour le positionnement du flockage dans l'onglet suivant.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ── ONGLET MOCKUP 3 : RÉGLAGE FLOCKAGE ── */}
+          {activeFormTab === 'mockup_flocking' && (
+            <div className="admin-form-group admin-form-group--full">
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '18px' }}>
+                <h4 style={{ margin: '0 0 4px', color: '#1e40af', fontSize: '0.92rem' }}>✍️ Positionnement du Flockage Officiel</h4>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a' }}>
+                  Ajustez avec les curseurs ci-dessous la position du Nom et du Numéro sur le dos du maillot. Le rendu est synchronisé en temps réel.
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '24px', alignItems: 'start' }}>
+                {/* APERÇU VISUEL DIRECT */}
+                <div style={{ position: 'relative', width: '100%', maxWidth: '320px', margin: '0 auto', border: '1.5px solid #cbd5e1', borderRadius: '14px', overflow: 'hidden', background: '#f8fafc', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}>
+                  {form.image_back ? (
+                    <img src={form.image_back} alt="Aperçu Dos" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  ) : (
+                    <div style={{ height: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                      <span style={{ fontSize: '2rem', marginBottom: '8px' }}>📸</span>
+                      <span>Veuillez ajouter une photo de dos dans l'onglet 2</span>
+                    </div>
+                  )}
+
+                  {form.image_back && (
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                      {/* Nom */}
+                      <div style={{
+                        position: 'absolute',
+                        left: `${form.flocking_config?.name?.x_percent ?? 50}%`,
+                        top: `${form.flocking_config?.name?.y_percent ?? 26}%`,
+                        transform: 'translateX(-50%)',
+                        fontFamily: form.flocking_config?.name?.font_family || "'Bebas Neue', 'Impact', sans-serif",
+                        fontSize: `${Math.round((form.flocking_config?.name?.font_size || 28) * 0.75)}px`,
+                        color: form.flocking_config?.name?.default_color || '#ffffff',
+                        letterSpacing: `${form.flocking_config?.name?.letter_spacing || 4}px`,
+                        fontWeight: 800,
+                        whiteSpace: 'nowrap',
+                        textAlign: 'center'
+                      }}>
+                        JOUEUR
+                      </div>
+
+                      {/* Numéro */}
+                      <div style={{
+                        position: 'absolute',
+                        left: `${form.flocking_config?.number?.x_percent ?? 50}%`,
+                        top: `${form.flocking_config?.number?.y_percent ?? 52}%`,
+                        transform: 'translateX(-50%)',
+                        fontFamily: form.flocking_config?.number?.font_family || "'Bebas Neue', 'Impact', sans-serif",
+                        fontSize: `${Math.round((form.flocking_config?.number?.font_size || 110) * 0.7)}px`,
+                        color: form.flocking_config?.number?.default_color || '#ffffff',
+                        lineHeight: 1,
+                        fontWeight: 900,
+                        textAlign: 'center'
+                      }}>
+                        10
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* CONTRÔLES / SLIDERS */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Positionnement Nom (X & Y) */}
+                  <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '10px', color: '#1e293b' }}>Position du Nom</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Horizontal (X%)</label>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.name?.x_percent ?? 50}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="80"
+                          value={form.flocking_config?.name?.x_percent ?? 50}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            setForm(prev => ({
+                              ...prev,
+                              flocking_config: {
+                                ...prev.flocking_config,
+                                name: { ...prev.flocking_config?.name, x_percent: val }
+                              }
+                            }));
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Hauteur (Y%)</label>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.name?.y_percent ?? 26}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="15"
+                          max="45"
+                          value={form.flocking_config?.name?.y_percent ?? 26}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            setForm(prev => ({
+                              ...prev,
+                              flocking_config: {
+                                ...prev.flocking_config,
+                                name: { ...prev.flocking_config?.name, y_percent: val }
+                              }
+                            }));
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Positionnement Numéro (X & Y) */}
+                  <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '10px', color: '#1e293b' }}>Position du Numéro</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Horizontal (X%)</label>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.number?.x_percent ?? 50}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="20"
+                          max="80"
+                          value={form.flocking_config?.number?.x_percent ?? 50}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            setForm(prev => ({
+                              ...prev,
+                              flocking_config: {
+                                ...prev.flocking_config,
+                                number: { ...prev.flocking_config?.number, x_percent: val }
+                              }
+                            }));
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Hauteur (Y%)</label>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.number?.y_percent ?? 52}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="35"
+                          max="75"
+                          value={form.flocking_config?.number?.y_percent ?? 52}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            setForm(prev => ({
+                              ...prev,
+                              flocking_config: {
+                                ...prev.flocking_config,
+                                number: { ...prev.flocking_config?.number, y_percent: val }
+                              }
+                            }));
+                          }}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tailles de Police Nom & Numéro */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700 }}>Taille du Nom</label>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.name?.font_size || 28}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="16"
+                        max="48"
+                        value={form.flocking_config?.name?.font_size || 28}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          setForm(prev => ({
+                            ...prev,
+                            flocking_config: {
+                              ...prev.flocking_config,
+                              name: { ...prev.flocking_config?.name, font_size: val }
+                            }
+                          }));
+                        }}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+
+                    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700 }}>Taille du Numéro</label>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f15a24' }}>{form.flocking_config?.number?.font_size || 110}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="60"
+                        max="160"
+                        value={form.flocking_config?.number?.font_size || 110}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          setForm(prev => ({
+                            ...prev,
+                            flocking_config: {
+                              ...prev.flocking_config,
+                              number: { ...prev.flocking_config?.number, font_size: val }
+                            }
+                          }));
+                        }}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Police et Couleur par défaut */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label className="admin-form-label">Police du Flockage</label>
+                      <select
+                        className="admin-form-select"
+                        value={form.flocking_config?.name?.font_family || "'Bebas Neue', sans-serif"}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setForm(prev => ({
+                            ...prev,
+                            flocking_config: {
+                              ...prev.flocking_config,
+                              name: { ...prev.flocking_config?.name, font_family: val },
+                              number: { ...prev.flocking_config?.number, font_family: val }
+                            }
+                          }));
+                        }}
+                      >
+                        <option value="'Bebas Neue', sans-serif">Bebas Neue (Football Pro / Officiel)</option>
+                        <option value="'Impact', 'Arial Black', sans-serif">Impact (Classique Musclé)</option>
+                        <option value="'Anton', sans-serif">Anton (Massif / Premier League)</option>
+                        <option value="'Oswald', sans-serif">Oswald (Élancé / Serie A)</option>
+                        <option value="'Barlow Condensed', sans-serif">Barlow Condensed (Moderne Pro)</option>
+                        <option value="'Teko', sans-serif">Teko (Athlétique Haute Lisibilité)</option>
+                        <option value="'Russo One', sans-serif">Russo One (Puissant / Power Sport)</option>
+                        <option value="'Staatliches', sans-serif">Staatliches (Urbain / Street)</option>
+                        <option value="'Archivo Black', sans-serif">Archivo Black (Robuste)</option>
+                        <option value="'Montserrat', sans-serif">Montserrat (Clean Géométrique)</option>
+                        <option value="'Chakra Petch', sans-serif">Chakra Petch (Racing & Esport)</option>
+                        <option value="'Orbitron', sans-serif">Orbitron (Futuriste / Gaming)</option>
+                        <option value="'Playfair Display', serif">Playfair (Vintage / Luxe)</option>
+                        <option value="'Georgia', serif">Georgia (Rétro / Héritage)</option>
+                        <option value="'Permanent Marker', cursive">Permanent Marker (Street)</option>
+                        <option value="'Courier New', monospace">Courier New (Technique / Mono)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="admin-form-label">Couleur de Base</label>
+                      <select
+                        className="admin-form-select"
+                        value={form.flocking_config?.name?.default_color || '#ffffff'}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setForm(prev => ({
+                            ...prev,
+                            flocking_config: {
+                              ...prev.flocking_config,
+                              name: { ...prev.flocking_config?.name, default_color: val },
+                              number: { ...prev.flocking_config?.number, default_color: val }
+                            }
+                          }));
+                        }}
+                      >
+                        <option value="#ffffff">⚪ Blanc</option>
+                        <option value="#111111">⚫ Noir</option>
+                        <option value="#ffd700">🟡 Or / Doré</option>
+                        <option value="#e63946">🔴 Rouge</option>
+                        <option value="#1d3557">🔵 Bleu Marine</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── ONGLET 2 : FACE AVANT (SVG FRONT) ── */}
           {activeFormTab === 'front' && (
             <>
               <div className="admin-form-group admin-form-group--full">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label className="admin-form-label">Code SVG Face Avant *</label>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Doit contenir &lt;svg viewBox="0 0 300 360" ...&gt;</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <label className="admin-form-label" style={{ margin: 0 }}>Code SVG Face Avant *</label>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary admin-btn--sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => { setMapperSide('front'); setMapperOpen(true); }}
+                  >
+                    <span>🎯</span>
+                    <span>Assistant Visuel : Identifier les éléments & Blason</span>
+                  </button>
                 </div>
                 <textarea
                   className="admin-form-textarea"
@@ -431,7 +945,7 @@ export default function AdminTemplates() {
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
-                    dangerouslySetInnerHTML={{ __html: form.svg_front }}
+                    dangerouslySetInnerHTML={{ __html: normalizeSvgForDisplay(form.svg_front) }}
                   />
                 </div>
               )}
@@ -442,9 +956,17 @@ export default function AdminTemplates() {
           {activeFormTab === 'back' && (
             <>
               <div className="admin-form-group admin-form-group--full">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label className="admin-form-label">Code SVG Dos / Arrière</label>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Utilisé pour le flockage du nom et numéro</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <label className="admin-form-label" style={{ margin: 0 }}>Code SVG Dos / Arrière</label>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary admin-btn--sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => { setMapperSide('back'); setMapperOpen(true); }}
+                  >
+                    <span>🎯</span>
+                    <span>Assistant Visuel : Identifier les éléments & Flockage</span>
+                  </button>
                 </div>
                 <textarea
                   className="admin-form-textarea"
@@ -469,7 +991,7 @@ export default function AdminTemplates() {
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
-                    dangerouslySetInnerHTML={{ __html: form.svg_back }}
+                    dangerouslySetInnerHTML={{ __html: normalizeSvgForDisplay(form.svg_back) }}
                   />
                 </div>
               )}
@@ -544,11 +1066,37 @@ export default function AdminTemplates() {
           {/* ── ONGLET 5 : CALQUES & ÉLÉMENTS MODIFIABLES ── */}
           {activeFormTab === 'layers' && (
             <div className="admin-form-group admin-form-group--full">
-              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '18px' }}>
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '14px' }}>
                 <h4 style={{ margin: '0 0 6px', color: '#1e40af', fontSize: '0.92rem' }}>💡 Guide des balises & IDs modifiables</h4>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a', lineHeight: 1.45 }}>
                   Pour que le studio de personnalisation applique dynamiquement les couleurs et les flockages, spécifiez les identifiants (<code style={{ background: '#dbeafe', padding: '1px 4px', borderRadius: '4px' }}>id="..."</code>) utilisés dans vos codes SVG.
                 </p>
+              </div>
+
+              {/* Raccourci vers le Studio Interactif Point-and-Click */}
+              <div style={{ background: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '0.92rem', color: '#0f172a' }}>🎯 Studio Interactif de Mapping</h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+                    Identifiez visuellement chaque tracé en cliquant dessus et positionnez le blason et le flockage sans saisir de code.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--primary admin-btn--sm"
+                    onClick={() => { setMapperSide('front'); setMapperOpen(true); }}
+                  >
+                    🎨 Identifier Face & Blason
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary admin-btn--sm"
+                    onClick={() => { setMapperSide('back'); setMapperOpen(true); }}
+                  >
+                    🎨 Identifier Dos & Flockage
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -712,10 +1260,24 @@ export default function AdminTemplates() {
                       position: 'relative'
                     }}
                   >
-                    <div
-                      style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      dangerouslySetInnerHTML={{ __html: t.svg_front || t.svg_content || DEFAULT_FRONT_SVG }}
-                    />
+                    {t.template_type === 'MOCKUP' && t.image_front ? (
+                      <img
+                        src={t.image_front}
+                        alt={t.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <div
+                        style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        dangerouslySetInnerHTML={{ __html: normalizeSvgForDisplay(t.svg_front || t.svg_content || DEFAULT_FRONT_SVG) }}
+                      />
+                    )}
+                    <span
+                      className={`admin-badge admin-badge--${t.template_type === 'MOCKUP' ? 'purple' : 'blue'}`}
+                      style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '0.72rem' }}
+                    >
+                      {t.template_type === 'MOCKUP' ? '📸 MOCKUP' : '🎨 SVG'}
+                    </span>
                     <span
                       className={`admin-badge admin-badge--${t.is_free ? 'blue' : 'green'}`}
                       style={{ position: 'absolute', top: '10px', right: '10px' }}
@@ -755,6 +1317,16 @@ export default function AdminTemplates() {
           )}
         </div>
       </div>
+
+      {/* STUDIO INTERACTIF DE MAPPING SVG */}
+      <AdminSvgMapperModal
+        open={mapperOpen}
+        onClose={() => setMapperOpen(false)}
+        initialSvg={mapperSide === 'front' ? form.svg_front : form.svg_back}
+        side={mapperSide}
+        badgeUrl={form.badge_url}
+        onSave={handleMapperSave}
+      />
     </div>
   );
 }

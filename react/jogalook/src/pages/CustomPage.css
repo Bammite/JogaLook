@@ -111,14 +111,18 @@
 }
 
 .template-svg-box svg {
-  max-height: 100%;
-  max-width: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
   object-fit: contain;
+  display: block;
+  margin: auto;
   transition: transform 0.3s ease;
 }
 
 .template-card:hover .template-svg-box svg {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 .template-card__content {
@@ -346,8 +350,13 @@
 }
 
 .modal-svg-container svg {
-  max-height: 300px;
-  width: auto;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 320px !important;
+  object-fit: contain;
+  display: block;
+  margin: auto;
 }
 
 .template-modal-details {

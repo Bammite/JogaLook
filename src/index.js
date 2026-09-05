@@ -29,7 +29,7 @@ app.use('/api', require('./backend'));
 
 // Service auxiliaire si présent
 try {
-  app.use('/service', require('./serviceAuxiliaire'));
+  app.use('/service', require('./serviceAuxiliaire')); 
 } catch (e) {
   // Service optionnel
 }

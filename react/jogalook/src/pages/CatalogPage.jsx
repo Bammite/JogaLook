@@ -44,6 +44,8 @@ function CatalogPage() {
             badge: product.is_customizable ? { type: 'new', text: 'Personnalisable' } : null,
             colors: colors.length ? colors : ['#1F2937', '#F8FAFC', '#D1D5DB'],
             category: categoryName,
+            product_variants: product.product_variants || [],
+            product_images: product.product_images || [],
           };
         });
 

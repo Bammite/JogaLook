@@ -25,6 +25,8 @@ import {
   AdminCarts, AdminCustomizations, AdminLogs,
 } from './pages/admin/AdminPages';
 import CartPage from './pages/CartPage';
+import MyOrdersPage from './pages/MyOrdersPage';
+import ProfilePage from './pages/ProfilePage';
 import FloatingCart from './components/FloatingCart';
 import './App.css';
 
@@ -82,6 +84,9 @@ function AppShell() {
         <Route path="/actus"             element={<Navigate to="/actualites" replace />} />
         <Route path="/panier"            element={<CartPage />} />
         <Route path="/cart"              element={<Navigate to="/panier" replace />} />
+        <Route path="/mes-commandes"     element={<RequireAuth><MyOrdersPage /></RequireAuth>} />
+        <Route path="/profil"            element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/profile"           element={<Navigate to="/profil" replace />} />
 
         {/* ── Auth Client ── */}
         <Route path="/login"         element={<GuestOnly><LoginPage /></GuestOnly>} />
