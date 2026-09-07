@@ -63,7 +63,15 @@ function Navbar() {
           </li>
           <li><NavLink to="/custom" onClick={() => setMenuOpen(false)}>Customiser</NavLink></li>
           <li><NavLink to="/actualites" onClick={() => setMenuOpen(false)}>Actus</NavLink></li>
-          <li><a href="/accueil#contact" onClick={() => setMenuOpen(false)}>Contact</a></li>
+          <li>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              onClick={() => setMenuOpen(false)}
+            >
+              Contact
+            </NavLink>
+          </li>
           {user && (
             <li className="navbar-mobile-account">
               <div className="navbar-mobile-account__identity">
@@ -135,7 +143,7 @@ function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className="navbar-login-btn" aria-label="Connexion">
+            <Link to="/login" state={{ from: location.pathname + location.search }} className="navbar-login-btn" aria-label="Connexion">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>

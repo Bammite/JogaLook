@@ -154,6 +154,9 @@ export default function CustomEditorPage() {
   const [size, setSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
+  // Modale de confirmation si le user n'a fait aucune personnalisation
+  const [showNoCustomConfirm, setShowNoCustomConfirm] = useState(false);
+
 
   // Contextual Tap-to-Edit Popup: { visible, x, y, label, targetKey }
   // targetKey: 'body' | 'body2' | 'collar' | 'sleeves' | 'stripes' | 'flockage' | 'badge'
@@ -386,9 +389,10 @@ export default function CustomEditorPage() {
   };
 
   // Price Calculation
-  const basePrice = template?.price ? parseFloat(template.price) : 49.99;
-  const flockingPrice = (playerName ? 9.99 : 0) + (playerNumber ? 4.99 : 0);
-  const badgePrice = clubBadgeUrl ? 4.99 : 0;
+  const basePrice = template?.price ? parseFloat(template.price) : 50000;
+  const flockingPrice = (playerName ? 10000 : 0) + (playerNumber ? 5000 : 0);
+  const badgePrice = clubBadgeUrl ? 5000 : 0;
+  const formatFCFA = (value) => `${Math.round(Number(value) || 0).toLocaleString('fr-FR')} FCFA`;
   const unitPrice = basePrice + flockingPrice + badgePrice;
   const totalPrice = (unitPrice * quantity).toFixed(2);
 
@@ -628,8 +632,53 @@ export default function CustomEditorPage() {
     layers
   ]);
 
+  // ── VÉRIFIER SI LE USER N'A FAIT AUCUNE PERSONNALISATION ──
+  const hasNoCustomization = () => {
+    const hasFlocking = playerName.trim() !== '' || playerNumber.trim() !== '';
+    const hasBadge = Boolean(clubBadgeUrl);
+
+    if (hasFlocking || hasBadge) return false;
+
+    if (isMockup) {
+      // Sur les mockups, seuls le flocage et le blason sont personnalisables
+      return true;
+    }
+
+    // Pour les SVG vectoriels, comparer avec les valeurs initiales du template chargé
+    const tpl = template || {};
+    const defaultBodyColor   = tpl.baseColor    || '#e63946';
+    const defaultBodyColor2  = tpl.accentColor  || '#1d3557';
+    const defaultCollarColor = tpl.collarColor  || (tpl.collar === 'polo' ? '#111111' : '#ffffff');
+    const defaultSleeves     = tpl.sleevesColor || tpl.accentColor || '#ffffff';
+    const defaultStripes     = tpl.stripesColor || tpl.accentColor || '#1d3557';
+    const defaultPattern     = tpl.pattern      || 'solid';
+    const defaultCollar      = tpl.collar       || 'round';
+
+    const colorsChanged = (
+      bodyColor   !== defaultBodyColor   ||
+      bodyColor2  !== defaultBodyColor2  ||
+      collarColor !== defaultCollarColor ||
+      sleevesColor !== defaultSleeves    ||
+      stripesColor !== defaultStripes    ||
+      pattern      !== defaultPattern    ||
+      collar       !== defaultCollar
+    );
+
+    return !colorsChanged;
+  };
+
   // ── AJOUT AU PANIER AVEC SAUVEGARDE DE LA PERSONNALISATION ──
   const handleAddToCart = async () => {
+    // Vérifier si aucune personnalisation n'a été faite → demander confirmation
+    if (hasNoCustomization()) {
+      setShowNoCustomConfirm(true);
+      return;
+    }
+    await doAddToCart();
+  };
+
+  // Logique effective d'ajout au panier (appelée après confirmation éventuelle)
+  const doAddToCart = async () => {
     const frontSvg = buildSvgString('front');
     const backSvg = buildSvgString('back');
 
@@ -801,7 +850,7 @@ export default function CustomEditorPage() {
 
           <div className="top-bar-title-group">
             <span className="template-name-tag">{template?.name || 'Maillot Custom'}</span>
-            <span className="template-status-pill">{template?.is_free ? 'Template Inclus' : `${template?.price} €`}</span>
+            <span className="template-status-pill">{template?.is_free ? 'Template Inclus' : formatFCFA(template?.price)}</span>
           </div>
         </div>
 
@@ -833,7 +882,7 @@ export default function CustomEditorPage() {
         <div className="top-bar-right">
           <div className="live-price-box">
             <span className="live-price-label">Total</span>
-            <span className="live-price-amount">{totalPrice} €</span>
+            <span className="live-price-amount">{formatFCFA(totalPrice)}</span>
           </div>
 
           <button className="btn-add-cart-primary" onClick={handleAddToCart} title="Ajouter au panier">
@@ -852,6 +901,60 @@ export default function CustomEditorPage() {
           <CheckIcon size={18} color="#fff" />
           <span>Maillot personnalisé ajouté au panier !</span>
           <Link to="/panier" className="toast-link">Voir le panier →</Link>
+        </div>
+      )}
+
+      {/* ── MODALE CONFIRMATION : Aucune personnalisation détectée ── */}
+      {showNoCustomConfirm && (
+        <div
+          className="no-custom-confirm-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirmation ajout sans personnalisation"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowNoCustomConfirm(false); }}
+        >
+          <div className="no-custom-confirm-modal">
+            {/* Icône d'avertissement */}
+            <div className="no-custom-confirm-icon">🎨</div>
+
+            <h2 className="no-custom-confirm-title">Aucune personnalisation</h2>
+            <p className="no-custom-confirm-body">
+              Vous n'avez pas encore personnalisé ce maillot.<br />
+              Voulez-vous l'ajouter tel quel, ou continuer à le personnaliser ?
+            </p>
+
+            {/* Rappel des éléments personnalisables */}
+            <ul className="no-custom-confirm-hints">
+              {!isMockup && <li>🎨 Couleurs : corps, col, manches, motifs</li>}
+              <li>✍️ Flocage : nom du joueur &amp; numéro</li>
+              {!isMockup && <li>🛡️ Blason / logo de club</li>}
+            </ul>
+
+            <div className="no-custom-confirm-actions">
+              <button
+                type="button"
+                className="no-custom-btn no-custom-btn--secondary"
+                onClick={() => {
+                  setShowNoCustomConfirm(false);
+                  // Orienter directement vers l'onglet de personnalisation
+                  setActiveTab(isMockup ? 'flockage' : 'colors');
+                  if (isMockup) setView('back');
+                }}
+              >
+                ✏️ Personnaliser d'abord
+              </button>
+              <button
+                type="button"
+                className="no-custom-btn no-custom-btn--primary"
+                onClick={async () => {
+                  setShowNoCustomConfirm(false);
+                  await doAddToCart();
+                }}
+              >
+                🛒 Ajouter tel quel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1209,7 +1312,7 @@ export default function CustomEditorPage() {
                   <div className="tool-row-2col">
                     {editable.name_zone !== false && (
                       <div className="tool-group">
-                        <label className="tool-label">Nom du joueur (+9.99€)</label>
+                        <label className="tool-label">Nom du joueur (+10 000 FCFA)</label>
                         <input
                           type="text"
                           className="tool-input-text"
@@ -1223,7 +1326,7 @@ export default function CustomEditorPage() {
 
                     {editable.number_zone !== false && (
                       <div className="tool-group">
-                        <label className="tool-label">Numéro (+4.99€)</label>
+                        <label className="tool-label">Numéro (+5 000 FCFA)</label>
                         <input
                           type="text"
                           className="tool-input-text input-number-center"
@@ -1470,7 +1573,7 @@ export default function CustomEditorPage() {
                         onClick={() => setClubBadgeUrl(null)}
                       >
                         <span>🚫 Sans blason</span>
-                        <small>Épuré (Inclus 0 €)</small>
+                        <small>Épuré (Inclus)</small>
                       </button>
                       <button
                         type="button"
@@ -1483,7 +1586,7 @@ export default function CustomEditorPage() {
                         }}
                       >
                         <span>🛡️ Avec blason</span>
-                        <small>Personnalisé (+4.99 €)</small>
+                        <small>Personnalisé (+5 000 FCFA)</small>
                       </button>
                     </div>
                   </div>
@@ -1595,7 +1698,7 @@ export default function CustomEditorPage() {
                           setView('front');
                         }}
                       >
-                        + Ajouter un blason (+4.99 €)
+                        + Ajouter un blason (+5 000 FCFA)
                       </button>
                     </div>
                   )}
@@ -1632,34 +1735,34 @@ export default function CustomEditorPage() {
                   <div className="mini-summary-box">
                     <div className="summary-line">
                       <span>Maillot de base</span>
-                      <span>{basePrice.toFixed(2)} €</span>
+                      <span>{formatFCFA(basePrice)}</span>
                     </div>
                     {playerName && (
                       <div className="summary-line">
                         <span>Nom "{playerName}"</span>
-                        <span>+9.99 €</span>
+                        <span>+10 000 FCFA</span>
                       </div>
                     )}
                     {playerNumber && (
                       <div className="summary-line">
                         <span>Numéro "{playerNumber}"</span>
-                        <span>+4.99 €</span>
+                        <span>+5 000 FCFA</span>
                       </div>
                     )}
                     {clubBadgeUrl && (
                       <div className="summary-line">
                         <span>Blason Club personnalisé</span>
-                        <span>+4.99 €</span>
+                        <span>+5 000 FCFA</span>
                       </div>
                     )}
                     <div className="summary-line total-line">
                       <span>Total ({quantity} ex.)</span>
-                      <span>{totalPrice} €</span>
+                      <span>{formatFCFA(totalPrice)}</span>
                     </div>
                   </div>
 
                   <button className="btn-add-cart-popover" onClick={handleAddToCart}>
-                    Ajouter au panier ({totalPrice} €)
+                    Ajouter au panier ({formatFCFA(totalPrice)})
                   </button>
                 </div>
               )}

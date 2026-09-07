@@ -5,6 +5,70 @@ html {
   scroll-behavior: smooth;
 }
 
+.app-loading-skeleton {
+  min-height: 100vh;
+  background: #f8f9fb;
+}
+
+.app-loading-skeleton__nav,
+.app-loading-skeleton__line,
+.app-loading-skeleton__card {
+  position: relative;
+  overflow: hidden;
+  background: #e7ebee;
+}
+
+.app-loading-skeleton__nav {
+  height: 76px;
+  background: #eef1f3;
+}
+
+.app-loading-skeleton__content {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  padding-top: 48px;
+}
+
+.app-loading-skeleton__line {
+  height: 18px;
+  border-radius: 8px;
+}
+
+.app-loading-skeleton__line--wide { width: min(360px, 70%); height: 34px; }
+.app-loading-skeleton__line--medium { width: min(520px, 85%); margin-top: 14px; }
+
+.app-loading-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 34px;
+}
+
+.app-loading-skeleton__card {
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+}
+
+.app-loading-skeleton__nav::after,
+.app-loading-skeleton__line::after,
+.app-loading-skeleton__card::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.6) 48%, transparent 76%);
+  transform: translateX(-100%);
+  animation: app-skeleton-shimmer 1.45s ease-in-out infinite;
+}
+
+@keyframes app-skeleton-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (max-width: 768px) {
+  .app-loading-skeleton__content { width: calc(100% - 32px); padding-top: 32px; }
+  .app-loading-skeleton__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+
 /* Selection styling */
 ::selection {
   background: var(--primary);

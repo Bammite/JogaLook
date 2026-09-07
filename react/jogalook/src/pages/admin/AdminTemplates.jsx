@@ -4,8 +4,13 @@ import { AdminModal } from './AdminModal';
 import { uploadImageFile } from '../../utils/uploadUtil';
 import { normalizeSvgForDisplay } from '../../utils/svgUtils';
 import { AdminSvgMapperModal } from './AdminSvgMapperModal';
+import { AlertTriangleIcon, CameraIcon, JerseyIcon, PaletteIcon, PencilIcon, ShieldCheckIcon, TagIcon, UploadIcon } from '../../components/icons/AppIcons';
 
 const API = '/api/templates';
+
+function formatFCFA(value) {
+  return `${Math.round(Number(value) || 0).toLocaleString('fr-FR')} FCFA`;
+}
 
 const DEFAULT_FRONT_SVG = `<svg viewBox="0 0 300 360" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
   <!-- Corps principal du maillot -->
@@ -320,7 +325,7 @@ export default function AdminTemplates() {
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1d3557' }}>{preview.name}</h3>
                 <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                  {preview.is_free ? 'Gratuit' : `${preview.price} €`} • {preview.visibility === 'PUBLIC' ? 'Public' : 'Privé'}
+                  {preview.is_free ? 'Gratuit' : formatFCFA(preview.price)} • {preview.visibility === 'PUBLIC' ? 'Public' : 'Privé'}
                 </span>
               </div>
               <button className="admin-btn admin-btn--ghost admin-btn--sm" onClick={() => setPreview(null)}>
@@ -434,7 +439,7 @@ export default function AdminTemplates() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.92rem', color: form.template_type !== 'MOCKUP' ? '#f15a24' : '#1e293b' }}>
-                      <span>🎨</span>
+                      <PaletteIcon size={18} />
                       <span>Modèle Vectoriel SVG</span>
                     </div>
                     <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
@@ -459,7 +464,7 @@ export default function AdminTemplates() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.92rem', color: form.template_type === 'MOCKUP' ? '#f15a24' : '#1e293b' }}>
-                      <span>📸</span>
+                      <CameraIcon size={18} />
                       <span>Photo / Mockup Réaliste (Recommandé)</span>
                     </div>
                     <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
@@ -508,14 +513,14 @@ export default function AdminTemplates() {
 
               {!form.is_free && (
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Prix de base (€)</label>
+                  <label className="admin-form-label">Prix de base (FCFA)</label>
                   <input
                     type="number"
                     step="0.01"
                     className="admin-form-input"
                     value={form.price}
                     onChange={e => setForm({ ...form, price: e.target.value })}
-                    placeholder="49.99"
+                    placeholder="30 000"
                   />
                 </div>
               )}
@@ -552,7 +557,7 @@ export default function AdminTemplates() {
                     onClick={() => frontImageRef.current?.click()}
                     disabled={uploadingFrontImage}
                   >
-                    {uploadingFrontImage ? 'Téléversement…' : '📁 Téléverser la photo Face'}
+                    {uploadingFrontImage ? 'Téléversement…' : <><UploadIcon size={16} /> Téléverser la photo Face</>}
                   </button>
                   <input
                     className="admin-form-input"
@@ -578,7 +583,7 @@ export default function AdminTemplates() {
               <div className="admin-form-group admin-form-group--full" style={{ marginTop: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label className="admin-form-label" style={{ fontWeight: 700, margin: 0 }}>2. Photo Dos Vierge du Maillot *</label>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>⚠️ Le dos ne doit comporter aucun nom ni numéro</span>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><AlertTriangleIcon size={14} /> Le dos ne doit comporter aucun nom ni numéro</span>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
                   <input
@@ -594,7 +599,7 @@ export default function AdminTemplates() {
                     onClick={() => backImageRef.current?.click()}
                     disabled={uploadingBackImage}
                   >
-                    {uploadingBackImage ? 'Téléversement…' : '📁 Téléverser la photo Dos Vierge'}
+                    {uploadingBackImage ? 'Téléversement…' : <><UploadIcon size={16} /> Téléverser la photo Dos Vierge</>}
                   </button>
                   <input
                     className="admin-form-input"
@@ -622,7 +627,7 @@ export default function AdminTemplates() {
           {activeFormTab === 'mockup_flocking' && (
             <div className="admin-form-group admin-form-group--full">
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '18px' }}>
-                <h4 style={{ margin: '0 0 4px', color: '#1e40af', fontSize: '0.92rem' }}>✍️ Positionnement du Flockage Officiel</h4>
+                <h4 style={{ margin: '0 0 4px', color: '#1e40af', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '6px' }}><PencilIcon size={16} /> Positionnement du Flockage Officiel</h4>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a' }}>
                   Ajustez avec les curseurs ci-dessous la position du Nom et du Numéro sur le dos du maillot. Le rendu est synchronisé en temps réel.
                 </p>
@@ -635,7 +640,7 @@ export default function AdminTemplates() {
                     <img src={form.image_back} alt="Aperçu Dos" style={{ width: '100%', height: 'auto', display: 'block' }} />
                   ) : (
                     <div style={{ height: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
-                      <span style={{ fontSize: '2rem', marginBottom: '8px' }}>📸</span>
+                      <CameraIcon size={32} style={{ marginBottom: '8px' }} />
                       <span>Veuillez ajouter une photo de dos dans l'onglet 2</span>
                     </div>
                   )}
@@ -917,7 +922,7 @@ export default function AdminTemplates() {
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     onClick={() => { setMapperSide('front'); setMapperOpen(true); }}
                   >
-                    <span>🎯</span>
+                    <PaletteIcon size={16} />
                     <span>Assistant Visuel : Identifier les éléments & Blason</span>
                   </button>
                 </div>
@@ -964,7 +969,7 @@ export default function AdminTemplates() {
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     onClick={() => { setMapperSide('back'); setMapperOpen(true); }}
                   >
-                    <span>🎯</span>
+                    <PaletteIcon size={16} />
                     <span>Assistant Visuel : Identifier les éléments & Flockage</span>
                   </button>
                 </div>
@@ -1017,7 +1022,7 @@ export default function AdminTemplates() {
                     onClick={() => badgeFileRef.current?.click()}
                     disabled={uploadingBadge}
                   >
-                    {uploadingBadge ? 'Téléversement...' : '📁 Téléverser une image (PNG/JPG/SVG)'}
+                    {uploadingBadge ? 'Téléversement...' : <><UploadIcon size={16} /> Téléverser une image (PNG/JPG/SVG)</>}
                   </button>
                   {form.badge_url && (
                     <button
@@ -1067,7 +1072,7 @@ export default function AdminTemplates() {
           {activeFormTab === 'layers' && (
             <div className="admin-form-group admin-form-group--full">
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '14px' }}>
-                <h4 style={{ margin: '0 0 6px', color: '#1e40af', fontSize: '0.92rem' }}>💡 Guide des balises & IDs modifiables</h4>
+                <h4 style={{ margin: '0 0 6px', color: '#1e40af', fontSize: '0.92rem' }}><TagIcon size={16} /> Guide des balises & IDs modifiables</h4>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#1e3a8a', lineHeight: 1.45 }}>
                   Pour que le studio de personnalisation applique dynamiquement les couleurs et les flockages, spécifiez les identifiants (<code style={{ background: '#dbeafe', padding: '1px 4px', borderRadius: '4px' }}>id="..."</code>) utilisés dans vos codes SVG.
                 </p>
@@ -1076,7 +1081,7 @@ export default function AdminTemplates() {
               {/* Raccourci vers le Studio Interactif Point-and-Click */}
               <div style={{ background: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '0.92rem', color: '#0f172a' }}>🎯 Studio Interactif de Mapping</h4>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '0.92rem', color: '#0f172a' }}><PaletteIcon size={16} /> Studio Interactif de Mapping</h4>
                   <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
                     Identifiez visuellement chaque tracé en cliquant dessus et positionnez le blason et le flockage sans saisir de code.
                   </p>
@@ -1087,14 +1092,14 @@ export default function AdminTemplates() {
                     className="admin-btn admin-btn--primary admin-btn--sm"
                     onClick={() => { setMapperSide('front'); setMapperOpen(true); }}
                   >
-                    🎨 Identifier Face & Blason
+                    <><PaletteIcon size={16} /> Identifier Face & Blason</>
                   </button>
                   <button
                     type="button"
                     className="admin-btn admin-btn--secondary admin-btn--sm"
                     onClick={() => { setMapperSide('back'); setMapperOpen(true); }}
                   >
-                    🎨 Identifier Dos & Flockage
+                    <><PaletteIcon size={16} /> Identifier Dos & Flockage</>
                   </button>
                 </div>
               </div>
@@ -1104,7 +1109,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.body ?? true} onChange={() => toggleElement('body')} />
-                    <span>👕 Corps Principal</span>
+                    <span><JerseyIcon size={16} /> Corps Principal</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1118,7 +1123,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.collar ?? true} onChange={() => toggleElement('collar')} />
-                    <span>👔 Col du Maillot</span>
+                    <span><JerseyIcon size={16} /> Col du Maillot</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1132,7 +1137,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.sleeves ?? true} onChange={() => toggleElement('sleeves')} />
-                    <span>💪 Manches & Bordures</span>
+                    <span><JerseyIcon size={16} /> Manches & Bordures</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1146,7 +1151,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.stripes ?? true} onChange={() => toggleElement('stripes')} />
-                    <span>🎨 Bandes & Motifs</span>
+                    <span><PaletteIcon size={16} /> Bandes & Motifs</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1160,7 +1165,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.badge ?? true} onChange={() => toggleElement('badge')} />
-                    <span>🛡️ Zone du Blason</span>
+                    <span><ShieldCheckIcon size={16} /> Zone du Blason</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1174,7 +1179,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.name_zone ?? true} onChange={() => toggleElement('name_zone')} />
-                    <span>✍️ Zone Nom Joueur</span>
+                    <span><PencilIcon size={16} /> Zone Nom Joueur</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1188,7 +1193,7 @@ export default function AdminTemplates() {
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', background: '#fff' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', marginBottom: '8px' }}>
                     <input type="checkbox" checked={form.editable_elements?.number_zone ?? true} onChange={() => toggleElement('number_zone')} />
-                    <span>🔢 Zone Numéro Joueur</span>
+                    <span><TagIcon size={16} /> Zone Numéro Joueur</span>
                   </label>
                   <input
                     className="admin-form-input admin-form-input--sm"
@@ -1276,13 +1281,13 @@ export default function AdminTemplates() {
                       className={`admin-badge admin-badge--${t.template_type === 'MOCKUP' ? 'purple' : 'blue'}`}
                       style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '0.72rem' }}
                     >
-                      {t.template_type === 'MOCKUP' ? '📸 MOCKUP' : '🎨 SVG'}
+                      <>{t.template_type === 'MOCKUP' ? <><CameraIcon size={14} /> MOCKUP</> : <><PaletteIcon size={14} /> SVG</>}</>
                     </span>
                     <span
                       className={`admin-badge admin-badge--${t.is_free ? 'blue' : 'green'}`}
                       style={{ position: 'absolute', top: '10px', right: '10px' }}
                     >
-                      {t.is_free ? 'Inclus' : `${t.price} €`}
+                      {t.is_free ? 'Inclus' : formatFCFA(t.price)}
                     </span>
                   </div>
 

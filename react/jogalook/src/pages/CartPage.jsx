@@ -407,6 +407,18 @@ export default function CartPage() {
     );
   };
 
+  const requireAuthentication = () => {
+    if (user) return true;
+    navigate('/login', { state: { from: '/panier' } });
+    return false;
+  };
+
+  const openCheckout = () => {
+    if (!requireAuthentication()) return;
+    setErrorMessage('');
+    setIsMobileCheckoutOpen(true);
+  };
+
   // ── Verrouillage du scroll et touche Échap pour la modale mobile ──
   useEffect(() => {
     if (isMobileCheckoutOpen) {
@@ -428,6 +440,8 @@ export default function CartPage() {
   const handleCheckout = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+
+    if (!requireAuthentication()) return;
 
     if (selectedItems.length === 0) {
       setErrorMessage('Veuillez sélectionner au moins un article à commander.');
@@ -506,26 +520,28 @@ export default function CartPage() {
         throw new Error(data.message || 'Impossible d’initialiser le paiement.');
       }
 
-      // Supprimer uniquement les articles commandés du panier
-      selectedItems.forEach(item => removeItem(item.id));
-      setIsMobileCheckoutOpen(false);
-
-      if (isCod) {
+      if (data.is_cod) {
+        selectedItems.forEach(item => removeItem(item.id));
+        setIsMobileCheckoutOpen(false);
         setOrderSuccess({
           is_cod: true,
-          order_number: data.data?.order_number || data.data?.payment_id || 'JLK-' + Date.now(),
-          amount: totalFcfa,
+          order_number: data.data?.order_number,
+          message: data.message || 'Votre commande a été enregistrée avec succès !',
         });
+        return;
+      }
+
+      const targetUrl = data.data?.redirectUrl || data.data?.payment_url || data.data?.checkout_url;
+      if (targetUrl) {
+        window.location.href = targetUrl;
       } else {
-        const targetUrl = data.data?.redirectUrl || data.data?.payment_url || data.data?.checkout_url;
-        if (targetUrl) {
-          window.location.href = targetUrl;
-        } else {
-          setOrderSuccess({
-            is_cod: false,
-            message: 'Paiement initié avec succès.',
-          });
-        }
+        selectedItems.forEach(item => removeItem(item.id));
+        setIsMobileCheckoutOpen(false);
+        setOrderSuccess({
+          is_cod: false,
+          order_number: data.data?.order_number,
+          message: data.message || 'Paiement initié avec succès.',
+        });
       }
     } catch (err) {
       console.error('Erreur checkout:', err);
@@ -705,7 +721,6 @@ export default function CartPage() {
             id={`paymentMethod-${isModal ? 'm' : 'd'}`}
             value={paymentMethod}
             onChange={e => setPaymentMethod(e.target.value)}
-            disabled={isCod}
             className="cart-select"
           >
             {PAYMENT_METHODS.map(method => (
@@ -714,34 +729,6 @@ export default function CartPage() {
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Checkbox Payer à la livraison */}
-        <div className={`cart-cod-box ${!canUseCod ? 'cart-cod-box--disabled' : ''}`}>
-          <label className="cart-cod-label">
-            <input
-              type="checkbox"
-              checked={isCod}
-              disabled={!canUseCod}
-              onChange={e => setIsCod(e.target.checked)}
-            />
-            <div>
-              <strong>
-                <CreditCardIcon size={16} /> Payer à la livraison
-              </strong>
-              <span>Réglez en espèces directement auprès du livreur.</span>
-            </div>
-          </label>
-          {!isCodAmountValid && (
-            <p className="cart-cod-hint">
-              <InfoIcon size={14} /> Disponible uniquement pour les commandes de 5 000 à 100 000 FCFA.
-            </p>
-          )}
-          {!codEligible && (
-            <p className="cart-cod-hint cart-cod-hint--warning">
-              <AlertTriangleIcon size={14} /> Option indisponible pour votre compte ({codReason || 'Non éligible'}).
-            </p>
-          )}
         </div>
 
         {/* Enregistrer la méthode */}
@@ -780,8 +767,6 @@ export default function CartPage() {
         >
           {submitting ? (
             'Traitement en cours…'
-          ) : isCod ? (
-            `Valider la commande (${totalFcfa.toLocaleString('fr-FR')} FCFA à la livraison)`
           ) : (
             `Payer ${totalFcfa.toLocaleString('fr-FR')} FCFA`
           )}
@@ -1037,10 +1022,7 @@ export default function CartPage() {
                     type="button"
                     className="cart-btn cart-btn--primary cart-mobile-open-btn"
                     disabled={selectedItems.length === 0}
-                    onClick={() => {
-                      setErrorMessage('');
-                      setIsMobileCheckoutOpen(true);
-                    }}
+                    onClick={openCheckout}
                   >
                     <LockIcon size={16} /> Finaliser la commande ({totalFcfa.toLocaleString('fr-FR')} FCFA)
                   </button>
@@ -1065,10 +1047,7 @@ export default function CartPage() {
             <button
               type="button"
               className="cart-btn cart-btn--primary cart-mobile-sticky-btn"
-              onClick={() => {
-                setErrorMessage('');
-                setIsMobileCheckoutOpen(true);
-              }}
+              onClick={openCheckout}
             >
               <LockIcon size={15} /> Finaliser
             </button>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Test SMS JogaLook</title>
+	<style>
+		:root { font-family: system-ui, sans-serif; color: #17202a; background: #f4f6f8; }
+		body { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 20px; }
+		main { width: min(480px, 100%); padding: 28px; background: #fff; border: 1px solid #dfe4ea; border-radius: 14px; box-shadow: 0 12px 35px rgba(23, 32, 42, .08); }
+		h1 { margin: 0 0 8px; font-size: 1.5rem; }
+		p { color: #5d6875; }
+		label { display: grid; gap: 6px; margin-top: 16px; font-weight: 650; }
+		input, textarea { box-sizing: border-box; width: 100%; padding: 11px 12px; border: 1px solid #cbd3dc; border-radius: 8px; font: inherit; }
+		textarea { min-height: 100px; resize: vertical; }
+		button { width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px; background: #f15a24; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+		button:disabled { opacity: .65; cursor: wait; }
+		#result { min-height: 1.4em; margin-top: 16px; white-space: pre-wrap; }
+		.success { color: #137333; } .error { color: #b3261e; }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Test du service SMS</h1>
+		<p>Accès réservé aux administrateurs actifs de JogaLook.</p>
+		<form id="sms-form">
+			<label>Numéro de téléphone
+				<input name="telephone" value="781941351" required inputmode="tel">
+			</label>
+			<label>Message
+				<textarea name="message" required>test</textarea>
+			</label>
+			<label>Nom d’expéditeur
+				<input name="name" value="otp" required>
+			</label>
+			<button type="submit">Envoyer le SMS de test</button>
+		</form>
+		<div id="result" role="status"></div>
+	</main>
+	<script>
+		const form = document.querySelector('#sms-form');
+		const result = document.querySelector('#result');
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const button = form.querySelector('button');
+			button.disabled = true;
+			result.className = '';
+			result.textContent = 'Envoi en cours…';
+			try {
+				const response = await fetch('/service/sms/test', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${localStorage.getItem('jogalook-token') || ''}`,
+					},
+					body: JSON.stringify(Object.fromEntries(new FormData(form))),
+				});
+				const data = await response.json();
+				if (!response.ok || !data.success) throw new Error(data.message || 'Échec de l’envoi.');
+				result.className = 'success';
+				result.textContent = data.message;
+			} catch (error) {
+				result.className = 'error';
+				result.textContent = error.message;
+			} finally {
+				button.disabled = false;
+			}
+		});
+	</script>
+</body>
+</html>

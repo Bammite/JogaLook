@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
@@ -111,6 +111,7 @@ export default function ProfilePage() {
   const { user, loading } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState('creations');
   const [customizations, setCustomizations] = useState([]);
@@ -120,8 +121,8 @@ export default function ProfilePage() {
 
   // ── Auth guard
   useEffect(() => {
-    if (!loading && !user) navigate('/login');
-  }, [loading, user, navigate]);
+    if (!loading && !user) navigate('/login', { state: { from: location.pathname + location.search } });
+  }, [loading, user, navigate, location]);
 
   // ── Chargement des customisations (DB + localStorage)
   const loadCustomizations = useCallback(async () => {

@@ -8,6 +8,7 @@ import CustomEditorPage from './pages/CustomEditorPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
+import ContactPage from './pages/ContactPage';
 import { LoginPage, RegisterPage } from './pages/AuthPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -37,15 +38,21 @@ function RequireAuth({ children, adminOnly = false }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #E9ECEF', borderTopColor: '#F15A24', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="app-loading-skeleton" aria-label="Chargement de la page">
+        <div className="app-loading-skeleton__nav" />
+        <div className="app-loading-skeleton__content">
+          <div className="app-loading-skeleton__line app-loading-skeleton__line--wide" />
+          <div className="app-loading-skeleton__line app-loading-skeleton__line--medium" />
+          <div className="app-loading-skeleton__grid">
+            {Array.from({ length: 6 }, (_, index) => <div className="app-loading-skeleton__card" key={index} />)}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return <Navigate to={adminOnly ? "/admin/login" : "/login"} state={{ from: location.pathname }} replace />;
+    return <Navigate to={adminOnly ? "/admin/login" : "/login"} state={{ from: location.pathname + location.search }} replace />;
   }
 
   if (adminOnly && !isAdmin) {
@@ -58,8 +65,12 @@ function RequireAuth({ children, adminOnly = false }) {
 // ── Redirige si déjà connecté (pages login/register clients) ─────────────────
 function GuestOnly({ children }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return null;
-  if (user) return <Navigate to="/" replace />;
+  if (user) {
+    const from = location.state?.from || '/';
+    return <Navigate to={from} replace />;
+  }
   return children;
 }
 
@@ -82,6 +93,7 @@ function AppShell() {
         <Route path="/actualites"        element={<NewsPage />} />
         <Route path="/actualites/:id"    element={<NewsDetailPage />} />
         <Route path="/actus"             element={<Navigate to="/actualites" replace />} />
+        <Route path="/contact"           element={<ContactPage />} />
         <Route path="/panier"            element={<CartPage />} />
         <Route path="/cart"              element={<Navigate to="/panier" replace />} />
         <Route path="/mes-commandes"     element={<RequireAuth><MyOrdersPage /></RequireAuth>} />

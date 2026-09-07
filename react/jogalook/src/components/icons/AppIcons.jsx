@@ -448,3 +448,28 @@ export const CompassIcon = (props) => baseSvg(
   </>,
   props
 );
+
+export const MailIcon = (props) => baseSvg(
+  <>
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
+  </>,
+  props
+);
+
+export const ClockIcon = (props) => baseSvg(
+  <>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </>,
+  props
+);
+
+export const SendIcon = (props) => baseSvg(
+  <>
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </>,
+  props
+);
+

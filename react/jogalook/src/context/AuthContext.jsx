@@ -70,25 +70,10 @@ export function AuthProvider({ children }) {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
-  /** Étape 1 du login : email + password → OTP ou token direct */
+  /** Connexion directe email + mot de passe (sans OTP) */
   const login = useCallback(async (email, password) => {
     const json = await apiPost('/api/auth/login', { email, password });
-    if (!json.success) throw new Error(json.message || 'Erreur de connexion');
-
-    if (json.skipOtp) {
-      // SMTP non configuré → token reçu directement
-      setToken(json.token);
-      setUser(json.user);
-      persist(json.token, json.user);
-      return { requireOtp: false };
-    }
-    return { requireOtp: true };
-  }, []);
-
-  /** Étape 2 du login : code OTP → token */
-  const verifyOtp = useCallback(async (email, code) => {
-    const json = await apiPost('/api/auth/verify-otp', { email, code });
-    if (!json.success) throw new Error(json.message || 'OTP invalide');
+    if (!json.success || !json.token) throw new Error(json.message || 'Identifiants incorrects');
 
     setToken(json.token);
     setUser(json.user);
@@ -96,16 +81,35 @@ export function AuthProvider({ children }) {
     return json.user;
   }, []);
 
-  /** Inscription */
+  /** Étape 1 d'inscription : envoi de l'OTP de validation email */
+  const sendRegisterOtp = useCallback(async ({ email, password, phone }) => {
+    const json = await apiPost('/api/auth/register-send-otp', { email, password, phone });
+    if (!json.success) throw new Error(json.message || 'Impossible d\'envoyer le code de confirmation');
+    return json;
+  }, []);
+
+  /** Renvoi de l'OTP d'inscription (ne nécessite que l'email) */
+  const resendRegisterOtp = useCallback(async (email) => {
+    const json = await apiPost('/api/auth/register-resend-otp', { email });
+    if (!json.success) throw new Error(json.message || 'Impossible de renvoyer le code');
+    return json;
+  }, []);
+
+  /** Étape 2 d'inscription : vérification de l'OTP et création du compte */
+  const verifyRegisterOtp = useCallback(async ({ email, code, password, phone }) => {
+    const json = await apiPost('/api/auth/register-verify-otp', { email, code, password, phone });
+    if (!json.success || !json.token) throw new Error(json.message || 'Code de confirmation invalide ou expiré');
+
+    setToken(json.token);
+    setUser(json.user);
+    persist(json.token, json.user);
+    return json.user;
+  }, []);
+
+  /** Inscription directe / wrapper */
   const register = useCallback(async (fields) => {
-    const json = await apiPost('/api/auth/register', fields);
-    if (!json.success) throw new Error(json.message || "Erreur lors de l'inscription");
-
-    setToken(json.token);
-    setUser(json.user);
-    persist(json.token, json.user);
-    return json.user;
-  }, []);
+    return sendRegisterOtp(fields);
+  }, [sendRegisterOtp]);
 
   /** Connexion Google : récupération de l'URL OAuth et redirection */
   const loginWithGoogle = useCallback(async (fromPath = '/') => {
@@ -148,7 +152,9 @@ export function AuthProvider({ children }) {
       loading,
       isAdmin,
       login,
-      verifyOtp,
+      sendRegisterOtp,
+      resendRegisterOtp,
+      verifyRegisterOtp,
       register,
       loginWithGoogle,
       handleGoogleCallback,

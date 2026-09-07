@@ -10,6 +10,21 @@ const fallbackProducts = [
   { id: 'fallback-2', name: 'Maillot Extérieur 2025', team: 'Collection sport', price: 94.99, image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=500&fit=crop', badge: { type: 'hot', text: 'Best-seller' }, colors: ['#FFFFFF', '#004170', '#DA291C'], category: 'Football' },
 ];
 
+function CatalogSkeleton() {
+  return (
+    <div className="catalog-grid catalog-grid--skeleton" aria-label="Chargement du catalogue">
+      {Array.from({ length: 8 }, (_, index) => (
+        <div className="catalog-skeleton-card" key={index}>
+          <div className="catalog-skeleton-image" />
+          <div className="catalog-skeleton-line catalog-skeleton-line--title" />
+          <div className="catalog-skeleton-line catalog-skeleton-line--meta" />
+          <div className="catalog-skeleton-line catalog-skeleton-line--price" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function CatalogPage() {
   const [products, setProducts] = useState(fallbackProducts);
   const [categories, setCategories] = useState(['Tous']);
@@ -115,18 +130,8 @@ function CatalogPage() {
             </div>
           </div>
 
-          <div className="catalog-count">
-            <span>
-              {loading ? 'Chargement...' : `${filtered.length} article${filtered.length > 1 ? 's' : ''} trouvé${filtered.length > 1 ? 's' : ''}`}
-            </span>
-          </div>
-
           {loading ? (
-            <div className="catalog-empty">
-              <span className="empty-icon">⏳</span>
-              <h3>Chargement du catalogue...</h3>
-              <p>Récupération des produits depuis la base de données.</p>
-            </div>
+            <CatalogSkeleton />
           ) : filtered.length > 0 ? (
             <div className="catalog-grid">
               {filtered.map((product) => (

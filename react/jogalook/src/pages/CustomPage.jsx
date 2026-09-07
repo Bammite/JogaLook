@@ -2,10 +2,23 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { JerseyIcon } from '../components/icons/AppIcons';
+import {
+  CameraIcon,
+  EyeIcon,
+  JerseyIcon,
+  PaletteIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  TagIcon
+} from '../components/icons/AppIcons';
 import { MOCK_TEMPLATES } from '../utils/templatePresets';
 import { normalizeSvgForDisplay } from '../utils/svgUtils';
 import './CustomPage.css';
+
+function formatFCFA(value) {
+  return `${Math.round(Number(value) || 0).toLocaleString('fr-FR')} FCFA`;
+}
 
 function CustomPage() {
   const navigate = useNavigate();
@@ -94,7 +107,7 @@ function CustomPage() {
                   return (
                     <div key={tpl.id} className="template-card">
                       <div className="template-card__badge">
-                        {tpl.is_free ? 'Gratuit' : `${tpl.price} €`}
+                        {tpl.is_free ? 'Gratuit' : formatFCFA(tpl.price)}
                       </div>
 
                       {/* Zone d'aperçu du Template (Photo HD ou SVG) */}
@@ -126,23 +139,23 @@ function CustomPage() {
                         <div className="template-card-tags">
                           {tpl.template_type === 'MOCKUP' ? (
                             <>
-                              <span className="custom-feature-tag" style={{ background: '#f3e8ff', color: '#7e22ce', borderColor: '#d8b4fe' }}>📸 Photo HD</span>
-                              <span className="custom-feature-tag">✍️ Flockage Nom & N°</span>
+                              <span className="custom-feature-tag" style={{ background: '#f3e8ff', color: '#7e22ce', borderColor: '#d8b4fe' }}><CameraIcon size={14} /> Photo HD</span>
+                              <span className="custom-feature-tag"><PencilIcon size={14} /> Flockage Nom & N°</span>
                             </>
                           ) : (
                             <>
-                              {editable.body !== false && <span className="custom-feature-tag">🎨 Couleurs</span>}
-                              {editable.collar !== false && <span className="custom-feature-tag">👔 Col</span>}
-                              {editable.badge !== false && <span className="custom-feature-tag">🛡️ Blason</span>}
+                              {editable.body !== false && <span className="custom-feature-tag"><PaletteIcon size={14} /> Couleurs</span>}
+                              {editable.collar !== false && <span className="custom-feature-tag"><JerseyIcon size={14} /> Col</span>}
+                              {editable.badge !== false && <span className="custom-feature-tag"><ShieldCheckIcon size={14} /> Blason</span>}
                               {(editable.name_zone !== false || editable.number_zone !== false) && (
-                                <span className="custom-feature-tag">✍️ Flockage</span>
+                                <span className="custom-feature-tag"><PencilIcon size={14} /> Flockage</span>
                               )}
                             </>
                           )}
                         </div>
 
                         <div className="template-card__meta">
-                          <span>🔥 {tpl.usage_count || 0} créations</span>
+                          <span><SparklesIcon size={14} /> {tpl.usage_count || 0} créations</span>
                         </div>
 
                         {/* Boutons d'action : Voir & Personnaliser */}
@@ -151,13 +164,13 @@ function CustomPage() {
                             className="btn-template-voir"
                             onClick={() => handleOpenModal(tpl)}
                           >
-                            👁 Voir
+                            <><EyeIcon size={16} /> Voir</>
                           </button>
                           <button
                             className="btn-template-custom"
                             onClick={() => handleStartCustomizing(tpl.id)}
                           >
-                            ✨ Personnaliser
+                            <><SparklesIcon size={16} /> Personnaliser</>
                           </button>
                         </div>
                       </div>
@@ -219,7 +232,7 @@ function CustomPage() {
                   <div className="template-modal-details">
                     <h2>{modalTemplate.name}</h2>
                     <span className="template-modal-price">
-                      {modalTemplate.is_free ? 'Template Inclus' : `${modalTemplate.price} €`}
+                      {modalTemplate.is_free ? 'Template Inclus' : formatFCFA(modalTemplate.price)}
                     </span>
 
                     <p className="template-modal-desc">
@@ -243,11 +256,11 @@ function CustomPage() {
                         Fonctionnalités personnalisables :
                       </span>
                       <div className="template-card-tags">
-                        {modalTemplate.editable_elements?.body !== false && <span className="custom-feature-tag">🎨 Couleur Principale</span>}
-                        {modalTemplate.editable_elements?.collar !== false && <span className="custom-feature-tag">👔 Forme de Col</span>}
-                        {modalTemplate.editable_elements?.badge !== false && <span className="custom-feature-tag">🛡️ Import Logo/Blason</span>}
-                        {modalTemplate.editable_elements?.name_zone !== false && <span className="custom-feature-tag">✍️ Nom Joueur</span>}
-                        {modalTemplate.editable_elements?.number_zone !== false && <span className="custom-feature-tag">🔢 Numéro Joueur</span>}
+                        {modalTemplate.editable_elements?.body !== false && <span className="custom-feature-tag"><PaletteIcon size={14} /> Couleur Principale</span>}
+                        {modalTemplate.editable_elements?.collar !== false && <span className="custom-feature-tag"><JerseyIcon size={14} /> Forme de Col</span>}
+                        {modalTemplate.editable_elements?.badge !== false && <span className="custom-feature-tag"><ShieldCheckIcon size={14} /> Import Logo/Blason</span>}
+                        {modalTemplate.editable_elements?.name_zone !== false && <span className="custom-feature-tag"><PencilIcon size={14} /> Nom Joueur</span>}
+                        {modalTemplate.editable_elements?.number_zone !== false && <span className="custom-feature-tag"><TagIcon size={14} /> Numéro Joueur</span>}
                       </div>
                     </div>
 
@@ -262,7 +275,7 @@ function CustomPage() {
                         className="btn-primary"
                         onClick={() => handleStartCustomizing(modalTemplate.id)}
                       >
-                        ✨ Personnaliser ce modèle
+                        <><SparklesIcon size={16} /> Personnaliser ce modèle</>
                       </button>
                     </div>
                   </div>

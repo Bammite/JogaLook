@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { supabaseAdmin } = require('../supabaseClient');
-const { sendOtpEmail, isConfigured: isSmtpConfigured } = require('../services/mailService');
+const { sendOtpEmail, sendRegistrationOtpEmail, isConfigured: isSmtpConfigured } = require('../services/mailService');
 const { logLoginAttempt } = require('./logController');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'jogalook_dev_secret';
@@ -23,65 +23,253 @@ async function findUserByEmail(email) {
 }
 
 // ==============================================================================
-// POST /api/auth/register
+// POST /api/auth/register-send-otp — Étape 1 : validation préliminaire & envoi OTP
 // ==============================================================================
-exports.register = async (req, res) => {
+exports.registerSendOtp = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, phone } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email et mot de passe requis' });
     }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ success: false, message: 'Format d\'adresse email invalide' });
+    }
+
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: 'Le mot de passe doit faire au moins 8 caractères' });
     }
 
-    // Vérifier si l'email est déjà utilisé dans la table 'users'
-    const { data: existing } = await supabaseAdmin
+    // Vérifier si un compte ACTIF existe déjà avec cet email
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
+      .select('id, email, status')
+      .eq('email', cleanEmail)
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'Un compte existe déjà avec cet email' });
+    if (existingUser && existingUser.status === 'ACTIVE') {
+      return res.status(409).json({ success: false, message: 'Un compte actif existe déjà avec cette adresse email. Veuillez vous connecter.' });
     }
 
-    const password_hash = await bcrypt.hash(password, 12);
+    // Générer code OTP à 6 chiffres
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
-    const { data: newUser, error } = await supabaseAdmin
-      .from('users')
+    // Invalider les anciens codes d'inscription pour cet email
+    await supabaseAdmin
+      .from('otps')
+      .update({ is_used: true })
+      .eq('recipient', cleanEmail)
+      .eq('purpose', 'REGISTRATION')
+      .eq('is_used', false);
+
+    // Enregistrer le nouvel OTP
+    const { error: otpError } = await supabaseAdmin
+      .from('otps')
       .insert([{
-        email: email.toLowerCase(),
-        password_hash,
-        first_name: first_name?.trim() || null,
-        last_name: last_name?.trim() || null,
-        phone: phone?.trim() || null,
-        role: 'CUSTOMER',
-        status: 'ACTIVE',
-      }])
-      .select('id, email, first_name, last_name, role, status')
-      .single();
+        user_id: existingUser?.id || null,
+        recipient: cleanEmail,
+        code_hash: otpCode,
+        purpose: 'REGISTRATION',
+        expires_at: expiresAt,
+        is_used: false,
+        attempts: 0,
+      }]);
 
-    if (error) throw error;
+    if (otpError) throw otpError;
 
-    const token = generateToken({ user_id: newUser.id, email: newUser.email, role: newUser.role });
+    // Envoi de l'email minimaliste
+    await sendRegistrationOtpEmail({ to: cleanEmail, code: otpCode });
 
-    return res.status(201).json({
+    return res.json({
       success: true,
-      message: 'Compte créé avec succès',
-      token,
-      user: newUser,
+      message: 'Code de confirmation envoyé à votre adresse email',
+      debug_code: !isSmtpConfigured ? otpCode : undefined
     });
   } catch (error) {
-    console.error('Auth register error:', error);
+    console.error('Auth registerSendOtp error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // ==============================================================================
-// POST /api/auth/login — Étape 1 : vérification password → envoi OTP
+// POST /api/auth/register-resend-otp — Renvoyer un nouveau code OTP d'inscription
+// ==============================================================================
+exports.registerResendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Adresse email requise' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Vérifier si le compte est déjà actif
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id, email, status')
+      .eq('email', cleanEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingUser && existingUser.status === 'ACTIVE') {
+      return res.status(409).json({ success: false, message: 'Ce compte est déjà actif. Veuillez vous connecter.' });
+    }
+
+    // Invalider les anciens codes d'inscription pour cet email
+    await supabaseAdmin
+      .from('otps')
+      .update({ is_used: true })
+      .eq('recipient', cleanEmail)
+      .eq('purpose', 'REGISTRATION')
+      .eq('is_used', false);
+
+    // Générer code OTP à 6 chiffres
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    // Enregistrer le nouvel OTP
+    const { error: otpError } = await supabaseAdmin
+      .from('otps')
+      .insert([{
+        user_id: existingUser?.id || null,
+        recipient: cleanEmail,
+        code_hash: otpCode,
+        purpose: 'REGISTRATION',
+        expires_at: expiresAt,
+        is_used: false,
+        attempts: 0,
+      }]);
+
+    if (otpError) throw otpError;
+
+    // Envoi de l'email
+    await sendRegistrationOtpEmail({ to: cleanEmail, code: otpCode });
+
+    return res.json({
+      success: true,
+      message: 'Nouveau code envoyé avec succès',
+      debug_code: !isSmtpConfigured ? otpCode : undefined
+    });
+  } catch (error) {
+    console.error('Auth registerResendOtp error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==============================================================================
+// POST /api/auth/register-verify-otp — Étape 2 : vérification OTP & création du compte
+// ==============================================================================
+exports.registerVerifyOtp = async (req, res) => {
+  try {
+    const { email, code, password, phone } = req.body;
+
+    if (!email || !code || !password) {
+      return res.status(400).json({ success: false, message: 'Email, code de confirmation et mot de passe requis' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = String(code).trim();
+
+    // Vérifier l'OTP
+    const { data: otp, error: fetchError } = await supabaseAdmin
+      .from('otps')
+      .select('*')
+      .eq('recipient', cleanEmail)
+      .eq('purpose', 'REGISTRATION')
+      .eq('is_used', false)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (fetchError || !otp) {
+      return res.status(400).json({ success: false, message: 'Code de confirmation invalide ou expiré' });
+    }
+
+    if (otp.code_hash !== cleanCode) {
+      await supabaseAdmin.from('otps').update({ attempts: (otp.attempts || 0) + 1 }).eq('id', otp.id);
+      return res.status(400).json({ success: false, message: 'Code de confirmation incorrect' });
+    }
+
+    // Marquer l'OTP comme utilisé
+    await supabaseAdmin.from('otps').update({ is_used: true }).eq('id', otp.id);
+
+    const password_hash = await bcrypt.hash(password, 12);
+
+    // Vérifier si un compte existe déjà dans la table users
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id, email, status, role')
+      .eq('email', cleanEmail)
+      .limit(1)
+      .maybeSingle();
+
+    let userRecord;
+
+    if (existingUser) {
+      // Si le compte existait (par exemple d'une tentative précédente ou pending), on le met à jour et on l'active
+      const { data: updatedUser, error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({
+          password_hash,
+          phone: phone?.trim() || null,
+          status: 'ACTIVE',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingUser.id)
+        .select('id, email, first_name, last_name, role, status')
+        .single();
+
+      if (updateError) throw updateError;
+      userRecord = updatedUser;
+    } else {
+      // Création du nouvel utilisateur
+      const { data: newUser, error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert([{
+          email: cleanEmail,
+          password_hash,
+          first_name: null,
+          last_name: null,
+          phone: phone?.trim() || null,
+          role: 'CUSTOMER',
+          status: 'ACTIVE',
+        }])
+        .select('id, email, first_name, last_name, role, status')
+        .single();
+
+      if (insertError) throw insertError;
+      userRecord = newUser;
+    }
+
+    const token = generateToken({ user_id: userRecord.id, email: userRecord.email, role: userRecord.role });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Compte créé avec succès',
+      token,
+      user: userRecord,
+    });
+  } catch (error) {
+    console.error('Auth registerVerifyOtp error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==============================================================================
+// POST /api/auth/register (Rétrocompatibilité directe si besoin)
+// ==============================================================================
+exports.register = async (req, res) => {
+  return exports.registerSendOtp(req, res);
+};
+
+// ==============================================================================
+// POST /api/auth/login — Connexion DIRECTE email + mot de passe (sans OTP)
 // ==============================================================================
 exports.login = async (req, res) => {
   try {
@@ -90,9 +278,10 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email et mot de passe requis' });
     }
 
-    const { user, error } = await findUserByEmail(email.toLowerCase());
+    const cleanEmail = email.trim().toLowerCase();
+    const { user, error } = await findUserByEmail(cleanEmail);
     if (error || !user) {
-      await logLoginAttempt({ user_id: null, email_attempted: email, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'FAILURE', failure_reason: 'Compte introuvable' });
+      await logLoginAttempt({ user_id: null, email_attempted: cleanEmail, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'FAILURE', failure_reason: 'Compte introuvable' });
       return res.status(401).json({ success: false, message: 'Identifiants invalides' });
     }
 
@@ -102,45 +291,19 @@ exports.login = async (req, res) => {
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
-      await logLoginAttempt({ user_id: user.id, email_attempted: email, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'FAILURE', failure_reason: 'Mot de passe incorrect' });
+      await logLoginAttempt({ user_id: user.id, email_attempted: cleanEmail, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'FAILURE', failure_reason: 'Mot de passe incorrect' });
       return res.status(401).json({ success: false, message: 'Identifiants invalides' });
     }
 
-    // Si SMTP pas configuré → connexion directe sans OTP (mode dev)
-    if (!isSmtpConfigured) {
-      const token = generateToken({ user_id: user.id, email: user.email, role: user.role });
-      await logLoginAttempt({ user_id: user.id, email_attempted: email, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'SUCCESS', failure_reason: null });
-      return res.json({
-        success: true,
-        message: 'Connexion réussie (mode sans OTP)',
-        token,
-        user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: user.role },
-        skipOtp: true,
-      });
-    }
+    const token = generateToken({ user_id: user.id, email: user.email, role: user.role });
+    await logLoginAttempt({ user_id: user.id, email_attempted: cleanEmail, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'SUCCESS', failure_reason: null });
 
-    // Générer et stocker le code OTP dans la table PostgreSQL 'otps'
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-    const { error: otpError } = await supabaseAdmin
-      .from('otps')
-      .insert([{
-        user_id: user.id,
-        recipient: email.toLowerCase(),
-        code_hash: otpCode,
-        purpose: 'LOGIN',
-        expires_at: expiresAt,
-        is_used: false,
-        attempts: 0,
-      }]);
-
-    if (otpError) throw otpError;
-
-    await sendOtpEmail({ to: email.toLowerCase(), code: otpCode, recipientName: user.first_name || user.email });
-    await logLoginAttempt({ user_id: user.id, email_attempted: email, ip_address: req.ip, user_agent: req.get('User-Agent'), status: 'PENDING', failure_reason: null });
-
-    return res.json({ success: true, message: 'Code OTP envoyé. Vérifiez votre boîte mail.', skipOtp: false });
+    return res.json({
+      success: true,
+      message: 'Connexion réussie',
+      token,
+      user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: user.role },
+    });
   } catch (error) {
     console.error('Auth login error:', error);
     return res.status(500).json({ success: false, message: error.message });

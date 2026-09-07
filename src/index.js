@@ -45,6 +45,10 @@ app.get(['/test-paiement', '/test-paiement.html'], (req, res) => {
   res.sendFile(path.join(frontendPath, 'test-paiement.html'));
 });
 
+app.get(['/test-service', '/test-service.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'serviceAuxiliaire', 'testService.html'));
+});
+
 app.use(express.static(frontendPath));
 
 // Middleware SPA : toute requête GET qui ne cible pas /api ou /service renvoie index.html

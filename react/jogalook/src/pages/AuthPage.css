@@ -303,34 +303,145 @@
   text-decoration: underline;
 }
 
-/* ── Saisie OTP (grand champ unique) ── */
-.auth-otp-inputs {
-  display: flex;
+/* ── Saisie OTP (6 cases distinctes) ── */
+.auth-otp-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin: 18px 0 22px;
   justify-content: center;
-  margin: 8px 0;
 }
 
-.auth-otp-input {
+.auth-otp-box {
   width: 100%;
-  max-width: 220px;
-  padding: 16px;
+  aspect-ratio: 1 / 1.15;
+  min-width: 36px;
+  max-width: 52px;
+  margin: 0 auto;
+  padding: 0;
   text-align: center;
   font-family: var(--heading);
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: 0.5em;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
   color: var(--secondary);
   background: var(--bg-alt);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
 
-.auth-otp-input:focus {
+.auth-otp-box:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
   background: var(--bg);
+  box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.18);
+  transform: translateY(-2px);
+}
+
+.auth-otp-box--filled {
+  border-color: #94A3B8;
+  background: #ffffff;
+}
+
+/* ── Modal Overlay pour confirmation OTP ── */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: auth-fade-in 0.2s ease-out;
+}
+
+.auth-modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg);
+  border-radius: 20px;
+  padding: 32px 26px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: auth-scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes auth-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes auth-scale-up {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.auth-modal-header {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.auth-modal-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(241, 90, 36, 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.auth-modal-title {
+  font-family: var(--heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--secondary);
+  margin: 0 0 6px;
+}
+
+.auth-modal-desc {
+  font-size: 0.88rem;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.auth-modal-desc strong {
+  color: var(--secondary);
+}
+
+.auth-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 16px;
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.auth-resend-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.auth-resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--text-light);
 }
 
 /* ═══════════════════════════════════════
@@ -359,5 +470,13 @@
 
   .auth-card {
     padding: 28px 20px;
+  }
+
+  .auth-otp-grid {
+    gap: 6px;
+  }
+
+  .auth-otp-box {
+    font-size: 1.3rem;
   }
 }

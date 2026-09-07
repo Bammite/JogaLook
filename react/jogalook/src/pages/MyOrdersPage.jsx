@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
@@ -107,6 +107,7 @@ function getLatestRelation(relations) {
 export default function MyOrdersPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [payingOrderId, setPayingOrderId] = useState(null);
@@ -129,7 +130,7 @@ export default function MyOrdersPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname + location.search } });
       return;
     }
 

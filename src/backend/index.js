@@ -84,4 +84,10 @@ router.use('/sports-news',   require('./routes/sportsArticleRoutes'));
 // ==============================================================================
 router.use('/upload',        require('./routes/upload'));
 
+// ==============================================================================
+// CONTACT & DEMANDES COMMERCIALES
+// ==============================================================================
+router.use('/contact',       require('./routes/contactRoutes'));
+
 module.exports = router;
+

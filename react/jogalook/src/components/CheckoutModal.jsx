@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -60,6 +60,7 @@ const PAYMENT_METHODS = [
 export default function CheckoutModal({ open, onClose }) {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [customerName, setCustomerName]       = useState('');
   const [phoneNumber, setPhoneNumber]         = useState('');
@@ -270,11 +271,17 @@ export default function CheckoutModal({ open, onClose }) {
   };
 
   const handleSubmit = useCallback(async () => {
+    if (!user) {
+      onClose();
+      navigate('/login', { state: { from: '/panier' } });
+      return;
+    }
+
     if (!validate()) return;
     setStep('loading');
     try {
       const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
-      const chosenMethod = isCod ? 'cash_on_delivery' : paymentMethod;
+      const chosenMethod = paymentMethod;
       const selectedMethodObj = PAYMENT_METHODS.find(m => m.id === paymentMethod);
       const country = selectedMethodObj?.country || 'sn';
       const formattedAddress = getFormattedAddress();
@@ -309,15 +316,16 @@ export default function CheckoutModal({ open, onClose }) {
 
       if (json.success) {
         setPaymentData(json.data);
-        clearCart();
 
         if (json.is_cod) {
+          clearCart();
           setStep('success');
         } else {
           const targetUrl = json.data?.redirectUrl || json.data?.payment_url || json.data?.checkout_url;
           if (targetUrl) {
             window.location.href = targetUrl;
           } else {
+            clearCart();
             setStep('success');
           }
         }
@@ -329,7 +337,7 @@ export default function CheckoutModal({ open, onClose }) {
       setErrorMsg('Impossible de contacter le serveur. Vérifiez votre connexion.');
       setStep('error');
     }
-  }, [validate, customerName, phoneNumber, paymentMethod, isCod, city, deliveryMode, gpsCoords, savePreference, totalFcfa, items, user, clearCart]);
+  }, [validate, customerName, phoneNumber, paymentMethod, isCod, city, deliveryMode, gpsCoords, savePreference, totalFcfa, items, user, clearCart, onClose, navigate]);
 
   if (!open) return null;
 
@@ -608,7 +616,6 @@ export default function CheckoutModal({ open, onClose }) {
                     className="cm-field__input cm-select"
                     value={paymentMethod}
                     onChange={(e) => { setPaymentMethod(e.target.value); setErrors(er => ({ ...er, paymentMethod: '' })); }}
-                    disabled={isCod}
                   >
                     {PAYMENT_METHODS.map(m => (
                       <option key={m.id} value={m.id}>
@@ -617,34 +624,6 @@ export default function CheckoutModal({ open, onClose }) {
                     ))}
                   </select>
                   {errors.paymentMethod && <p className="cm-field__err">{errors.paymentMethod}</p>}
-                </div>
-
-                {/* Option Payer à la livraison */}
-                <div className={`cm-cod-box ${!canUseCod ? 'cm-cod-box--disabled' : ''}`}>
-                  <label className="cm-cod-label">
-                    <input
-                      type="checkbox"
-                      checked={isCod}
-                      disabled={!canUseCod}
-                      onChange={e => setIsCod(e.target.checked)}
-                    />
-                    <div>
-                      <strong>
-                        <CreditCardIcon size={16} /> Payer à la livraison
-                      </strong>
-                      <span>Réglez en espèces à la réception de votre colis.</span>
-                    </div>
-                  </label>
-                  {!isCodAmountValid && (
-                    <span className="cm-cod-note">
-                      <InfoIcon size={14} /> Disponible uniquement entre 5 000 et 100 000 FCFA.
-                    </span>
-                  )}
-                  {!codEligible && (
-                    <span className="cm-cod-note cm-cod-note--err">
-                      <AlertTriangleIcon size={14} /> Non disponible pour ce compte ({codReason || 'Non éligible'}).
-                    </span>
-                  )}
                 </div>
 
                 {/* Mémoriser les préférences */}
@@ -667,7 +646,7 @@ export default function CheckoutModal({ open, onClose }) {
                   </div>
                   <button className="cm-btn cm-btn--primary cm-btn--pay" onClick={handleSubmit}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    {isCod ? `Confirmer la commande` : `Payer ${totalFcfa.toLocaleString('fr-FR')} FCFA`}
+                    {`Payer ${totalFcfa.toLocaleString('fr-FR')} FCFA`}
                   </button>
                 </div>
               </div>

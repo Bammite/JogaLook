@@ -78,6 +78,14 @@ exports.initiatePayment = async (req, res) => {
       });
     }
 
+    if (payment_method === 'cash_on_delivery' || payment_method === 'cod' || requestedCod === true) {
+      return res.status(400).json({
+        success: false,
+        code: 'COD_DISABLED',
+        message: 'Le paiement à la livraison est désactivé. Un paiement en ligne est requis pour valider la commande.',
+      });
+    }
+
     // ─── 1. Résolution globale du user_id ───
     let resolvedUserId = user_id;
 
@@ -471,6 +479,10 @@ exports.initiatePayment = async (req, res) => {
       .update({
         transaction_reference: paybammiteToken,
         payload: {
+          customer_name: customer_name ? customer_name.trim() : null,
+          phone_number: phone_number ? phone_number.replace(/\s/g, '') : null,
+          shipping_address: shipping_address || delivery_address || null,
+          items: items || [],
           paybammite_response: paybammiteResponse,
           initiated_at: new Date().toISOString(),
         },
