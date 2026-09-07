@@ -161,22 +161,48 @@
     font-size: 1.1rem;
   }
 
-  .navbar-user--desktop {
-    display: none;
+  .navbar-user--desktop,
+  .navbar-login-btn--desktop {
+    display: none !important;
   }
 
-  .navbar-mobile-account {
+  .navbar-mobile-account,
+  .navbar-mobile-auth {
     display: block;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
     border-top: 1px solid var(--border);
+  }
+
+  .navbar-mobile-login-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark, #ea580c));
+    color: #ffffff !important;
+    font-family: var(--heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: var(--radius-full, 50px);
+    text-decoration: none;
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.25);
+    transition: var(--transition);
+  }
+
+  .navbar-mobile-login-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.35);
   }
 
   .navbar-mobile-account__identity {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 16px 0 8px;
+    padding: 6px 0 12px;
     text-align: left;
   }
 
@@ -218,7 +244,8 @@
   position: relative;
 }
 
-.navbar-mobile-account {
+.navbar-mobile-account,
+.navbar-mobile-auth {
   display: none;
 }
 
@@ -340,17 +367,110 @@
 }
 
 .navbar-login-text {
-  display: none;
+  display: inline;
 }
 
-@media (min-width: 640px) {
+/* ── Badge Panier ── */
+.navbar-cart-btn {
+  position: relative;
+}
+
+.navbar-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--primary, #f15a24);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ── Écrans intermédiaires / Tablettes et petits laptops (769px à 960px) ── */
+@media (min-width: 769px) and (max-width: 960px) {
+  .navbar-inner {
+    height: 68px;
+    gap: 8px;
+  }
+
+  .logo-img {
+    height: 44px;
+  }
+
+  .navbar-links {
+    gap: 2px;
+  }
+
+  .navbar-links a {
+    padding: 6px 8px;
+    font-size: 0.82rem;
+  }
+
+  .navbar-actions {
+    gap: 6px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .navbar-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.75rem;
+  }
+
+  /* Connexion compacte : icône seule sous forme de bouton circulaire */
+  .navbar-login-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
   .navbar-login-text {
-    display: inline;
+    display: none !important;
   }
 }
 
-@media (max-width: 768px) {
-  .navbar-mobile-account {
-    display: block;
+/* ── Laptops moyens (961px à 1100px) ── */
+@media (min-width: 961px) and (max-width: 1100px) {
+  .navbar-inner {
+    gap: 12px;
+  }
+
+  .logo-img {
+    height: 48px;
+  }
+
+  .navbar-links {
+    gap: 4px;
+  }
+
+  .navbar-links a {
+    padding: 8px 10px;
+    font-size: 0.86rem;
+  }
+
+  .navbar-actions {
+    gap: 8px;
+  }
+
+  .navbar-login-btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
   }
 }

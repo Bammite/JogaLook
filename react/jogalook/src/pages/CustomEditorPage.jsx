@@ -388,13 +388,10 @@ export default function CustomEditorPage() {
     }, 280);
   };
 
-  // Price Calculation
-  const basePrice = template?.price ? parseFloat(template.price) : 50000;
-  const flockingPrice = (playerName ? 10000 : 0) + (playerNumber ? 5000 : 0);
-  const badgePrice = clubBadgeUrl ? 5000 : 0;
+  // Price Calculation : le prix du maillot personnalisé est strictement celui défini à la création du template
   const formatFCFA = (value) => `${Math.round(Number(value) || 0).toLocaleString('fr-FR')} FCFA`;
-  const unitPrice = basePrice + flockingPrice + badgePrice;
-  const totalPrice = (unitPrice * quantity).toFixed(2);
+  const unitPrice = template ? (template.is_free ? 0 : (parseFloat(template.price) || 0)) : 0;
+  const totalPrice = unitPrice * quantity;
 
   // ── MOTEUR DE RENDU FIDÈLE ET RESPONSIVE (FACE & DOS) ──
   const buildSvgString = (side) => {
@@ -1698,7 +1695,7 @@ export default function CustomEditorPage() {
                           setView('front');
                         }}
                       >
-                        + Ajouter un blason (+5 000 FCFA)
+                        + Ajouter un blason
                       </button>
                     </div>
                   )}
@@ -1734,25 +1731,25 @@ export default function CustomEditorPage() {
 
                   <div className="mini-summary-box">
                     <div className="summary-line">
-                      <span>Maillot de base</span>
-                      <span>{formatFCFA(basePrice)}</span>
+                      <span>Prix du modèle</span>
+                      <span>{formatFCFA(unitPrice)}</span>
                     </div>
                     {playerName && (
                       <div className="summary-line">
                         <span>Nom "{playerName}"</span>
-                        <span>+10 000 FCFA</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>Inclus</span>
                       </div>
                     )}
                     {playerNumber && (
                       <div className="summary-line">
                         <span>Numéro "{playerNumber}"</span>
-                        <span>+5 000 FCFA</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>Inclus</span>
                       </div>
                     )}
                     {clubBadgeUrl && (
                       <div className="summary-line">
-                        <span>Blason Club personnalisé</span>
-                        <span>+5 000 FCFA</span>
+                        <span>Blason Club</span>
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>Inclus</span>
                       </div>
                     )}
                     <div className="summary-line total-line">
@@ -1760,6 +1757,7 @@ export default function CustomEditorPage() {
                       <span>{formatFCFA(totalPrice)}</span>
                     </div>
                   </div>
+
 
                   <button className="btn-add-cart-popover" onClick={handleAddToCart}>
                     Ajouter au panier ({formatFCFA(totalPrice)})

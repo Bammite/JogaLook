@@ -72,7 +72,7 @@ function Navbar() {
               Contact
             </NavLink>
           </li>
-          {user && (
+          {user ? (
             <li className="navbar-mobile-account">
               <div className="navbar-mobile-account__identity">
                 <span className="navbar-avatar navbar-mobile-account__avatar">{initials}</span>
@@ -96,6 +96,21 @@ function Navbar() {
                 <LogOutIcon size={16} /> Se déconnecter
               </button>
             </li>
+          ) : (
+            <li className="navbar-mobile-auth">
+              <Link
+                to="/login"
+                state={{ from: location.pathname + location.search }}
+                className="navbar-mobile-login-link"
+                onClick={() => setMenuOpen(false)}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Se connecter</span>
+              </Link>
+            </li>
           )}
         </ul>
 
@@ -106,7 +121,7 @@ function Navbar() {
             </svg>
           </Link>
 
-          {/* ── Compte utilisateur ── */}
+          {/* ── Compte utilisateur / Connexion (Desktop uniquement) ── */}
           {user ? (
             <div className="navbar-user navbar-user--desktop" ref={dropRef}>
               <button
@@ -143,7 +158,7 @@ function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" state={{ from: location.pathname + location.search }} className="navbar-login-btn" aria-label="Connexion">
+            <Link to="/login" state={{ from: location.pathname + location.search }} className="navbar-login-btn navbar-login-btn--desktop" aria-label="Connexion">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
@@ -152,64 +167,13 @@ function Navbar() {
             </Link>
           )}
 
-          <Link
-            to="/panier"
-            aria-label="Mon Panier"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: 'transparent',
-              color: '#000',
-              textDecoration: 'none',
-              transition: 'background 0.2s ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#000"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                display: 'block',
-                width: '20px',
-                height: '20px',
-                stroke: '#000',
-                visibility: 'visible',
-              }}
-            >
+          <Link to="/panier" className="icon-btn navbar-cart-btn" aria-label="Mon Panier">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
             {cartCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '2px',
-                  right: '2px',
-                  minWidth: '18px',
-                  height: '18px',
-                  background: '#000',
-                  color: '#fff',
-                  fontSize: '0.7rem',
-                  fontWeight: '700',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 4px',
-                }}
-              >
+              <span className="navbar-cart-badge">
                 {cartCount}
               </span>
             )}
