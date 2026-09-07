@@ -121,6 +121,12 @@
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
+/* ── Mobile account & auth options (hidden by default on desktop) ── */
+.navbar-mobile-account,
+.navbar-mobile-auth {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -128,20 +134,23 @@
 
   .navbar-links {
     position: fixed;
-    top: 72px;
+    top: 78px;
     left: 0;
     right: 0;
-    background: var(--bg);
+    background: var(--bg, #ffffff);
     flex-direction: column;
     align-items: center;
     gap: 0;
-    padding: 24px;
+    padding: 20px 24px 28px;
     border-bottom: 1px solid var(--border);
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;
     transition: var(--transition);
-    box-shadow: var(--shadow);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+    max-height: calc(100vh - 78px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .navbar-links.active {
@@ -168,11 +177,11 @@
 
   .navbar-mobile-account,
   .navbar-mobile-auth {
-    display: block;
+    display: block !important;
     width: 100%;
     margin-top: 14px;
     padding-top: 14px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border, rgba(15, 23, 42, 0.08));
   }
 
   .navbar-mobile-login-link {
@@ -242,11 +251,6 @@
 /* ── Avatar & dropdown utilisateur ── */
 .navbar-user {
   position: relative;
-}
-
-.navbar-mobile-account,
-.navbar-mobile-auth {
-  display: none;
 }
 
 .navbar-avatar {
