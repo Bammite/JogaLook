@@ -10,7 +10,8 @@
     "dev": "nodemon server.js",
     "dev:full": "cd react/jogalook && npm run build && cd ../.. && nodemon server.js",
     "start": "node server.js",
-    "create-admin": "node ./src/backend/scripts/createAdmin.js"
+    "create-admin": "node ./src/backend/scripts/createAdmin.js",
+    "test:email": "node ./src/backend/scripts/testEmail.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.40.0",
@@ -21,6 +22,7 @@
     "multer": "^2.2.0",
     "nodemailer": "^6.9.4",
     "nodemon": "^3.1.14",
-    "pg": "^8.11.0"
+    "pg": "^8.11.0",
+    "resend": "^6.26.0"
   }
 }

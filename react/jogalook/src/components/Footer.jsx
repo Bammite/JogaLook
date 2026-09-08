@@ -68,6 +68,17 @@ function Footer() {
             </ul>
           </div>
 
+          <div className="footer-column">
+            <h4>Légal</h4>
+            <ul>
+              <li><a href="/legal/cgu.html">CGU</a></li>
+              <li><a href="/legal/cgv.html">CGV</a></li>
+              <li><a href="/legal/politique_confidentialite.html">Confidentialité</a></li>
+              <li><a href="/legal/mentions_legales.html">Mentions légales</a></li>
+              <li><a href="/legal/politique_cookies.html">Cookies</a></li>
+            </ul>
+          </div>
+
           <div className="footer-column footer-newsletter">
             <h4>Newsletter</h4>
             <p>Recevez les dernières offres et nouveautés</p>
