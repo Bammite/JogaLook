@@ -49,11 +49,24 @@ app.get(['/test-service', '/test-service.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'serviceAuxiliaire', 'testService.html'));
 });
 
+app.get(['/404', '/404.html'], (req, res) => {
+  res.status(404).sendFile(path.join(frontendPath, '404.html'));
+});
+
+// Fichiers statiques frontend (assets, css, js, favicon, legal/*.html, 404.html)
 app.use(express.static(frontendPath));
 
-// Middleware SPA : toute requête GET qui ne cible pas /api ou /service renvoie index.html
+// Middleware SPA : toute requête GET qui ne cible pas /api ou /service renvoie index.html (géré ensuite par React Router)
 app.use((req, res, next) => {
-  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/service') && req.path !== '/test-paiement' && req.path !== '/test-paiement.html') {
+  if (
+    req.method === 'GET' &&
+    !req.path.startsWith('/api') &&
+    !req.path.startsWith('/service') &&
+    req.path !== '/test-paiement' &&
+    req.path !== '/test-paiement.html' &&
+    req.path !== '/404' &&
+    req.path !== '/404.html'
+  ) {
     const indexPath = path.join(frontendPath, 'index.html');
     return res.sendFile(indexPath, (err) => {
       if (err) next();
@@ -63,9 +76,12 @@ app.use((req, res, next) => {
 });
 
 // ==============================================================================
-// 4. GESTIONNAIRES D'ERREURS & 404
+// 4. GESTIONNAIRES D'ERREURS & 404 (pour API ou requêtes non traitées)
 // ==============================================================================
 app.use((req, res) => {
+  if (req.accepts('html')) {
+    return res.status(404).sendFile(path.join(frontendPath, '404.html'));
+  }
   res.status(404).json({
     success: false,
     message: `Route introuvable : ${req.method} ${req.originalUrl}`
