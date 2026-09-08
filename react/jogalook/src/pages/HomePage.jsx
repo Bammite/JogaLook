@@ -26,15 +26,6 @@ const HERO_SLIDES = [
   { id: 'hero4', type: 'image', src: hero4Img, duration: 3000, alt: 'Équipement JogaLook 4' },
 ];
 
-const fallbackCategories = [
-  { name: 'Football',   icon: <FootballIcon   size={36} />, count: 245, color: '#e63946' },
-  { name: 'Basketball', icon: <BasketballIcon size={36} />, count: 89,  color: '#f4a261' },
-  { name: 'Rugby',      icon: <RugbyIcon      size={36} />, count: 56,  color: '#2a9d8f' },
-  { name: 'Running',    icon: <RunningIcon    size={36} />, count: 134, color: '#264653' },
-  { name: 'Tennis',     icon: <TennisIcon     size={36} />, count: 42,  color: '#e9c46a' },
-  { name: 'Training',   icon: <FitnessIcon    size={36} />, count: 78,  color: '#6d6875' },
-];
-
 const SPORT_ICONS = [
   <FootballIcon size={36} />,
   <BasketballIcon size={36} />,
@@ -44,17 +35,6 @@ const SPORT_ICONS = [
   <FitnessIcon size={36} />,
 ];
 
-const fallbackProducts = [
-  { id: 1, name: 'Maillot Domicile 2025', team: 'FC Barcelone', price: 99.99, oldPrice: 119.99, image: 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=400&h=500&fit=crop', badge: { type: 'sale', text: '-17%' }, colors: ['#A50044', '#004D98', '#FFED02'], category: 'Football' },
-  { id: 2, name: 'Maillot Extérieur 2025', team: 'Paris Saint-Germain', price: 109.99, image: 'https://images.unsplash.com/photo-1511886929837-354d827aae26?w=400&h=500&fit=crop', badge: { type: 'new', text: 'Nouveau' }, colors: ['#FFFFFF', '#004170', '#DA291C'], category: 'Football' },
-  { id: 3, name: 'Maillot Third 2025', team: 'Manchester City', price: 94.99, oldPrice: 109.99, image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=500&fit=crop', badge: { type: 'hot', text: 'Best-seller' }, colors: ['#6CABDD', '#1C2C5B', '#FFC659'], category: 'Football' },
-  { id: 4, name: 'Maillot Domicile 2025', team: 'Juventus FC', price: 89.99, image: 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=400&h=500&fit=crop', badge: { type: 'new', text: 'Nouveau' }, colors: ['#000000', '#FFFFFF', '#D3D3D3'], category: 'Football' },
-  { id: 5, name: 'Maillot Domicile 2025', team: 'Bayern Munich', price: 99.99, image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=500&fit=crop', badge: { type: 'sale', text: '-10%' }, colors: ['#DC052D', '#FFFFFF', '#0066B2'], category: 'Football' },
-  { id: 6, name: 'Maillot Extérieur 2025', team: 'AC Milan', price: 104.99, oldPrice: 119.99, image: 'https://images.unsplash.com/photo-1589487391730-58f20eb2c308?w=400&h=500&fit=crop', badge: { type: 'sale', text: '-13%' }, colors: ['#FFFFFF', '#FB090B', '#000000'], category: 'Football' },
-  { id: 7, name: 'Maillot Domicile 2025', team: 'Liverpool FC', price: 99.99, image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=400&h=500&fit=crop', badge: { type: 'hot', text: 'Populaire' }, colors: ['#C8102E', '#00B2A9', '#FFFFFF'], category: 'Football' },
-  { id: 8, name: 'Maillot Third 2025', team: 'Arsenal FC', price: 94.99, image: 'https://images.unsplash.com/photo-1581009137042-c552e485697a?w=400&h=500&fit=crop', badge: { type: 'new', text: 'Nouveau' }, colors: ['#EF0107', '#FFFFFF', '#063672'], category: 'Football' },
-];
-
 const stats = [
   { value: '10K+', label: 'Clients satisfaits' },
   { value: '500+', label: 'Maillots disponibles' },
@@ -62,35 +42,6 @@ const stats = [
   { value: '24/7', label: 'Service client' },
 ];
 
-const BLOG_FALLBACK = [
-  {
-    id: 1,
-    title: 'Les maillots les plus iconiques de la décennie',
-    excerpt: 'Du bleu de la France 98 aux rayures de la Juventus, retour sur les designs qui ont marqué le football mondial et redéfini le style sur les pelouses.',
-    image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=380&fit=crop',
-    category: 'Culture',
-    date: '2 septembre 2026',
-    readTime: '5 min',
-  },
-  {
-    id: 2,
-    title: 'Comment choisir la bonne taille pour votre maillot ?',
-    excerpt: 'Coupe slim, regular ou oversize — chaque morphologie mérite un maillot adapté. Notre guide complet pour ne plus jamais se tromper de taille.',
-    image: 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=600&h=380&fit=crop',
-    category: 'Guide',
-    date: '28 août 2026',
-    readTime: '4 min',
-  },
-  {
-    id: 3,
-    title: 'Personnalisation : les tendances 2025–2026',
-    excerpt: 'Flocage, couleurs custom, broderie… La personnalisation des maillots n\'a jamais été aussi populaire. Découvrez ce qui séduit les clubs et les supporters cette saison.',
-    image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=600&h=380&fit=crop',
-    category: 'Tendances',
-    date: '20 août 2026',
-    readTime: '6 min',
-  },
-];
 
 // ── Contact Modal ─────────────────────────────────────────────────────────────
 const EMPTY_FORM = { name: '', email: '', phone: '', organization: '', quantity: '', city: '', message: '' };
@@ -215,9 +166,10 @@ function ContactModal({ config, onClose }) {
 function HomePage() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [resetKey, setResetKey]                   = useState(0);
-  const [featuredProducts, setFeaturedProducts]   = useState(fallbackProducts);
-  const [categories, setCategories]               = useState(fallbackCategories);
-  const [blogPosts, setBlogPosts]                 = useState(BLOG_FALLBACK);
+  const [featuredProducts, setFeaturedProducts]   = useState([]);
+  const [categories, setCategories]               = useState([]);
+  const [blogPosts, setBlogPosts]                 = useState([]);
+  const [loading, setLoading]                     = useState(true);
   const [activeModal, setActiveModal]             = useState(null); // 'WHOLESALER' | 'CLUB' | 'SCHOOL'
 
   // Hero carousel
@@ -232,6 +184,7 @@ function HomePage() {
   // Load products, categories, blog
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
         const [productsRes, categoriesRes, newsRes] = await Promise.all([
           fetch('/api/products?limit=8'),
@@ -259,26 +212,30 @@ function HomePage() {
         const mappedCategories = (cJson.data || []).slice(0, 6).map((cat, i) => ({
           name: cat.name,
           icon: SPORT_ICONS[i % SPORT_ICONS.length],
-          count: 42 + i * 12,
+          count: cat.product_count || 0,
           color: ['#e63946', '#f4a261', '#2a9d8f', '#264653', '#e9c46a', '#6d6875'][i % 6],
         }));
 
-        const mappedNews = (nJson.data || []).slice(0, 3).map((a, i) => ({
+        const mappedNews = (nJson.data || []).slice(0, 3).map((a) => ({
           id: a.id,
           title: a.title,
           excerpt: a.excerpt || a.content?.slice(0, 160) + '…',
-          image: a.cover_image_url || BLOG_FALLBACK[i % 3].image,
-          category: a.category_name || a.category || 'Actualité',
-          date: a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : BLOG_FALLBACK[i % 3].date,
+          image: a.cover_image_url || null,
+          category: a.sports_news_categories?.name || a.category_name || a.category || 'Actualité',
+          date: a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
           readTime: a.read_time || `${Math.max(3, Math.ceil((a.content?.split(' ').length || 300) / 200))} min`,
           slug: a.slug || a.id,
         }));
 
-        if (mappedProducts.length) setFeaturedProducts(mappedProducts);
-        if (mappedCategories.length) setCategories(mappedCategories);
-        if (mappedNews.length) setBlogPosts(mappedNews);
+        setFeaturedProducts(mappedProducts);
+        setCategories(mappedCategories);
+        setBlogPosts(mappedNews);
       } catch {
-        // garder les données fallback
+        setFeaturedProducts([]);
+        setCategories([]);
+        setBlogPosts([]);
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -398,17 +355,29 @@ function HomePage() {
             <h2>Nouveautés &amp; Meilleures Ventes</h2>
             <p>Les maillots les plus populaires de la saison</p>
           </div>
-          <div className="products-grid">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          <div className="section-cta">
-            <Link to="/catalogue" className="btn-primary">
-              Voir tous les maillots
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </Link>
-          </div>
+          {loading ? (
+            <div className="hp-empty-message">
+              <p>Chargement des maillots…</p>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <>
+              <div className="products-grid">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <div className="section-cta">
+                <Link to="/catalogue" className="btn-primary">
+                  Voir tous les maillots
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="hp-empty-message">
+              <p>Aucun produit pour le moment.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -421,39 +390,55 @@ function HomePage() {
             <p>Conseils, tendances et coulisses du monde du maillot de sport</p>
           </div>
 
-          <div className="hp-blog-grid">
-            {blogPosts.map((post, i) => (
-              <Link
-                key={post.id}
-                to={`/blog/${post.slug || post.id}`}
-                className={`hp-blog-card ${i === 0 ? 'hp-blog-card--featured' : ''}`}
-              >
-                <div className="hp-blog-img-wrap">
-                  <img src={post.image} alt={post.title} loading="lazy" />
-                  <span className="hp-blog-cat">{post.category}</span>
-                </div>
-                <div className="hp-blog-body">
-                  <div className="hp-blog-meta">
-                    <span>{post.date}</span>
-                    <span>·</span>
-                    <span>{post.readTime} de lecture</span>
-                  </div>
-                  <h3 className="hp-blog-title">{post.title}</h3>
-                  <p className="hp-blog-excerpt">{post.excerpt}</p>
-                  <span className="hp-blog-read">
-                    Lire l'article
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="hp-empty-message">
+              <p>Chargement des actualités…</p>
+            </div>
+          ) : blogPosts.length > 0 ? (
+            <>
+              <div className="hp-blog-grid">
+                {blogPosts.map((post, i) => (
+                  <Link
+                    key={post.id}
+                    to={`/blog/${post.slug || post.id}`}
+                    className={`hp-blog-card ${i === 0 ? 'hp-blog-card--featured' : ''}`}
+                  >
+                    <div className="hp-blog-img-wrap">
+                      {post.image ? (
+                        <img src={post.image} alt={post.title} loading="lazy" />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>📰</div>
+                      )}
+                      <span className="hp-blog-cat">{post.category}</span>
+                    </div>
+                    <div className="hp-blog-body">
+                      <div className="hp-blog-meta">
+                        {post.date && <span>{post.date}</span>}
+                        {post.date && <span>·</span>}
+                        <span>{post.readTime} de lecture</span>
+                      </div>
+                      <h3 className="hp-blog-title">{post.title}</h3>
+                      <p className="hp-blog-excerpt">{post.excerpt}</p>
+                      <span className="hp-blog-read">
+                        Lire l'article
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
 
-          <div className="section-cta">
-            <Link to="/blog" className="btn-outline-primary">
-              Voir tous les articles
-            </Link>
-          </div>
+              <div className="section-cta">
+                <Link to="/blog" className="btn-outline-primary">
+                  Voir tous les articles
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="hp-empty-message">
+              <p>Aucune actualité pour le moment.</p>
+            </div>
+          )}
         </div>
       </section>
 

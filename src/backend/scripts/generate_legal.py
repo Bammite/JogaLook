@@ -1,54 +1,59 @@
 # -*- coding: utf-8 -*-
-import os
+"""
+Générateur des documents légaux personnalisés pour JogaLook.
+Génère les 5 documents légaux complets avec branding, favicons et textes 100% sur-mesure.
+"""
 
-TEMPLATE = """<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} — JogaLook</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {{
+import os
+import shutil
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+LEGAL_SRC_DIR = os.path.join(BASE_DIR, "legal")
+LEGAL_FRONTEND_DIR = os.path.join(BASE_DIR, "src", "frontend", "legal")
+
+COMMON_CSS = """
+        :root {
             --primary: #f15a24;
             --primary-hover: #d94815;
-            --primary-light: rgba(241, 90, 36, 0.12);
-            --dark: #0f172a;
-            --dark-surface: #1e293b;
+            --primary-light: rgba(241, 90, 36, 0.1);
+            --dark: #0b1329;
+            --dark-surface: #131c38;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #334155;
             --text-heading: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-        }}
+            --accent-green: #10b981;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
 
-        * {{
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-        }}
+        }
 
-        body {{
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.75;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.8;
             color: var(--text);
             background-color: var(--bg);
             -webkit-font-smoothing: antialiased;
-        }}
+        }
 
-        h1, h2, h3, h4, .nav-logo, .hero-badge {{
-            font-family: "Plus Jakarta Sans", sans-serif;
+        h1, h2, h3, h4, .nav-logo, .hero-badge, .tab-btn, .section-number {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-heading);
             font-weight: 700;
-        }}
+        }
 
-        /* Header Navbar */
-        .navbar {{
-            background-color: #0b1329;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        /* Navbar Header */
+        .navbar {
+            background-color: var(--dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding: 1.1rem 2rem;
             position: sticky;
             top: 0;
@@ -56,443 +61,448 @@ TEMPLATE = """<!DOCTYPE html>
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }}
+        }
 
-        .nav-logo {{
+        .nav-logo {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             font-size: 1.45rem;
             font-weight: 800;
             text-decoration: none;
             color: #ffffff;
             letter-spacing: -0.5px;
-        }}
+        }
 
-        .nav-logo span {{
+        .nav-logo svg, .nav-logo img {
+            height: 28px;
+            width: auto;
+        }
+
+        .nav-logo span {
             color: var(--primary);
-        }}
+        }
 
-        .nav-links {{
+        .nav-links {
             display: flex;
-            gap: 1.1rem;
+            gap: 1.25rem;
             align-items: center;
-        }}
+        }
 
-        .nav-links a {{
+        .nav-links a {
             text-decoration: none;
             color: #94a3b8;
+            font-size: 0.92rem;
             font-weight: 500;
-            font-size: 0.9rem;
             transition: all 0.2s ease;
-            padding: 6px 12px;
-            border-radius: 6px;
-        }}
-
-        .nav-links a:hover {{
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
-        }}
-
-        .nav-links a.active {{
-            color: #ffffff;
-            background: var(--primary);
-            font-weight: 600;
-        }}
-
-        .nav-back {{
-            background: rgba(241, 90, 36, 0.15) !important;
-            color: var(--primary) !important;
-            border: 1px solid rgba(241, 90, 36, 0.3) !important;
-            font-weight: 600 !important;
-        }}
-
-        .nav-back:hover {{
-            background: var(--primary) !important;
-            color: #ffffff !important;
-        }}
-
-        /* Hero Banner */
-        .hero {{
-            background: linear-gradient(135deg, #0b1329 0%, #0f172a 60%, #1e293b 100%);
-            color: #ffffff;
-            padding: 4.5rem 1.5rem 5rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }}
-
-        .hero::before {{
-            content: "";
-            position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 450px;
-            height: 450px;
-            background: radial-gradient(circle, rgba(241, 90, 36, 0.18) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }}
-
-        .hero-badge {{
-            display: inline-block;
-            padding: 6px 18px;
-            background: rgba(241, 90, 36, 0.18);
-            border: 1px solid rgba(241, 90, 36, 0.35);
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
-            margin-bottom: 1.1rem;
-        }}
-
-        .hero h1 {{
-            font-size: clamp(2.2rem, 4vw, 3rem);
-            color: #ffffff;
-            margin-bottom: 0.8rem;
-            font-weight: 800;
-        }}
-
-        .hero p {{
-            color: #94a3b8;
-            font-size: 1.05rem;
-            max-width: 650px;
-            margin: 0 auto;
-        }}
-
-        /* Main Container */
-        .container {{
-            max-width: 960px;
-            margin: -2.8rem auto 4.5rem;
-            padding: 0 1.5rem;
-            position: relative;
-            z-index: 10;
-        }}
-
-        .document-card {{
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-            border: 1px solid var(--border);
-            padding: 3.5rem 3rem;
-        }}
-
-        .document-meta {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 2rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 2px solid var(--border);
-        }}
-
-        .meta-pill {{
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-
-        .meta-pill span {{
-            color: var(--primary);
-            font-weight: 700;
-        }}
-
-        .print-btn {{
-            background: #f1f5f9;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
-        }}
+        }
 
-        .print-btn:hover {{
-            background: #e2e8f0;
-            color: #0f172a;
-        }}
+        .nav-links a:hover {
+            color: #ffffff;
+        }
 
-        /* Articles & Content */
-        .article {{
-            margin-bottom: 3rem;
-        }}
+        .nav-links .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 0.55rem 1.15rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
 
-        .article:last-child {{
-            margin-bottom: 0;
-        }}
+        .nav-links .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
 
-        .article h2 {{
-            font-size: 1.45rem;
-            color: #0f172a;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.6rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1.25rem;
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, var(--dark) 0%, #152244 100%);
+            color: #ffffff;
+            padding: 3.5rem 1.5rem 2.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(241, 90, 36, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(241, 90, 36, 0.15);
+            border: 1px solid rgba(241, 90, 36, 0.35);
+            color: #ff9d75;
+            padding: 0.35rem 0.95rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-banner h1 {
+            color: #ffffff;
+            font-size: 2.35rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-banner p {
+            color: #cbd5e1;
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* Nav Pills for Legal Navigation */
+        .legal-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 2rem;
+        }
+
+        .legal-nav a {
+            text-decoration: none;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .legal-nav a:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        .legal-nav a.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(241, 90, 36, 0.35);
+        }
+
+        /* Main Container & Articles */
+        .container {
+            max-width: 960px;
+            margin: 2.5rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+
+        .legal-meta-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        .legal-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2.25rem;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .legal-section:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }}
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
 
-        .article h2::before {{
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 22px;
-            background: var(--primary);
-            border-radius: 4px;
-        }}
+        .section-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
 
-        .article h3 {{
-            font-size: 1.15rem;
-            color: #1e293b;
-            margin-top: 1.75rem;
-            margin-bottom: 0.75rem;
-        }}
+        .section-header h2 {
+            font-size: 1.35rem;
+            color: var(--text-heading);
+            line-height: 1.3;
+        }
 
-        .article p {{
-            margin-bottom: 1.1rem;
-            color: #334155;
+        .legal-section p {
+            margin-bottom: 1rem;
             font-size: 0.98rem;
-            line-height: 1.75;
-        }}
+        }
 
-        .article ul, .article ol {{
-            margin: 1rem 0 1.5rem 1.75rem;
-            color: #334155;
-        }}
-
-        .article li {{
-            margin-bottom: 0.6rem;
-            font-size: 0.98rem;
-            line-height: 1.65;
-        }}
-
-        .article li strong {{
-            color: #0f172a;
-        }}
-
-        .highlight-box {{
-            background: rgba(241, 90, 36, 0.05);
-            border-left: 4px solid var(--primary);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
-            font-size: 0.96rem;
-        }}
-
-        .highlight-box p:last-child {{
+        .legal-section p:last-child {
             margin-bottom: 0;
-        }}
+        }
 
-        .info-table {{
+        .legal-section ul, .legal-section ol {
+            margin: 1rem 0 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .legal-section li {
+            font-size: 0.96rem;
+        }
+
+        .highlight-box {
+            background: #fff7ed;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #9a3412;
+        }
+
+        .info-box {
+            background: #f0fdf4;
+            border-left: 4px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #166534;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5rem 0;
-            font-size: 0.92rem;
-        }}
-
-        .info-table th, .info-table td {{
-            padding: 12px 16px;
-            border: 1px solid var(--border);
             text-align: left;
-        }}
+            font-size: 0.92rem;
+        }
 
-        .info-table th {{
-            background: #f8fafc;
-            color: #0f172a;
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-heading);
             font-weight: 700;
-        }}
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
 
-        .info-table tr:nth-child(even) {{
-            background: #fdfdfd;
-        }}
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
 
-        a {{
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }}
+        tr:last-child td {
+            border-bottom: none;
+        }
 
-        a:hover {{
-            text-decoration: underline;
-        }}
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
 
-        /* Site Footer */
-        .site-footer {{
-            background-color: #0b1329;
+        /* Footer */
+        .footer {
+            background-color: var(--dark);
             color: #94a3b8;
-            padding: 4.5rem 2rem 2rem;
-            margin-top: 5rem;
+            padding: 3rem 1.5rem 2rem;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }}
+            font-size: 0.9rem;
+        }
 
-        .site-footer-container {{
-            max-width: 1000px;
+        .footer-content {
+            max-width: 960px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 2.5rem;
-        }}
-
-        .site-footer-col h4 {{
-            color: #ffffff;
-            font-size: 1.05rem;
-            margin-bottom: 1.2rem;
-            font-weight: 700;
-        }}
-
-        .site-footer-col p {{
-            font-size: 0.9rem;
-            line-height: 1.65;
-            margin-bottom: 1rem;
-        }}
-
-        .site-footer-col ul {{
-            list-style: none;
-        }}
-
-        .site-footer-col ul li {{
-            margin-bottom: 0.6rem;
-        }}
-
-        .site-footer-col ul li a {{
-            color: #94a3b8;
-            font-weight: 400;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }}
-
-        .site-footer-col ul li a:hover {{
-            color: var(--primary);
-            text-decoration: none;
-        }}
-
-        .site-footer-bottom {{
-            max-width: 1000px;
-            margin: 3rem auto 0;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
             text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            justify-content: center;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-copy {
             font-size: 0.85rem;
             color: #64748b;
-        }}
+        }
 
-        @media (max-width: 768px) {{
-            .navbar {{
-                flex-direction: column;
-                gap: 1rem;
+        @media (max-width: 768px) {
+            .navbar {
                 padding: 1rem;
-            }}
-            .nav-links {{
-                flex-wrap: wrap;
-                justify-content: center;
+            }
+            .hero-banner h1 {
+                font-size: 1.85rem;
+            }
+            .legal-section {
+                padding: 1.5rem;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.5rem;
-            }}
-            .document-card {{
-                padding: 2rem 1.25rem;
-                border-radius: 12px;
-            }}
-            .hero {{
-                padding: 3.5rem 1rem 4rem;
-            }}
-        }}
+            }
+        }
+"""
 
-        @media print {{
-            .navbar, .site-footer, .print-btn, .hero-badge {{
-                display: none !important;
-            }}
-            .hero {{
-                background: none;
-                color: #000;
-                padding: 1rem 0;
-            }}
-            .hero h1 {{
-                color: #000;
-            }}
-            .container {{
-                margin: 0;
-                max-width: 100%;
-                padding: 0;
-            }}
-            .document-card {{
-                box-shadow: none;
-                border: none;
-                padding: 0;
-            }}
-        }}
+def generate_header(title, badge_text, active_slug):
+    nav_items = [
+        ("cgu.html", "Conditions Générales d'Utilisation", "CGU"),
+        ("cgv.html", "Conditions Générales de Vente", "CGV"),
+        ("politique_confidentialite.html", "Politique de Confidentialité", "Confidentialité"),
+        ("mentions_legales.html", "Mentions Légales", "Mentions Légales"),
+        ("politique_cookies.html", "Politique des Cookies", "Cookies"),
+    ]
+    
+    pills_html = []
+    for url, full_name, short_name in nav_items:
+        is_active = "active" if url == active_slug else ""
+        pills_html.append(f'<a href="{url}" class="{is_active}" title="{full_name}">{short_name}</a>')
+    
+    return f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} — JogaLook</title>
+    <meta name="description" content="{title} officielles de la plateforme JogaLook, opérée par ATTIC SA à Dakar, Sénégal.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    
+    <!-- Polices Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+{COMMON_CSS}
     </style>
 </head>
 <body>
 
+    <!-- Header Navbar -->
     <nav class="navbar">
-        <a href="/" class="nav-logo">JOGA<span>LOOK</span></a>
+        <a href="/" class="nav-logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                <circle cx="24" cy="24" r="24" fill="#0b1329"/>
+                <path d="M10 14 L14 10 L18 13 C19.5 14 20.5 14 24 14 C27.5 14 28.5 14 30 13 L34 10 L38 14 L33 18 L33 38 L15 38 L15 18 Z" fill="#f15a24"/>
+                <path d="M20 14 Q24 17 28 14" stroke="#0b1329" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Joga<span>Look</span>
+        </a>
         <div class="nav-links">
-            <a href="cgu.html" class="{active_cgu}">CGU</a>
-            <a href="cgv.html" class="{active_cgv}">CGV</a>
-            <a href="politique_confidentialite.html" class="{active_conf}">Confidentialité</a>
-            <a href="mentions_legales.html" class="{active_mentions}">Mentions Légales</a>
-            <a href="politique_cookies.html" class="{active_cookies}">Cookies</a>
-            <a href="/" class="nav-back">← Boutique</a>
+            <a href="/">← Retour à la boutique</a>
+            <a href="/contact" class="btn-primary">Support & Contact</a>
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="hero-badge">{badge}</div>
-        <h1>{heading}</h1>
-        <p>{subheading}</p>
+    <!-- Hero Section -->
+    <header class="hero-banner">
+        <div class="hero-badge">{badge_text}</div>
+        <h1>{title}</h1>
+        <p>Document officiel encadrant les services de vente et de personnalisation de maillots de sport sur JogaLook.</p>
+        
+        <div class="legal-nav">
+            {"".join(pills_html)}
+        </div>
     </header>
 
-    <div class="container">
-        <main class="document-card">
-            <div class="document-meta">
-                <div class="meta-pill">📅 Dernière mise à jour : <span>Septembre 2026</span></div>
-                <div class="meta-pill">🏢 Société : <span>ATTIC SA (JogaLook)</span></div>
-                <button class="print-btn" onclick="window.print()">
-                    🖨️ Imprimer ce document
-                </button>
-            </div>
-            {content}
-        </main>
-    </div>
+    <main class="container">
+"""
 
-    <footer class="site-footer">
-        <div class="site-footer-container">
-            <div class="site-footer-col">
-                <h4>JogaLook</h4>
-                <p>Votre boutique en ligne de référence pour les maillots de football officiels, tenues sportives et personnalisation d\x27atelier haute définition au Sénégal et en Afrique.</p>
-                <p>Édité par <strong>ATTIC SA</strong>.<br>RCCM : SN STL 2025 A 1556 | NINEA : 012216314</p>
+def generate_footer():
+    return """
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Boutique</a>
+                <a href="/contact">Contact</a>
+                <a href="cgu.html">CGU</a>
+                <a href="cgv.html">CGV</a>
+                <a href="politique_confidentialite.html">Confidentialité</a>
+                <a href="mentions_legales.html">Mentions Légales</a>
+                <a href="politique_cookies.html">Cookies</a>
             </div>
-            <div class="site-footer-col">
-                <h4>Documents Légaux</h4>
-                <ul>
-                    <li><a href="cgu.html">Conditions Générales d\x27Utilisation (CGU)</a></li>
-                    <li><a href="cgv.html">Conditions Générales de Vente (CGV)</a></li>
-                    <li><a href="politique_confidentialite.html">Politique de Confidentialité</a></li>
-                    <li><a href="mentions_legales.html">Mentions Légales</a></li>
-                    <li><a href="politique_cookies.html">Politique des Cookies</a></li>
-                </ul>
-            </div>
-            <div class="site-footer-col">
-                <h4>Service Client & Atelier</h4>
-                <p>📧 Email : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a></p>
-                <p>📞 Assistance : <a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a></p>
-                <p>📍 Dakar HLM-Bentaly, Dakar, Sénégal</p>
-            </div>
-        </div>
-        <div class="site-footer-bottom">
-            &copy; 2026 JogaLook — Tous droits réservés. Marque exploitée par ATTIC SA.
+            <p class="footer-copy">&copy; 2026 JogaLook — Propriété exclusive de ATTIC SA. Tous droits réservés. Dakar, Sénégal.</p>
         </div>
     </footer>
 
@@ -500,526 +510,755 @@ TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
-DOCS = {
-    "cgu.html": {
-        "title": "Conditions Générales d'Utilisation",
-        "heading": "Conditions Générales d'Utilisation",
-        "subheading": "Règles d'accès, d'utilisation du site jogalook.com et du studio de personnalisation de maillots.",
-        "badge": "CADRE JURIDIQUE & PLATEFORME",
-        "active": "cgu",
-        "content": """
-        <section class="article">
-            <h2>Article 1 - Objet et Champ d'Application</h2>
-            <p>Les présentes Conditions Générales d'Utilisation (ci-après désignées les <strong>« CGU »</strong>) ont pour objet d'encadrer l'accès, la consultation et l'utilisation de la plateforme de commerce électronique <strong>JogaLook</strong>, accessible à l'adresse <a href="https://jogalook.com">jogalook.com</a> (ci-après la <strong>« Plateforme »</strong>).</p>
-            <p>La Plateforme est éditée et exploitée par la société <strong>ATTIC SA</strong>, société anonyme régie par les lois de la République du Sénégal et le droit commercial OHADA, immatriculée au Registre du Commerce et du Crédit Mobilier sous le numéro <strong>RCCM SN STL 2025 A 1556</strong>, titulaire du <strong>NINEA 012216314</strong>, dont le siège social est situé à Sanar, Saint-Louis, et disposant de son établissement d'exploitation et atelier technique à <strong>Dakar HLM-Bentaly, Sénégal</strong>.</p>
-            <p>Toute navigation sur la Plateforme, toute création de compte ou utilisation de ses fonctionnalités (notamment l'atelier interactif de personnalisation vectorielle SVG) implique l'adhésion immédiate, expresse et sans réserve de l'Utilisateur aux présentes CGU.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Définitions</h2>
-            <ul>
-                <li><strong>« Plateforme » ou « Site » :</strong> L'infrastructure numérique accessible à l'adresse jogalook.com, ses déclinaisons mobiles, applications web et services associés.</li>
-                <li><strong>« JogaLook » :</strong> La marque commerciale, le service de vente en ligne et l'atelier de flocage exploités par la société ATTIC SA.</li>
-                <li><strong>« Utilisateur » :</strong> Toute personne physique ou morale qui navigue sur la Plateforme ou utilise ses services.</li>
-                <li><strong>« Client » :</strong> Tout Utilisateur qui passe une commande ferme de Produits ou de prestations de marquage sur la Plateforme.</li>
-                <li><strong>« Compte Client » :</strong> Espace personnel sécurisé accessible par identifiant et authentification à facteur unique ou multiple (OTP).</li>
-                <li><strong>« Atelier de Personnalisation / Customizer SVG » :</strong> Le module logiciel propriétaire interactif permettant au Client de concevoir et prévisualiser des flocages sur-mesure (nom, numéro, écussons, sponsors, polices, coloris).</li>
-                <li><strong>« Produits » :</strong> L'ensemble des maillots officiels, tenues sportives de clubs et sélections, articles rétro, équipements et accessoires proposés au catalogue.</li>
-                <li><strong>« Commande » :</strong> L'acte juridique par lequel le Client s'engage à acquérir des Produits ou services proposés par JogaLook.</li>
-            </ul>
-        </section>
-
-        <section class="article">
-            <h2>Article 3 - Accès au Site et Éligibilité</h2>
-            <p>L'accès à la Plateforme est libre et gratuit pour tout internaute disposant d'une connexion Internet. Les coûts liés à la connexion, aux forfaits data mobiles et aux équipements informatiques demeurent à la charge exclusive de l'Utilisateur.</p>
-            <p>Pour créer un compte ou passer commande, l'Utilisateur doit être une personne physique âgée d'au moins dix-huit (18) ans ou disposer de la pleine capacité juridique selon la législation de son pays de résidence, ou agir sous la responsabilité et avec le consentement de ses représentants légaux.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Création de Compte et Authentification Sécurisée (OTP)</h2>
-            <p>La création d'un Compte Client est facultative pour la navigation mais vivement recommandée pour le suivi des commandes, la gestion des adresses de livraison favorites et la sauvegarde des maquettes de maillots créées dans l'Atelier.</p>
-            <div class="highlight-box">
-                <p><strong>Sécurité sans mot de passe vulnérable (OTP) :</strong> JogaLook intègre une procédure d'authentification moderne basée sur des codes à usage unique (<strong>OTP - One Time Password</strong>). Lors de chaque connexion ou inscription, un code à six (6) chiffres valide dix (10) minutes est transmis par email ou SMS.</p>
+# ==============================================================================
+# 1. CGU (Conditions Générales d'Utilisation)
+# ==============================================================================
+def build_cgu_content():
+    return """
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Société éditrice</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
             </div>
-            <p>L'Utilisateur est seul garant de la confidentialité de sa boîte email et de son téléphone mobile. Toute opération réalisée depuis un compte authentifié par son titulaire est réputée émaner de ce dernier.</p>
+            <div class="meta-item">
+                <span class="meta-label">Siège social</span>
+                <span class="meta-value">Dakar, HLM-Bentaly, Sénégal</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Date d'effet</span>
+                <span class="meta-value">1er Mars 2026</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Contact juridique</span>
+                <span class="meta-value">contact@jogalook.com</span>
+            </div>
+        </div>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Objet et Acceptation des Conditions</h2>
+            </div>
+            <p>Les présentes <strong>Conditions Générales d’Utilisation (CGU)</strong> ont pour objet de définir les modalités et conditions dans lesquelles la société <strong>ATTIC SA</strong> (ci-après <em>« JogaLook »</em> ou <em>« la Société »</em>) met à la disposition des internautes (ci-après <em>« l’Utilisateur »</em>) sa plateforme e-commerce accessible à l’adresse <a href="https://www.jogalook.com" target="_blank">www.jogalook.com</a>.</p>
+            <p>Toute navigation, consultation du catalogue, inscription ou utilisation des fonctionnalités interactives de JogaLook implique l'adhésion pleine, entière et sans réserve de l'Utilisateur aux présentes CGU. Si l'Utilisateur n'accepte pas ces conditions, il doit renoncer immédiatement à l'utilisation du Site.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 5 - Règles d'Utilisation de l'Atelier de Personnalisation SVG</h2>
-            <p>L'Atelier de Personnalisation permet de simuler fidèlement le rendu final d'un maillot floqué avant mise en production.</p>
-            <p>En utilisant ce service, l'Utilisateur s'engage formellement à respecter les règles impératives suivantes :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Présentation des Services JogaLook</h2>
+            </div>
+            <p>JogaLook est une plateforme sénégalaise spécialisée dans :</p>
             <ul>
-                <li><strong>Contenus interdits :</strong> Il est strictement défendu de saisir des noms, numéros, textes ou de téléverser des visuels injurieux, diffamatoires, obscènes, haineux, violents, racistes, contraires à l'ordre public ou aux bonnes mœurs.</li>
-                <li><strong>Propriété intellectuelle tierce :</strong> L'Utilisateur garantit qu'il détient tous les droits, licences et autorisations nécessaires sur les logos, emblèmes ou insignes d'entreprises, de clubs ou d'associations qu'il demande de reproduire.</li>
-                <li><strong>Droit de modération et de refus d'impression :</strong> JogaLook se réserve le droit d'annuler unilatéralement toute commande comportant un flocage illégal, attentatoire aux droits d'un tiers ou contraire à l'éthique sportive. Dans cette hypothèse, le Client sera immédiatement avisé et intégralement remboursé.</li>
+                <li><strong>La commercialisation de maillots de football et de sport authentiques</strong> : maillots de clubs nationaux et internationaux, sélections nationales, éditions rétro, spéciales et d'entraînement.</li>
+                <li><strong>L'Atelier de Flocage & Personnalisation</strong> : un outil interactif permettant à l'Utilisateur de configurer des maillots personnalisés en y apposant un nom, un numéro officiel et des badges de ligues ou tournois.</li>
+                <li><strong>Le suivi interactif de commande</strong> : gestion de panier d'achat, historique des achats et suivi d'acheminement de la livraison à Dakar et dans toutes les régions du Sénégal.</li>
             </ul>
         </section>
 
-        <section class="article">
-            <h2>Article 6 - Propriété Intellectuelle</h2>
-            <p>Tous les éléments du Site (marques, graphismes, gabarits vectoriels 2D/3D, visuels de maillots, photographies, textes descriptifs, code source logiciel et architecture de base de données) sont la propriété exclusive de <strong>ATTIC SA</strong> ou de ses partenaires et sont protégés par les lois sénégalaises, le droit de l'Organisation Africaine de la Propriété Intellectuelle (OAPI) et les traités internationaux.</p>
-            <p>Toute extraction de données, aspiration de site (scraping), copie, reproduction ou diffusion non autorisée est passible de poursuites civiles et pénales.</p>
-            <p>Les logos, noms de clubs, fédérations et équipementiers apparaissant sur les maillots officiels sont la propriété de leurs titulaires respectifs et ne sont cités que dans le cadre de la vente légitime des articles originaux correspondants.</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Accès au Site et Authentification par OTP</h2>
+            </div>
+            <p>L’accès au catalogue public et aux articles du blog sportif est libre et gratuit pour tout internaute disposant d’une connexion Internet.</p>
+            <p>Pour passer commande, sauvegarder son panier ou accéder à son espace client, JogaLook propose un système d’authentification sécurisé et simplifié <strong>sans mot de passe</strong> :</p>
+            <ul>
+                <li>L’Utilisateur renseigne son adresse email valide.</li>
+                <li>Un <strong>code d’authentification à usage unique (OTP)</strong> à 6 chiffres lui est instantanément expédié par voie électronique via notre partenaire certifié Resend.</li>
+                <li>La saisie correcte de ce code génère un jeton de session chiffré (JWT) garantissant l'accès sécurisé à son compte.</li>
+            </ul>
+            <div class="highlight-box">
+                <strong>Sécurité de l'OTP :</strong> Le code OTP est strictement personnel et confidentiel. Il expire automatiquement après un délai de 10 minutes. L'Utilisateur est seul responsable de la confidentialité de sa boîte de réception électronique.
+            </div>
         </section>
 
-        <section class="article">
-            <h2>Article 7 - Comportements Prohibés et Mesures de Sécurité</h2>
-            <p>L'Utilisateur s'interdit d'entraver le bon fonctionnement du Site, d'injecter des virus ou scripts malveillants, d'utiliser des robots d'achat, ou d'abuser du service de Paiement à la Livraison en passant des commandes fictives. Tout comportement abusif entraîne la clôture immédiate du compte et l'inscription sur notre registre de non-fiabilité.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 8 - Disponibilité du Service</h2>
-            <p>JogaLook s'efforce de maintenir la Plateforme opérationnelle en permanence. Cependant, des interruptions ponctuelles peuvent survenir pour maintenance, mises à jour ou en cas de défaillance des réseaux de communication externes, sans que la responsabilité de JogaLook ne puisse être engagée.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 9 - Droit Applicable et Juridiction Compétente</h2>
-            <p>Les présentes CGU sont soumises à la législation de la <strong>République du Sénégal</strong>. Tout litige relatif à leur validité, interprétation ou exécution sera soumis en priorité à une conciliation amiable. À défaut d'accord, compétence exclusive est accordée aux <strong>tribunaux compétents de Dakar</strong>.</p>
-        </section>
-        """
-    },
-    "cgv.html": {
-        "title": "Conditions Générales de Vente",
-        "heading": "Conditions Générales de Vente",
-        "subheading": "Modalités d'achat, de paiement, de flocage sur-mesure, de livraison et de garantie sur JogaLook.",
-        "badge": "COMMERCE & VENTE EN LIGNE",
-        "active": "cgv",
-        "content": """
-        <section class="article">
-            <h2>Article 1 - Dispositions Générales & Identification du Vendeur</h2>
-            <p>Les présentes Conditions Générales de Vente (ci-après les <strong>« CGV »</strong>) régissent sans restriction l'ensemble des ventes de maillots, vêtements de sport, équipements et prestations de personnalisation par flocage conclues entre :</p>
-            <p>D'une part, la société <strong>ATTIC SA</strong>, société anonyme immatriculée au RCCM de Saint-Louis sous le numéro <strong>SN STL 2025 A 1556</strong>, NINEA <strong>012216314</strong>, exploitant la marque commerciale <strong>JogaLook</strong>, dont le siège est à Sanar (Saint-Louis) et l'établissement opérationnel à <strong>Dakar HLM-Bentaly, Sénégal</strong>, joignable à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> et par téléphone au <a href="tel:+221781941351">+221 78 194 13 51</a> (ci-après désignée <strong>« JogaLook »</strong> ou le <strong>« Vendeur »</strong>) ;</p>
-            <p>Et d'autre part, toute personne physique ou morale procédant à une commande via le site <a href="https://jogalook.com">jogalook.com</a> (ci-après désignée le <strong>« Client »</strong>).</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Produits et Disponibilité</h2>
-            <p>Les Produits proposés à la vente sont ceux décrits et présentés sur le catalogue en ligne de JogaLook. Ils comprennent des maillots de football (éditions domicile, extérieur, third, rétro), des ensembles complets, des tenues pour clubs, écoles et revendeurs, ainsi que des prestations d'atelier (flocage officiel ou sur-mesure).</p>
-            <p>Les photographies illustrant les Produits sont les plus fidèles possibles. Les offres de Produits et les prix sont valables tant qu'ils sont visibles sur le Site et dans la limite des stocks disponibles. En cas d'indisponibilité exceptionnelle d'un article après passation de commande, le Client en est informé sans délai et remboursé sous quarante-huit (48) heures.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 3 - Prix et Devises</h2>
-            <p>Les prix de vente des Produits sont indiqués en <strong>Francs CFA (XOF)</strong>, toutes taxes comprises (TTC), hors frais de livraison sauf mention expresse contraire.</p>
-            <p>JogaLook se réserve le droit de modifier ses tarifs à tout moment. Toutefois, les Produits seront facturés sur la base des tarifs en vigueur et affichés au moment précis de l'enregistrement de la commande par le Client.</p>
-            <p>Pour les commandes volumineuses émanant de clubs, écoles ou revendeurs, des tarifs dégressifs peuvent être convenus via un devis validé conjointement.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Passation de Commande</h2>
-            <p>Le processus de commande sur JogaLook comprend les étapes suivantes :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Engagements et Comportement de l'Utilisateur</h2>
+            </div>
+            <p>En utilisant la plateforme JogaLook, l'Utilisateur s'engage formellement à :</p>
             <ol>
-                <li>Sélection du produit et choix de la taille (S, M, L, XL, XXL, etc.) et de la variante de couleur ;</li>
-                <li>Option de personnalisation d'atelier : configuration du flocage (Face avant, Dos, Nom du joueur ou nom personnel, Numéro, Badges de compétition) avec prévisualisation dynamique ;</li>
-                <li>Ajout au panier d'achat et vérification du récapitulatif détaillé ;</li>
-                <li>Renseignement des coordonnées de livraison (adresse manuelle ou géolocalisation GPS pour Dakar) ;</li>
-                <li>Choix du mode de règlement et validation ferme de la commande.</li>
+                <li>Fournir des informations exactes, complètes et à jour (notamment concernant l'adresse de livraison et le numéro de téléphone pour la réception des colis).</li>
+                <li>Ne pas utiliser l'Atelier de Flocage pour générer des inscriptions injurieuses, diffamatoires, racistes, incitant à la haine ou portant atteinte aux bonnes mœurs et à l'ordre public sénégalais.</li>
+                <li>Ne pas tenter de contourner les systèmes de sécurité, de procéder à des attaques par déni de service, ou d'extraire de manière automatisée (scraping) le contenu, les visuels ou les bases de données du Site.</li>
+                <li>Ne pas usurper l'identité d'un tiers lors de la connexion OTP ou de la passation de commande.</li>
             </ol>
-            <p>La confirmation de commande fait l'objet d'un email automatique instantané expédié depuis <strong>JogaLook &lt;contact@jogalook.com&gt;</strong> récapitulant les détails de la commande et le numéro unique de suivi.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 5 - Régime Spécifique des Produits Personnalisés (Flocage d'Atelier)</h2>
-            <div class="highlight-box">
-                <p><strong>⚠️ DÉROGATION LÉGALE AU DROIT DE RÉTRACTATION :</strong> Conformément aux règles régissant la vente à distance et les contrats de consommation portant sur des biens nettement personnalisés ou confectionnés selon les spécifications précises du consommateur, <strong>les maillots ayant fait l'objet d'un flocage personnalisé (nom, prénom, numéro spécifique ou badges sur-mesure) ne peuvent faire l'objet d'aucun droit de rétractation, annulation, échange ou remboursement une fois la production lancée</strong>, sauf vice caché, défaut avéré de fabrication ou non-conformité manifeste imputable à notre atelier.</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Propriété Intellectuelle</h2>
             </div>
-            <p>Le Client est donc invité à vérifier scrupuleusement l'orthographe des noms, la justesse des numéros et le choix de la taille avant de valider son panier.</p>
+            <p>L’ensemble des éléments constituant le site JogaLook — incluant sans s'y limiter : l'architecture logicielle, le design UI/UX, le code source, la marque JogaLook, le logo, les visuels exclusifs, les maquettes 2D/3D de l'Atelier de personnalisation et les textes éditoriaux — sont la propriété exclusive de la société <strong>ATTIC SA</strong> ou de ses partenaires techniques sous licence.</p>
+            <p>Toute reproduction, distribution, modification, adaptation ou exploitation commerciale totale ou partielle de ces éléments, sans autorisation écrite préalable de la direction de ATTIC SA, est constitutive de contrefaçon et passible de poursuites judiciaires conformément à l'Accord de Bangui révisé (OAPI) et au Code pénal sénégalais.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 6 - Modalités de Paiement Sécurisé</h2>
-            <p>JogaLook met à la disposition de ses Clients deux modes de règlement fiables et sécurisés :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 6</span>
+                <h2>Disponibilité du Service et Maintenance</h2>
+            </div>
+            <p>JogaLook s'efforce de maintenir un accès continu au service 24h/24 et 7j/7 grâce à une infrastructure cloud moderne propulsée par Vercel et Supabase. Cependant, la Société se réserve le droit d’interrompre temporairement l’accès au site pour des opérations de maintenance programmée, de mise à jour technique ou en cas de force majeure indépendante de sa volonté.</p>
+            <p>ATTIC SA ne saurait être tenue pour responsable des ralentissements, dysfonctionnements de réseau Internet ou interruptions temporaires du service.</p>
+        </section>
 
-            <h3>6.1 Paiement Électronique en Ligne (Passerelle PayBammite)</h3>
-            <p>Le Client peut régler sa commande immédiatement en ligne via la passerelle agréée <strong>PayBammite</strong> :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 7</span>
+                <h2>Protection des Données Personnelles</h2>
+            </div>
+            <p>Le traitement des données à caractère personnel collectées sur la plateforme est soumis à la législation sénégalaise en vigueur (Loi n° 2008-12 du 25 janvier 2008). Pour comprendre les modalités de collecte, de stockage et d'exercice de vos droits (accès, rectification, suppression), veuillez consulter notre <a href="politique_confidentialite.html">Politique de Confidentialité</a>.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 8</span>
+                <h2>Modification des CGU</h2>
+            </div>
+            <p>ATTIC SA se réserve la faculté de faire évoluer les présentes CGU à tout moment afin de prendre en compte les améliorations fonctionnelles du Site ou l'évolution des réglementations en vigueur. La version opposable à l'Utilisateur est celle accessible en ligne à la date de son utilisation du Site.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 9</span>
+                <h2>Droit Applicable et Résolution des Différends</h2>
+            </div>
+            <p>Les présentes CGU sont régies et interprétées selon le <strong>droit de la République du Sénégal</strong>.</p>
+            <p>En cas de litige relatif à l’interprétation ou à l’exécution des présentes, les parties s'engagent à privilégier une solution amiable. À défaut d’accord amiable dans un délai de 30 jours, le litige sera soumis à la compétence exclusive des juridictions compétentes du <strong>Ressort du Tribunal de Commerce de Dakar</strong>.</p>
+        </section>
+"""
+
+# ==============================================================================
+# 2. CGV (Conditions Générales de Vente)
+# ==============================================================================
+def build_cgv_content():
+    return """
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Vendeur</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">RCCM / NINEA</span>
+                <span class="meta-value">SN STL 2025 A 1556 / 012216314</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Devise & Prix</span>
+                <span class="meta-value">Franc CFA (XOF) TTC</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Service Client</span>
+                <span class="meta-value">+221 78 194 13 51 / +221 71 031 69 39</span>
+            </div>
+        </div>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Dispositions Générales et Champ d'Application</h2>
+            </div>
+            <p>Les présentes <strong>Conditions Générales de Vente (CGV)</strong> s'appliquent sans restriction ni réserve à l'ensemble des ventes conclues par la société <strong>ATTIC SA</strong> (opérant sous la marque commerciale <em>« JogaLook »</em>) auprès de tout acheteur majeur (ci-après <em>« le Client »</em>), via le site Internet <a href="https://www.jogalook.com">www.jogalook.com</a>.</p>
+            <p>La validation définitive d'une commande par le Client vaut acceptation pleine et entière des présentes CGV, dont il reconnaît avoir pris connaissance préalablement à son achat.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Caractéristiques des Produits & Authenticité</h2>
+            </div>
+            <p>JogaLook propose des articles de sport premium :</p>
             <ul>
-                <li><strong>Mobile Money Sénégal & Afrique :</strong> Wave Sénégal, Orange Money, Free Money, Moov Money, MTN Mobile Money ;</li>
-                <li><strong>Cartes Bancaires :</strong> Carte Bancaire Visa, Mastercard avec protocole d'authentification 3D-Secure.</li>
+                <li><strong>Maillots officiels et répliques authentiques :</strong> modèles domicile (Home), extérieur (Away), troisième maillot (Third), pré-match et éditions collectors de clubs et d'équipes nationales.</li>
+                <li><strong>Tailles disponibles :</strong> standardisées du XS au 3XL (selon guide des tailles consultable sur chaque fiche produit).</li>
+                <li><strong>Visuels et descriptions :</strong> Les photographies et maquettes présentées sont les plus fidèles possibles. Toutefois, de légères variations de nuances de couleurs peuvent survenir selon l'écran ou l'éclairage.</li>
             </ul>
-            <p>Les transactions sont protégées par un chiffrement SSL/TLS de niveau bancaire. Aucune coordonnée bancaire secrète n'est hébergée sur les serveurs de JogaLook.</p>
+        </section>
 
-            <h3>6.2 Paiement à la Livraison (Cash on Delivery - COD)</h3>
-            <p>Afin de faciliter l'achat pour les clients de Dakar et de sa banlieue, JogaLook propose le paiement au comptant lors de la remise physique du colis par le livreur.</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Atelier de Flocage & Personnalisation sur-mesure</h2>
+            </div>
+            <p>JogaLook met à la disposition du Client un service d'atelier de flocage permettant d'ajouter :</p>
+            <ul>
+                <li>Un nom personnalisé ou nom de joueur officiel</li>
+                <li>Un numéro personnalisé</li>
+                <li>Des badges de manches officiels (Ligue 1, Champions League, Coupe du Monde, etc.)</li>
+            </ul>
             <div class="highlight-box">
-                <p><strong>Conditions d'éligibilité au COD :</strong> Le paiement à la livraison est encadré par notre système de fiabilité client (table <code>user_reliability</code>). Il est limité aux commandes comprises entre <strong>5 000 FCFA</strong> et <strong>100 000 FCFA</strong>. En cas de refus abusif ou d'absence injustifiée lors de la livraison, le Client perdra définitivement le bénéfice de ce mode de paiement pour ses commandes futures.</p>
+                <strong>Attention — Dispositions spécifiques aux produits personnalisés :</strong><br>
+                Conformément aux usages commerciaux et aux règles de protection du consommateur relatives aux biens confectionnés nettement sur-mesure, <strong>les articles ayant fait l'objet d'un flocage personnalisé ne peuvent être ni échangés, ni repris, ni remboursés</strong>, sauf défaut avéré imputable à l'impression par nos ateliers. Le Client est invité à vérifier scrupuleusement l'orthographe et les numéros avant validation de sa commande.
             </div>
         </section>
 
-        <section class="article">
-            <h2>Article 7 - Livraison, Délais et Modalités de Réception</h2>
-            <p>JogaLook livre ses Produits sur l'ensemble du territoire sénégalais et dans la sous-région ouest-africaine :</p>
-            <table class="info-table">
-                <thead>
-                    <tr>
-                        <th>Destination</th>
-                        <th>Délai indicatif</th>
-                        <th>Modalité de livraison</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Dakar & Banlieue</strong></td>
-                        <td>24h à 48h ouvrées</td>
-                        <td>Coursier express à domicile ou géolocalisation GPS</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Régions du Sénégal</strong></td>
-                        <td>48h à 72h ouvrées</td>
-                        <td>Transporteur partenaire ou point relais (Thiès, St-Louis, etc.)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sous-région & International</strong></td>
-                        <td>5 à 10 jours ouvrés</td>
-                        <td>Colis express international sécurisé</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p>Le Client est tenu de vérifier l'état du colis et des Produits devant le livreur ou lors du retrait. En cas de colis endommagé ou d'article manquant, des réserves motivées doivent être formulées immédiatement auprès du coursier et transmises sous 24h au service client de JogaLook.</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Tarifs et Monnaie de Facturation</h2>
+            </div>
+            <p>Les prix des produits sont indiqués sur le Site en <strong>Francs CFA (XOF)</strong>, toutes taxes comprises (TTC). Les frais de livraison sont calculés et affichés distinctement avant la validation finale de la commande, en fonction de la localité géographique sélectionnée.</p>
+            <p>JogaLook se réserve le droit de modifier ses prix à tout moment. Les produits seront cependant facturés sur la base des tarifs en vigueur au moment de l'enregistrement de la commande.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 8 - Droit de Rétractation et Retours (Produits Standards Vierges)</h2>
-            <p>Pour les Produits standards <strong>non personnalisés</strong> (maillots vierges sans flocage de nom ni numéro), le Client dispose d'un délai de sept (7) jours calendaires à compter de la réception pour exercer son droit de rétractation sans motif.</p>
-            <p>Les Produits doivent être impérativement retournés dans leur état d'origine, neufs, jamais portés, non lavés, munis de toutes leurs étiquettes d'origine intactes et dans leur sachet d'emballage d'origine. Les frais de réexpédition sont à la charge du Client, sauf erreur imputable à JogaLook.</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Processus de Commande</h2>
+            </div>
+            <p>Pour passer commande sur JogaLook, le Client suit le parcours suivant :</p>
+            <ol>
+                <li>Sélection des articles (taille, quantité, options de flocage le cas échéant) et ajout au panier.</li>
+                <li>Authentification rapide par email via notre système sécurisé de code OTP.</li>
+                <li>Renseignement de l'adresse exacte de livraison et du numéro de téléphone joignable (WhatsApp/Appels).</li>
+                <li>Choix du mode de paiement.</li>
+                <li>Vérification du récapitulatif de commande et confirmation finale.</li>
+            </ol>
+            <p>Dès confirmation, un email récapitulatif contenant le numéro unique de commande est adressé au Client.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 9 - Garanties Légales et Conseils d'Entretien</h2>
-            <p>Tous les Produits fournis par JogaLook bénéficient de la garantie légale de conformité et de la garantie contre les vices cachés. Sont exclus de cette garantie les détériorations consécutives à une usure normale, à un mauvais entretien ou au non-respect des consignes de lavage.</p>
-            <div class="highlight-box">
-                <p><strong>Guide d'entretien d'expert pour maillots floqués :</strong></p>
-                <ul>
-                    <li>Laver toujours le maillot sur l'envers afin de protéger les flocages et badges ;</li>
-                    <li>Laver à l'eau froide ou à 30°C maximum (programme délicat) ;</li>
-                    <li>Proscrire formellement l'utilisation du sèche-linge et de l'adoucissant ;</li>
-                    <li>Repassage formellement interdit directement sur les flocages (repasser à l'envers à température minimale avec un tissu de protection).</li>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 6</span>
+                <h2>Modalités de Paiement</h2>
+            </div>
+            <p>JogaLook met à disposition plusieurs modes de règlement sécurisés :</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mode de Paiement</th>
+                            <th>Description & Sécurité</th>
+                            <th>Frais additionnels</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Paiement à la livraison (Cash on Delivery)</strong></td>
+                            <td>Règlement en espèces directement auprès de notre livreur partenaire au moment de la réception du colis.</td>
+                            <td>Aucun</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mobile Money (Wave & Orange Money)</strong></td>
+                            <td>Paiement instantané via votre compte mobile sénégalais via passerelle dédiée.</td>
+                            <td>Aucun</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Carte Bancaire (Visa / Mastercard)</strong></td>
+                            <td>Transaction chiffrée via la passerelle de paiement sécurisée PayBammite aux normes PCI-DSS.</td>
+                            <td>Aucun</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 7</span>
+                <h2>Livraison et Délais d'Acheminement</h2>
+            </div>
+            <p>JogaLook assure la livraison de ses commandes partout au Sénégal :</p>
+            <ul>
+                <li><strong>Région de Dakar :</strong> Expédition express en <strong>24 à 48 heures ouvrées</strong>.</li>
+                <li><strong>Autres Régions du Sénégal :</strong> Acheminement sous <strong>48 à 72 heures ouvrées</strong> via nos transporteurs relais partenaires.</li>
+                <li><strong>Délais supplémentaires Atelier Flocage :</strong> Tout article floqué nécessite un temps de confection artisanale additionnel de 24h à 48h.</li>
+            </ul>
+            <p>Le livreur contacte systématiquement le destinataire par téléphone préalablement à son passage. En cas d'absence injustifiée lors de deux présentations consécutives, la commande sera réacheminée en agence.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 8</span>
+                <h2>Droit de Rétractation et Retours</h2>
+            </div>
+            <p>Pour les <strong>articles standards non personnalisés</strong>, le Client bénéficie d'un délai de <strong>sept (7) jours ouvrés</strong> à compter de la réception pour demander un échange ou un remboursement.</p>
+            <p><strong>Conditions impératives de reprise :</strong></p>
+            <ul>
+                <li>Le maillot doit être dans son état d'origine neuf, non porté, non lavé, exempt de parfum ou de tâche.</li>
+                <li>Toutes les étiquettes et emballages d'origine doivent être parfaitement intacts.</li>
+                <li>Les frais de retour sont à la charge du Client, sauf erreur avérée de préparation commise par JogaLook.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 9</span>
+                <h2>Garanties Légales et Réclamations</h2>
+            </div>
+            <p>Tous nos produits bénéficient de la garantie légale de conformité et de la garantie contre les vices cachés. En cas de non-conformité avérée (défaut de couture, erreur de référence reçue, erreur de flocage par rapport au bon de commande), JogaLook s'engage à échanger le produit sans frais ou à rembourser l'intégralité de la commande.</p>
+            <p>Toute réclamation doit être notifiée par email à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> ou par WhatsApp au <strong>+221 78 194 13 51</strong> dans les 48h suivant la livraison, avec photos justificatives.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 10</span>
+                <h2>Droit Applicable et Juridiction</h2>
+            </div>
+            <p>Les présentes CGV sont soumises à la législation de la <strong>République du Sénégal</strong> (Code des Obligations Civiles et Commerciales). Tout litige qui ne trouverait pas d'issue amiable sera soumis à la juridiction exclusive du <strong>Tribunal de Commerce de Dakar</strong>.</p>
+        </section>
+"""
+
+# ==============================================================================
+# 3. Politique de Confidentialité
+# ==============================================================================
+def build_privacy_content():
+    return """
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Responsable du traitement</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Délégué aux Données (DPO)</span>
+                <span class="meta-value">dpo@jogalook.com</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Cadre légal</span>
+                <span class="meta-value">Loi sénégalaise n° 2008-12 (CDP)</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Sécurité</span>
+                <span class="meta-value">Chiffrement TLS & Base PostgreSQL Supabase</span>
+            </div>
+        </div>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Engagement de JogaLook pour la Vie Privée</h2>
+            </div>
+            <p>La société <strong>ATTIC SA</strong> (ci-après <em>« JogaLook »</em>) accorde une importance primordiale à la protection et à la confidentialité des données à caractère personnel de ses utilisateurs et clients.</p>
+            <p>La présente Politique de Confidentialité décrit avec précision et transparence les catégories de données collectées, les finalités de leur traitement, ainsi que les mesures de sécurité et les droits dont vous disposez, conformément aux dispositions de la <strong>Loi sénégalaise n° 2008-12 du 25 janvier 2008</strong> portant sur la protection des données à caractère personnel et aux recommandations de la <strong>Commission de Protection des Données Personnelles (CDP)</strong> du Sénégal.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Catégories de Données Personnelles Collectées</h2>
+            </div>
+            <p>Dans le cadre de l’exploitation de notre plateforme, nous collectons les données suivantes :</p>
+            <ul>
+                <li><strong>Données d’identification et de contact :</strong> Adresse email (utilisée pour l'envoi de l'OTP de connexion sécurisé et des confirmations de commande), nom, prénom, numéro de téléphone portable (joignable pour la coordination des livraisons).</li>
+                <li><strong>Données de livraison et facturation :</strong> Adresse postale complète de livraison (ville, quartier, repère géographique pour Dakar et régions).</li>
+                <li><strong>Données de personnalisation d'atelier :</strong> Textes et numéros de flocage transmis lors de la commande de maillots personnalisés.</li>
+                <li><strong>Données de transactions financières :</strong> Références de commande, montant facturé, statut du paiement (veuillez noter que les données de cartes bancaires sont traitées directement par les passerelles bancaires certifiées sans que JogaLook n'y ait jamais accès).</li>
+                <li><strong>Données techniques de connexion :</strong> Adresse IP, type d'appareil, navigateur et logs d'authentification OTP pour prévenir les fraudes.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Finalités des Traitements et Bases Légales</h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Finalité du traitement</th>
+                            <th>Base Légale</th>
+                            <th>Durée de conservation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Authentification sans mot de passe (OTP)</strong></td>
+                            <td>Exécution contractuelle & Sécurité</td>
+                            <td>Durée d'activité du compte utilisateur</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestion & Livraison des commandes</strong></td>
+                            <td>Exécution du contrat de vente</td>
+                            <td>Durée de la relation + 5 ans (obligations comptables)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service client & Suivi réclamations</strong></td>
+                            <td>Intérêt légitime / Relation client</td>
+                            <td>3 ans après le dernier contact</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prévention de la fraude & Sécurité</strong></td>
+                            <td>Intérêt légitime & Obligations légales</td>
+                            <td>1 an pour les logs de connexion</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Communications d'offres promotionnelles</strong></td>
+                            <td>Consentement préalable de l'utilisateur</td>
+                            <td>Jusqu'au retrait du consentement / désabonnement</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Destinataires des Données et Sous-traitants Techniques</h2>
+            </div>
+            <p>JogaLook ne vend, ne loue, ni ne cède aucune donnée personnelle à des courtiers ou à des régies publicitaires tierces. Les données sont partagées uniquement avec nos sous-traitants techniques strictement nécessaires au fonctionnement du service :</p>
+            <ul>
+                <li><strong>Vercel Inc. :</strong> Hébergement du frontend et du réseau de distribution de contenu (CDN) sécurisé.</li>
+                <li><strong>Supabase Inc. :</strong> Hébergement de la base de données PostgreSQL chiffrée avec politiques de sécurité RLS (Row Level Security).</li>
+                <li><strong>Resend Inc. :</strong> Infrastructure certifiée pour l’envoi ultra-sécurisé des emails transactionnels et des codes OTP.</li>
+                <li><strong>Partenaires logistiques et livreurs :</strong> Uniquement le nom, le numéro de téléphone et l'adresse de destination pour assurer la remise physique du colis.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Mesures de Sécurité des Données</h2>
+            </div>
+            <p>Nous appliquons les standards de cybersécurité les plus stricts :</p>
+            <div class="info-box">
+                <strong>Garanties de sécurité :</strong>
+                <ul style="margin: 0.5rem 0 0 1rem;">
+                    <li>Chiffrement systématique de toutes les communications via protocole <strong>HTTPS / TLS 1.3</strong>.</li>
+                    <li>Authentification par OTP à usage unique, éliminant les risques de vol de mot de passe.</li>
+                    <li>Tokens de session JWT signés cryptographiquement.</li>
+                    <li>Accès à la base de données restreint aux microservices autorisés via des clés de service ultra-sécurisées.</li>
                 </ul>
             </div>
         </section>
 
-        <section class="article">
-            <h2>Article 10 - Service Client & Litiges</h2>
-            <p>Pour toute question relative à votre commande, un retour ou une réclamation, notre service client est à votre écoute :</p>
-            <p>📧 Email : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a><br>
-            📞 Téléphone & WhatsApp : <a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a><br>
-            📍 Adresse : Atelier JogaLook, Dakar HLM-Bentaly, Sénégal.</p>
-            <p>En cas de litige, les parties s'engagent à rechercher une conciliation amiable. À défaut, le différend sera tranché conformément au droit sénégalais par le <strong>Tribunal de Commerce de Dakar</strong>.</p>
-        </section>
-        """
-    },
-    "politique_confidentialite.html": {
-        "title": "Politique de Confidentialité & Protection des Données",
-        "heading": "Politique de Confidentialité",
-        "subheading": "Protection de vos données personnelles, respect de la vie privée et conformité avec la loi sénégalaise n° 2008-12.",
-        "badge": "DONNÉES PERSONNELLES & VIE PRIVÉE",
-        "active": "conf",
-        "content": """
-        <section class="article">
-            <h2>Article 1 - Engagement de Confidentialité et Responsable du Traitement</h2>
-            <p>La protection de vos données personnelles est une priorité absolue pour <strong>JogaLook</strong>. La présente Politique de Confidentialité a pour vocation de vous informer en toute transparence sur la manière dont vos données sont collectées, utilisées et protégées lorsque vous utilisez notre site <a href="https://jogalook.com">jogalook.com</a>.</p>
-            <p>Le responsable du traitement des données à caractère personnel est la société <strong>ATTIC SA</strong>, immatriculée au RCCM sous le numéro <strong>SN STL 2025 A 1556</strong>, NINEA <strong>012216314</strong>, dont le siège social est sis à Sanar, Saint-Louis, et exploitant l'enseigne JogaLook à Dakar HLM-Bentaly, Sénégal.</p>
-            <p>Le traitement des données à caractère personnel mis en œuvre sur la Plateforme est conforme aux dispositions de la <strong>loi sénégalaise n° 2008-12 du 25 janvier 2008</strong> relative à la protection des données à caractère personnel, sous le contrôle de la <strong>Commission de Protection des Données Personnelles du Sénégal (CDP)</strong>.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Données à Caractère Personnel Collectées</h2>
-            <p>JogaLook ne collecte que les données strictement adéquates, pertinentes et nécessaires aux finalités poursuivies :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 6</span>
+                <h2>Vos Droits sur Vos Données Personnelles</h2>
+            </div>
+            <p>Conformément à la législation sénégalaise, vous bénéficiez des droits suivants :</p>
             <ul>
-                <li><strong>Données d'identification :</strong> Nom, prénom, civilité ;</li>
-                <li><strong>Données de contact :</strong> Adresse de courrier électronique, numéros de téléphone (utilisés pour la notification SMS de livraison et les codes OTP de vérification) ;</li>
-                <li><strong>Données de livraison :</strong> Adresse postale de livraison, ville, quartier, repères géographiques et, le cas échéant, coordonnées GPS transmises volontairement par le Client pour une livraison rapide à Dakar ;</li>
-                <li><strong>Données relatives aux commandes et à l'atelier :</strong> Historique des achats, modèles choisis, textes et numéros personnalisés saisis pour le flocage d'atelier, récapitulatifs de facturation ;</li>
-                <li><strong>Données de paiement :</strong> Mode de règlement sélectionné (Wave, Orange Money, Carte, COD). <em>JogaLook ne conserve aucun numéro de carte bancaire ni code secret Mobile Money : les transactions sont intégralement déléguées à l'établissement de paiement agréé PayBammite ;</em></li>
-                <li><strong>Données techniques de connexion :</strong> Adresses IP, logs de connexion, horodatage, agent utilisateur, dans le respect des règles de sécurité et de détection des fraudes.</li>
+                <li><strong>Droit d'accès et de communication :</strong> Vous pouvez demander une copie intégrale des données que nous détenons vous concernant.</li>
+                <li><strong>Droit de rectification :</strong> Vous pouvez demander la mise à jour ou la correction de vos coordonnées.</li>
+                <li><strong>Droit à l'effacement (« droit à l'oubli ») :</strong> Vous pouvez demander la suppression définitive de votre compte et de vos données, sous réserve de nos obligations légales de conservation des factures.</li>
+                <li><strong>Droit d'opposition :</strong> Vous pouvez vous opposer à tout moment à la réception d'emails promotionnels en cliquant sur le lien de désinscription ou en nous écrivant.</li>
             </ul>
+            <p>Pour exercer l'un de ces droits, adressez simplement votre demande par email à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> avec une pièce justificative d'identité. Nous nous engageons à vous répondre dans un délai maximal de <strong>30 jours</strong>.</p>
         </section>
 
-        <section class="article">
-            <h2>Article 3 - Finalités et Bases Légales du Traitement</h2>
-            <p>Vos données font l'objet d'un traitement pour les finalités suivantes :</p>
-            <table class="info-table">
-                <thead>
-                    <tr>
-                        <th>Finalité du traitement</th>
-                        <th>Base légale (Loi 2008-12)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Gestion, exécution et livraison de votre commande de maillots</td>
-                        <td>Exécution du contrat de vente</td>
-                    </tr>
-                    <tr>
-                        <td>Création et fabrication des marquages dans l'atelier SVG</td>
-                        <td>Exécution du contrat de vente</td>
-                    </tr>
-                    <tr>
-                        <td>Authentification sécurisée sans mot de passe par code OTP</td>
-                        <td>Intérêt légitime et sécurité du compte</td>
-                    </tr>
-                    <tr>
-                        <td>Calcul de l'éligibilité au Paiement à la Livraison (COD) et lutte anti-fraude</td>
-                        <td>Intérêt légitime de protection contre les abus</td>
-                    </tr>
-                    <tr>
-                        <td>Émission des factures et tenue des registres comptables</td>
-                        <td>Obligation légale sénégalaise</td>
-                    </tr>
-                    <tr>
-                        <td>Réponse à vos demandes de devis (clubs, écoles, revendeurs) via le formulaire de contact</td>
-                        <td>Consentement de l'utilisateur</td>
-                    </tr>
-                </tbody>
-            </table>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 7</span>
+                <h2>Recours auprès de l'Autorité de Contrôle</h2>
+            </div>
+            <p>Si vous estimez que le traitement de vos données personnelles par JogaLook n'est pas conforme aux exigences légales, vous avez le droit d'introduire une réclamation auprès de la <strong>Commission de Protection des Données Personnelles (CDP) du Sénégal</strong> (site web : <a href="https://www.cdp.sn" target="_blank" rel="noopener">www.cdp.sn</a>).</p>
         </section>
+"""
 
-        <section class="article">
-            <h2>Article 4 - Destinataires et Sous-traitants des Données</h2>
-            <p>Les données collectées sont destinées aux services habilités de JogaLook (service client, atelier de flocage, logistique). Elles peuvent être transmises de façon strictement sécurisée aux prestataires suivants :</p>
-            <ul>
-                <li><strong>Nos livreurs et coursiers partenaires :</strong> uniquement les nom, téléphone et adresse/GPS nécessaires à la remise du colis ;</li>
-                <li><strong>La passerelle de paiement PayBammite :</strong> pour l'encaissement sécurisé des transactions ;</li>
-                <li><strong>Notre routeur de messagerie transactionnelle (Resend) :</strong> pour l'envoi des codes de connexion OTP et confirmations de commande depuis <code>contact@jogalook.com</code> ;</li>
-                <li><strong>Nos hébergeurs d'infrastructure cloud :</strong> Vercel Inc. et Supabase Inc. (serveurs sécurisés avec chiffrement des données au repos et en transit).</li>
-            </ul>
-            <div class="highlight-box">
-                <p><strong>Engagement ferme JogaLook :</strong> Vos données personnelles ne sont <strong>JAMAIS vendues, louées ou cédées</strong> à des tiers à des fins publicitaires ou de prospection commerciale.</p>
+# ==============================================================================
+# 4. Mentions Légales
+# ==============================================================================
+def build_mentions_content():
+    return """
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Éditeur du site</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Registre du Commerce</span>
+                <span class="meta-value">SN STL 2025 A 1556</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Numéro d'Identification (NINEA)</span>
+                <span class="meta-value">012216314</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Juridiction</span>
+                <span class="meta-value">Dakar, République du Sénégal</span>
+            </div>
+        </div>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Section 1</span>
+                <h2>Identification de la Société Éditrice</h2>
+            </div>
+            <p>Le site Internet accessible à l'adresse <a href="https://www.jogalook.com">www.jogalook.com</a> est édité et exploité par la société <strong>ATTIC SA</strong> :</p>
+            <div class="table-responsive">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 35%;"><strong>Raison sociale</strong></td>
+                            <td><strong>ATTIC SA</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Nom commercial / Enseigne</strong></td>
+                            <td>JogaLook</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Forme juridique</strong></td>
+                            <td>Société Anonyme (SA) de droit sénégalais</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Registre du Commerce et du Crédit Mobilier (RCCM)</strong></td>
+                            <td>SN STL 2025 A 1556</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Numéro NINEA</strong></td>
+                            <td>012216314</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Siège social</strong></td>
+                            <td>Dakar, HLM-Bentaly, République du Sénégal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Courriel de contact</strong></td>
+                            <td><a href="mailto:contact@jogalook.com">contact@jogalook.com</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Téléphone & Assistance</strong></td>
+                            <td>+221 78 194 13 51 / +221 71 031 69 39</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section class="article">
-            <h2>Article 5 - Durée de Conservation des Données</h2>
-            <p>Vos données sont conservées pendant une durée strictement nécessaire aux finalités pour lesquelles elles sont collectées :</p>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Section 2</span>
+                <h2>Direction de la Publication</h2>
+            </div>
+            <p>Le Directeur de la publication du site JogaLook est le représentant légal de la société <strong>ATTIC SA</strong> en sa qualité d'administrateur général. Pour toute demande éditoriale ou partenariat média, veuillez adresser vos correspondances à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a>.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Section 3</span>
+                <h2>Prestataires d'Hébergement et d'Infrastructure</h2>
+            </div>
+            <p>La plateforme JogaLook s'appuie sur une infrastructure cloud moderne et hautement sécurisée assurée par les prestataires de classe mondiale suivants :</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rôle technique</th>
+                            <th>Prestataire</th>
+                            <th>Adresse & Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Hébergement Frontend & CDN</strong></td>
+                            <td><strong>Vercel Inc.</strong></td>
+                            <td>340 S Lemon Ave #4133, Walnut, CA 91789, USA — <a href="https://vercel.com" target="_blank" rel="noopener">vercel.com</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Base de données & Stockage Cloud</strong></td>
+                            <td><strong>Supabase Inc.</strong></td>
+                            <td>970 Toa Payoh North #07-04, Singapour 318992 — <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Infrastructure Email Transactionnelle (OTP)</strong></td>
+                            <td><strong>Resend Inc.</strong></td>
+                            <td>San Francisco, CA, USA — <a href="https://resend.com" target="_blank" rel="noopener">resend.com</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Section 4</span>
+                <h2>Propriété Intellectuelle et Droits Réservés</h2>
+            </div>
+            <p>Les marques, logos, slogans, chartes graphiques, photographies de maillots, maquettes de prévisualisation de l'Atelier de flocage, textes éditoriaux et logiciels intégrés sur le Site constituent des créations protégées par les lois sénégalaises et internationales régissant la propriété littéraire, artistique et industrielle (Accords OAPI).</p>
+            <p>Toute reproduction intégrale ou partielle, par quelque procédé que ce soit, faite sans le consentement préalable écrit de <strong>ATTIC SA</strong> est illicite et constitue une contrefaçon sanctionnée pénalement.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Section 5</span>
+                <h2>Signaler un Contenu ou une Anomalie</h2>
+            </div>
+            <p>Conformément aux règles applicables aux services en ligne, tout utilisateur constatant une erreur, un contenu inapproprié ou une violation de droits de propriété est invité à en informer la direction technique à l'adresse <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> avec l'objet <em>« Signalement Contenu »</em>.</p>
+        </section>
+"""
+
+# ==============================================================================
+# 5. Politique des Cookies & Stockage Local
+# ==============================================================================
+def build_cookies_content():
+    return """
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Site concerné</span>
+                <span class="meta-value">www.jogalook.com</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Technologie client</span>
+                <span class="meta-value">LocalStorage & JWT Session</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Traceurs publicitaires</span>
+                <span class="meta-value">Aucun traceur tiers intrusif</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Mise à jour</span>
+                <span class="meta-value">Septembre 2026</span>
+            </div>
+        </div>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Comprendre les Cookies et le Stockage Local</h2>
+            </div>
+            <p>Lors de votre navigation sur <a href="https://www.jogalook.com">www.jogalook.com</a>, des informations relatives à votre session peuvent être temporairement ou durablement stockées sur votre appareil (ordinateur, smartphone, tablette) via des traceurs ou des technologies de <strong>stockage web local (LocalStorage / SessionStorage)</strong>.</p>
+            <p>Contrairement aux sites e-commerce traditionnels qui multiplient les cookies publicitaires et trackers intrusifs, <strong>JogaLook privilégie une architecture moderne et respectueuse de votre vie privée</strong> basée sur le stockage local nécessaire au fonctionnement strict de votre expérience d'achat.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Inventaire des Technologies de Stockage Utilisées par JogaLook</h2>
+            </div>
+            <p>Voici la liste exhaustive et transparente des éléments stockés sur votre navigateur lorsque vous utilisez JogaLook :</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Clé de Stockage</th>
+                            <th>Type de technologie</th>
+                            <th>Finalité & Rôle</th>
+                            <th>Caractère Obligatoire</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>jl_token / auth_token</strong></td>
+                            <td>LocalStorage (JWT)</td>
+                            <td>Maintient votre session connectée après validation de votre code OTP sans vous redemander de vous reconnecter à chaque page.</td>
+                            <td><span style="color: var(--primary); font-weight:700;">Strictement Nécessaire</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>jl_cart / cart_items</strong></td>
+                            <td>LocalStorage (JSON)</td>
+                            <td>Sauvegarde la liste des maillots et les personnalisations de flocage ajoutés dans votre panier, même si vous rechargez la page ou quittez le site.</td>
+                            <td><span style="color: var(--primary); font-weight:700;">Strictement Nécessaire</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>jl_user_info</strong></td>
+                            <td>LocalStorage</td>
+                            <td>Pré-remplit vos informations de livraison (nom, téléphone, adresse à Dakar/régions) pour faciliter vos futures commandes.</td>
+                            <td>Fonctionnel (Confort)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>jl_theme / filters</strong></td>
+                            <td>SessionStorage</td>
+                            <td>Mémorise vos filtres de recherche (tailles, clubs, championnats) pendant votre session active.</td>
+                            <td>Fonctionnel</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Absence de Traceurs Publicitaires Tiers</h2>
+            </div>
+            <div class="info-box">
+                <strong>Garantie JogaLook :</strong>
+                JogaLook n'implémente <strong>aucun pixel espion tiers</strong> (Facebook Pixel, Google Ads Remarketing, trackers de courtiers en données) visant à profiler vos habitudes de consommation en dehors de notre boutique. Vos données de navigation restent confinées à l'expérience JogaLook.
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Comment Gérer et Supprimer vos Données de Stockage Local ?</h2>
+            </div>
+            <p>Vous pouvez à tout moment inspecter, désactiver ou supprimer les données stockées par JogaLook dans votre navigateur :</p>
             <ul>
-                <li><strong>Données du Compte Client actif :</strong> pendant toute la durée d'utilisation du compte, puis archivées pendant trois (3) ans après la dernière activité enregistrée ;</li>
-                <li><strong>Données de commande et facturation :</strong> dix (10) ans conformément aux obligations du Code de commerce et du Code général des impôts sénégalais ;</li>
-                <li><strong>Codes OTP de vérification :</strong> supprimés ou invalidés automatiquement dix (10) minutes après leur émission ;</li>
-                <li><strong>Logs de connexion et sécurité :</strong> conservés pour une durée maximale de douze (12) mois.</li>
+                <li><strong>Déconnexion manuelle :</strong> En cliquant sur le bouton « Déconnexion » dans votre profil, votre jeton d'authentification est automatiquement supprimé de votre navigateur.</li>
+                <li><strong>Vider le panier :</strong> En supprimant les articles de votre panier, les données locales associées sont instantanément effacées.</li>
+                <li><strong>Paramètres du navigateur :</strong> Vous pouvez supprimer les cookies et les « Données de site web » dans les paramètres de confidentialité de Chrome, Safari, Firefox ou Edge. Veuillez noter que la suppression totale empêchera le maintien de votre session et réinitialisera votre panier.</li>
             </ul>
         </section>
 
-        <section class="article">
-            <h2>Article 6 - Sécurité des Données</h2>
-            <p>JogaLook applique les meilleures pratiques de sécurité de l'industrie pour protéger vos informations :</p>
-            <ul>
-                <li>Chiffrement systématique de toutes les communications via le protocole HTTPS / TLS ;</li>
-                <li>Hachage cryptographique irréversible des données sensibles (bcrypt) ;</li>
-                <li>Politiques de sécurité au niveau des lignes de base de données (Row Level Security - RLS) ;</li>
-                <li>Accès aux données réservé aux seuls personnels habilités tenus à une obligation de stricte confidentialité.</li>
-            </ul>
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Contact & Informations Complémentaires</h2>
+            </div>
+            <p>Pour toute question relative à l'utilisation de nos technologies de session et de stockage local, vous pouvez contacter notre équipe technique à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a>.</p>
         </section>
+"""
 
-        <section class="article">
-            <h2>Article 7 - Vos Droits sur Vos Données Personnelles</h2>
-            <p>Conformément à la loi n° 2008-12 du 25 janvier 2008, vous disposez des droits suivants concernant vos données à caractère personnel :</p>
-            <ul>
-                <li><strong>Droit d'accès :</strong> vous pouvez obtenir la confirmation que des données vous concernant sont traitées et en recevoir copie ;</li>
-                <li><strong>Droit de rectification :</strong> vous pouvez exiger que soient rectifiées ou complétées des informations inexactes ou périmées ;</li>
-                <li><strong>Droit à l'effacement (« droit à l'oubli ») :</strong> vous pouvez solliciter la suppression de vos données, sous réserve des délais légaux de conservation comptable ;</li>
-                <li><strong>Droit d'opposition :</strong> vous pouvez vous opposer au traitement de vos données pour des motifs légitimes.</li>
-            </ul>
-            <p>Pour exercer l'un quelconque de ces droits, il vous suffit d'adresser une demande écrite par email à notre Délégué à la Protection des Données : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a>, accompagnée d'un justificatif d'identité si nécessaire.</p>
-            <p>En cas de contestation non résolue, vous avez le droit de saisir la <strong>Commission de Protection des Données Personnelles du Sénégal (CDP)</strong> : <a href="https://www.cdp.sn" target="_blank" rel="noopener">www.cdp.sn</a>.</p>
-        </section>
-        """
-    },
-    "mentions_legales.html": {
-        "title": "Mentions Légales",
-        "heading": "Mentions Légales",
-        "subheading": "Informations légales relatives à l'éditeur, aux directeurs de la publication et aux hébergeurs de JogaLook.",
-        "badge": "INFORMATIONS JURIDIQUES & ÉDITEUR",
-        "active": "mentions",
-        "content": """
-        <section class="article">
-            <h2>Article 1 - Éditeur du Site</h2>
-            <p>Le site internet <a href="https://jogalook.com">jogalook.com</a> est la propriété exclusive de la société <strong>ATTIC SA</strong>, qui en assure l'édition et l'exploitation commerciale.</p>
-            <table class="info-table">
-                <tbody>
-                    <tr>
-                        <th>Dénomination sociale</th>
-                        <td><strong>ATTIC SA</strong> (Société Anonyme de droit sénégalais)</td>
-                    </tr>
-                    <tr>
-                        <th>Nom commercial</th>
-                        <td><strong>JogaLook</strong></td>
-                    </tr>
-                    <tr>
-                        <th>Numéro RCCM</th>
-                        <td><strong>SN STL 2025 A 1556</strong> (Tribunal de Commerce)</td>
-                    </tr>
-                    <tr>
-                        <th>Numéro NINEA</th>
-                        <td><strong>012216314</strong></td>
-                    </tr>
-                    <tr>
-                        <th>Siège social</th>
-                        <td>Sanar, Saint-Louis, République du Sénégal</td>
-                    </tr>
-                    <tr>
-                        <th>Établissement & Atelier</th>
-                        <td>Dakar HLM-Bentaly / HLM Grand Yoff, Dakar, Sénégal</td>
-                    </tr>
-                    <tr>
-                        <th>Courriel de contact</th>
-                        <td><a href="mailto:contact@jogalook.com">contact@jogalook.com</a></td>
-                    </tr>
-                    <tr>
-                        <th>Téléphones officiels</th>
-                        <td><a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
+# ==============================================================================
+# Programme principal d'écriture des fichiers
+# ==============================================================================
+def main():
+    os.makedirs(LEGAL_SRC_DIR, exist_ok=True)
+    os.makedirs(LEGAL_FRONTEND_DIR, exist_ok=True)
+    
+    docs = [
+        {
+            "filename": "cgu.html",
+            "title": "Conditions Générales d'Utilisation",
+            "badge": "Mise à jour : Mars 2026",
+            "content": build_cgu_content()
+        },
+        {
+            "filename": "cgv.html",
+            "title": "Conditions Générales de Vente",
+            "badge": "Mise à jour : Mars 2026",
+            "content": build_cgv_content()
+        },
+        {
+            "filename": "politique_confidentialite.html",
+            "title": "Politique de Confidentialité",
+            "badge": "Conforme Loi Sénégalaise 2008-12",
+            "content": build_privacy_content()
+        },
+        {
+            "filename": "mentions_legales.html",
+            "title": "Mentions Légales",
+            "badge": "Société ATTIC SA",
+            "content": build_mentions_content()
+        },
+        {
+            "filename": "politique_cookies.html",
+            "title": "Politique des Cookies & Stockage Local",
+            "badge": "Gestion des traceurs et session",
+            "content": build_cookies_content()
+        }
+    ]
+    
+    for doc in docs:
+        html_code = generate_header(doc["title"], doc["badge"], doc["filename"])
+        html_code += doc["content"]
+        html_code += generate_footer()
+        
+        # Écriture dans legal/
+        dest_root = os.path.join(LEGAL_SRC_DIR, doc["filename"])
+        with open(dest_root, "w", encoding="utf-8") as f:
+            f.write(html_code)
+            
+        # Écriture dans src/frontend/legal/
+        dest_front = os.path.join(LEGAL_FRONTEND_DIR, doc["filename"])
+        with open(dest_front, "w", encoding="utf-8") as f:
+            f.write(html_code)
+            
+        print(f"✅ Généré: {doc['filename']} ({len(html_code)} octets)")
 
-        <section class="article">
-            <h2>Article 2 - Direction de la Publication</h2>
-            <p>Le Directeur de la publication du site JogaLook est :</p>
-            <p><strong>Monsieur YENHAMME BAMMITE Yembouam Prince</strong>, agissant en qualité de Directeur Général de la société ATTIC SA.<br>Contact : <a href="mailto:princebammite@gmail.com">princebammite@gmail.com</a></p>
-        </section>
+    # Alias ccg.html vers cgv.html pour rétro-compatibilité
+    cgv_src = os.path.join(LEGAL_SRC_DIR, "cgv.html")
+    with open(cgv_src, "r", encoding="utf-8") as f:
+        cgv_content = f.read()
+    with open(os.path.join(LEGAL_SRC_DIR, "ccg.html"), "w", encoding="utf-8") as f:
+        f.write(cgv_content)
+    with open(os.path.join(LEGAL_FRONTEND_DIR, "ccg.html"), "w", encoding="utf-8") as f:
+        f.write(cgv_content)
+    print("✅ Alias ccg.html généré")
 
-        <section class="article">
-            <h2>Article 3 - Hébergement et Infrastructure Technique</h2>
-            <p>L'infrastructure technique de JogaLook est hébergée auprès d'opérateurs de rang mondial garantissant une haute disponibilité et un niveau de sécurité optimal :</p>
-            <ul>
-                <li><strong>Hébergement de l'application web & Frontend :</strong><br>
-                <strong>Vercel Inc.</strong><br>
-                Adresse : 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis<br>
-                Site web : <a href="https://vercel.com" target="_blank" rel="noopener">vercel.com</a></li>
-                
-                <li><strong>Hébergement de la Base de Données & Stockage médias :</strong><br>
-                <strong>Supabase Inc.</strong> (Infrastructure Cloud AWS)<br>
-                Adresse : 970 Toa Payoh North #07-04, Singapour<br>
-                Site web : <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></li>
-
-                <li><strong>Routage des Emails Transactionnels & OTP :</strong><br>
-                <strong>Resend Inc.</strong><br>
-                Adresse : 2261 Market Street #5039, San Francisco, CA 94114, États-Unis<br>
-                Site web : <a href="https://resend.com" target="_blank" rel="noopener">resend.com</a></li>
-            </ul>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Propriété Intellectuelle</h2>
-            <p>L'ensemble des contenus présents sur le site JogaLook (textes, logos, photographies, vidéos, icônes, gabarits graphiques, maquettes d'atelier, charte visuelle, scripts logiciels) relève de la législation sénégalaise et internationale sur le droit d'auteur et la propriété intellectuelle.</p>
-            <p>Toute reproduction, copie, distribution ou exploitation sans l'accord préalable et écrit d'ATTIC SA est formellement interdite et constitue un délit de contrefaçon.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 5 - Marques et Emblèmes Tiers</h2>
-            <p>Les marques de clubs sportifs, fédérations et équipementiers présentées dans le catalogue JogaLook sont des marques déposées appartenant à leurs propriétaires légitimes. Leur présence sur le Site n'a d'autre fin que la description et la présentation exacte des articles authentiques distribués.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 6 - Droit Applicable</h2>
-            <p>Le présent site internet et ses mentions légales sont régis par le droit de la <strong>République du Sénégal</strong>. Tout litige relatif à sa validité ou à son utilisation relève de la compétence exclusive des juridictions du ressort de la <strong>Cour d'Appel de Dakar</strong>.</p>
-        </section>
-        """
-    },
-    "politique_cookies.html": {
-        "title": "Politique des Cookies & Traceurs",
-        "heading": "Politique des Cookies",
-        "subheading": "Explication sur l'utilisation des cookies et du stockage local pour assurer le bon fonctionnement de JogaLook.",
-        "badge": "TRACEURS & GESTION DU CONSENTEMENT",
-        "active": "cookies",
-        "content": """
-        <section class="article">
-            <h2>Article 1 - Qu'est-ce qu'un Cookie ou un Traceur ?</h2>
-            <p>Un <strong>cookie</strong> est un petit fichier texte déposé sur votre terminal (ordinateur, smartphone ou tablette) par le biais de votre navigateur web lors de la visite d'un site internet. Il permet au site de mémoriser temporairement des informations sur votre visite, telles que vos préférences de navigation ou le contenu de votre panier d'achat.</p>
-            <p>Sur JogaLook, nous utilisons également les mécanismes modernes de stockage local sécurisé (<strong>HTML5 LocalStorage</strong> et <strong>SessionStorage</strong>) pour optimiser les temps de chargement et garantir la fluidité de votre expérience d'achat.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Les Types de Traceurs Utilisés sur JogaLook</h2>
-            <p>Nous classons les traceurs utilisés sur notre Plateforme en plusieurs catégories :</p>
-
-            <h3>2.1 Traceurs Strictement Nécessaires (Fonctionnels)</h3>
-            <p>Ces traceurs sont indispensables au fonctionnement technique de la boutique en ligne. Sans eux, vous ne pourriez pas utiliser les services de base :</p>
-            <table class="info-table">
-                <thead>
-                    <tr>
-                        <th>Nom du traceur</th>
-                        <th>Finalité</th>
-                        <th>Durée de conservation</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><code>jogalook_cart</code> (LocalStorage)</td>
-                        <td>Maintient les maillots et flocages ajoutés à votre panier pendant votre session de navigation</td>
-                        <td>30 jours ou jusqu'à vidage du panier</td>
-                    </tr>
-                    <tr>
-                        <td><code>jogalook_token</code> (SessionStorage / Cookie sécurisé)</td>
-                        <td>Gère votre session de connexion sécurisée (authentification JWT)</td>
-                        <td>Durée de la session ou 7 jours si mémorisé</td>
-                    </tr>
-                    <tr>
-                        <td><code>jogalook_user</code> (LocalStorage)</td>
-                        <td>Retient les informations de profil public pour l'affichage de la barre de navigation</td>
-                        <td>Durée de la session active</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h3>2.2 Traceurs de Personnalisation d'Atelier SVG</h3>
-            <p>Ces éléments permettent de sauvegarder en temps réel vos créations de flocages (nom du joueur, numéro sélectionné, couleurs choisies, écussons) au fur et à mesure que vous les modifiez dans le studio, afin de ne pas perdre votre travail en cas de rafraîchissement inopiné de la page.</p>
-
-            <h3>2.3 Traceurs de Sécurité et Prévention de la Fraude</h3>
-            <p>Ils permettent de détecter les requêtes répétitives malveillantes, de limiter les abus sur l'envoi de codes SMS/OTP et d'assurer l'intégrité de la plateforme.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 3 - Consentement et Paramétrage de vos Cookies</h2>
-            <p>Les traceurs strictement nécessaires au fonctionnement du site et à la fourniture d'un service expressément demandé par l'Utilisateur (panier d'achat, connexion) ne nécessitent pas de consentement préalable conformément aux recommandations de la CDP et aux standards internationaux.</p>
-            <p>Vous pouvez toutefois configurer à tout moment votre navigateur pour bloquer les cookies ou être alerté lors de leur dépôt :</p>
-            <ul>
-                <li><strong>Google Chrome :</strong> Paramètres > Confidentialité et sécurité > Cookies et autres données des sites ;</li>
-                <li><strong>Safari (Apple) :</strong> Réglages > Safari > Avancé > Bloquer tous les cookies ;</li>
-                <li><strong>Mozilla Firefox :</strong> Options > Vie privée et sécurité > Cookies et données de sites ;</li>
-                <li><strong>Microsoft Edge :</strong> Paramètres > Confidentialité, recherche et services > Cookies.</li>
-            </ul>
-            <p><em>Attention : La désactivation complète des cookies et du stockage local peut altérer l'affichage du site et empêcher l'ajout de maillots au panier ou l'utilisation de l'Atelier de flocage.</em></p>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Contact</h2>
-            <p>Pour toute interrogation relative à notre politique en matière de cookies et de traceurs, vous pouvez contacter notre équipe à : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a>.</p>
-        </section>
-        """
-    }
-}
-
-os.makedirs("legal", exist_ok=True)
-
-for filename, doc in DOCS.items():
-    active_cgu = "active" if doc["active"] == "cgu" else ""
-    active_cgv = "active" if doc["active"] == "cgv" else ""
-    active_conf = "active" if doc["active"] == "conf" else ""
-    active_mentions = "active" if doc["active"] == "mentions" else ""
-    active_cookies = "active" if doc["active"] == "cookies" else ""
-
-    html = TEMPLATE.format(
-        title=doc["title"],
-        heading=doc["heading"],
-        subheading=doc["subheading"],
-        badge=doc["badge"],
-        active_cgu=active_cgu,
-        active_cgv=active_cgv,
-        active_conf=active_conf,
-        active_mentions=active_mentions,
-        active_cookies=active_cookies,
-        content=doc["content"]
-    )
-
-    path = os.path.join("legal", filename)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"Generated {path} ({len(html)} chars)")
-
-# Also update ccg.html to be a clone or alias of cgv.html so old links still work
-with open(os.path.join("legal", "cgv.html"), "r", encoding="utf-8") as f:
-    cgv_content = f.read()
-with open(os.path.join("legal", "ccg.html"), "w", encoding="utf-8") as f:
-    f.write(cgv_content)
-print("Updated legal/ccg.html as alias of cgv.html")
-
+if __name__ == "__main__":
+    main()

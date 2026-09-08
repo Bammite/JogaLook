@@ -5,11 +5,6 @@ import ProductCard from '../components/ProductCard';
 import { SearchIcon } from '../components/icons/AppIcons';
 import './CatalogPage.css';
 
-const fallbackProducts = [
-  { id: 'fallback-1', name: 'Maillot Domicile 2025', team: 'Collection sport', price: 89.99, image: 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=400&h=500&fit=crop', badge: { type: 'new', text: 'Nouveau' }, colors: ['#A50044', '#004D98', '#FFED02'], category: 'Football' },
-  { id: 'fallback-2', name: 'Maillot Extérieur 2025', team: 'Collection sport', price: 94.99, image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=500&fit=crop', badge: { type: 'hot', text: 'Best-seller' }, colors: ['#FFFFFF', '#004170', '#DA291C'], category: 'Football' },
-];
-
 function CatalogSkeleton() {
   return (
     <div className="catalog-grid catalog-grid--skeleton" aria-label="Chargement du catalogue">
@@ -26,7 +21,7 @@ function CatalogSkeleton() {
 }
 
 function CatalogPage() {
-  const [products, setProducts] = useState(fallbackProducts);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['Tous']);
   const [activeCategory, setActiveCategory] = useState('Tous');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,11 +61,11 @@ function CatalogPage() {
 
         const realCategories = (categoriesJson.data || []).map((category) => category.name).filter(Boolean);
 
-        setProducts(realProducts.length ? realProducts : fallbackProducts);
+        setProducts(realProducts);
         setCategories(['Tous', ...new Set(realCategories)]);
       } catch (error) {
-        setProducts(fallbackProducts);
-        setCategories(['Tous', 'Football']);
+        setProducts([]);
+        setCategories(['Tous']);
       } finally {
         setLoading(false);
       }
@@ -138,10 +133,16 @@ function CatalogPage() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+          ) : products.length === 0 ? (
+            <div className="catalog-empty">
+              <span className="empty-icon"><SearchIcon size={44} color="#94A3B8" /></span>
+              <h3>Aucun produit pour le moment</h3>
+              <p>Le catalogue sera bientôt mis à jour avec nos nouveaux maillots et équipements.</p>
+            </div>
           ) : (
             <div className="catalog-empty">
               <span className="empty-icon"><SearchIcon size={44} color="#94A3B8" /></span>
-              <h3>Aucun produit trouvé</h3>
+              <h3>Aucun résultat trouvé</h3>
               <p>Essayez de modifier vos filtres ou votre recherche.</p>
               <button className="btn-primary" onClick={() => { setActiveCategory('Tous'); setSearchQuery(''); }}>
                 Réinitialiser les filtres

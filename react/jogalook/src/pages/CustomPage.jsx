@@ -28,21 +28,21 @@ function CustomPage() {
   const [modalViewSide, setModalViewSide] = useState('front'); // 'front' | 'back'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Charger la liste des templates depuis l'API ou utiliser les presets
+  // Charger la liste des templates depuis l'API backend
   useEffect(() => {
     async function fetchTemplates() {
       setLoadingTemplates(true);
       try {
         const res = await fetch('/api/templates');
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setTemplates(json.data);
         } else {
-          setTemplates(MOCK_TEMPLATES);
+          setTemplates([]);
         }
       } catch (err) {
         console.error('Erreur chargement templates:', err);
-        setTemplates(MOCK_TEMPLATES);
+        setTemplates([]);
       } finally {
         setLoadingTemplates(false);
       }
@@ -96,7 +96,7 @@ function CustomPage() {
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="templates-empty">
-                <p>Aucun modèle trouvé pour "{searchQuery}".</p>
+                <p>{templates.length === 0 ? 'Aucun modèle de maillot pour le moment.' : `Aucun modèle trouvé pour "${searchQuery}".`}</p>
               </div>
             ) : (
               <div className="templates-grid">

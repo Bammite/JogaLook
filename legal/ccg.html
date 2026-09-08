@@ -4,22 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conditions Générales de Vente — JogaLook</title>
+    <meta name="description" content="Conditions Générales de Vente officielles de la plateforme JogaLook, opérée par ATTIC SA à Dakar, Sénégal.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    
+    <!-- Polices Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+
         :root {
             --primary: #f15a24;
             --primary-hover: #d94815;
-            --primary-light: rgba(241, 90, 36, 0.12);
-            --dark: #0f172a;
-            --dark-surface: #1e293b;
+            --primary-light: rgba(241, 90, 36, 0.1);
+            --dark: #0b1329;
+            --dark-surface: #131c38;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #334155;
             --text-heading: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --accent-green: #10b981;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
         }
 
         * {
@@ -29,23 +44,23 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.75;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.8;
             color: var(--text);
             background-color: var(--bg);
             -webkit-font-smoothing: antialiased;
         }
 
-        h1, h2, h3, h4, .nav-logo, .hero-badge {
-            font-family: "Plus Jakarta Sans", sans-serif;
+        h1, h2, h3, h4, .nav-logo, .hero-badge, .tab-btn, .section-number {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-heading);
             font-weight: 700;
         }
 
-        /* Header Navbar */
+        /* Navbar Header */
         .navbar {
-            background-color: #0b1329;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding: 1.1rem 2rem;
             position: sticky;
             top: 0;
@@ -58,12 +73,17 @@
         .nav-logo {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             font-size: 1.45rem;
             font-weight: 800;
             text-decoration: none;
             color: #ffffff;
             letter-spacing: -0.5px;
+        }
+
+        .nav-logo svg, .nav-logo img {
+            height: 28px;
+            width: auto;
         }
 
         .nav-logo span {
@@ -72,545 +92,549 @@
 
         .nav-links {
             display: flex;
-            gap: 1.1rem;
+            gap: 1.25rem;
             align-items: center;
         }
 
         .nav-links a {
             text-decoration: none;
             color: #94a3b8;
+            font-size: 0.92rem;
             font-weight: 500;
-            font-size: 0.9rem;
             transition: all 0.2s ease;
-            padding: 6px 12px;
-            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .nav-links a:hover {
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
         }
 
-        .nav-links a.active {
+        .nav-links .btn-primary {
+            background-color: var(--primary);
             color: #ffffff;
-            background: var(--primary);
+            padding: 0.55rem 1.15rem;
+            border-radius: 8px;
             font-weight: 600;
         }
 
-        .nav-back {
-            background: rgba(241, 90, 36, 0.15) !important;
-            color: var(--primary) !important;
-            border: 1px solid rgba(241, 90, 36, 0.3) !important;
-            font-weight: 600 !important;
-        }
-
-        .nav-back:hover {
-            background: var(--primary) !important;
-            color: #ffffff !important;
+        .nav-links .btn-primary:hover {
+            background-color: var(--primary-hover);
         }
 
         /* Hero Banner */
-        .hero {
-            background: linear-gradient(135deg, #0b1329 0%, #0f172a 60%, #1e293b 100%);
+        .hero-banner {
+            background: linear-gradient(135deg, var(--dark) 0%, #152244 100%);
             color: #ffffff;
-            padding: 4.5rem 1.5rem 5rem;
+            padding: 3.5rem 1.5rem 2.5rem;
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-bottom: 3px solid var(--primary);
         }
 
-        .hero::before {
-            content: "";
+        .hero-banner::before {
+            content: '';
             position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 450px;
-            height: 450px;
-            background: radial-gradient(circle, rgba(241, 90, 36, 0.18) 0%, transparent 70%);
-            border-radius: 50%;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(241, 90, 36, 0.08) 0%, transparent 60%);
             pointer-events: none;
         }
 
         .hero-badge {
-            display: inline-block;
-            padding: 6px 18px;
-            background: rgba(241, 90, 36, 0.18);
-            border: 1px solid rgba(241, 90, 36, 0.35);
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
-            margin-bottom: 1.1rem;
-        }
-
-        .hero h1 {
-            font-size: clamp(2.2rem, 4vw, 3rem);
-            color: #ffffff;
-            margin-bottom: 0.8rem;
-            font-weight: 800;
-        }
-
-        .hero p {
-            color: #94a3b8;
-            font-size: 1.05rem;
-            max-width: 650px;
-            margin: 0 auto;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 960px;
-            margin: -2.8rem auto 4.5rem;
-            padding: 0 1.5rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        .document-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-            border: 1px solid var(--border);
-            padding: 3.5rem 3rem;
-        }
-
-        .document-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 2rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .meta-pill {
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .meta-pill span {
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .print-btn {
-            background: #f1f5f9;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
+            background: rgba(241, 90, 36, 0.15);
+            border: 1px solid rgba(241, 90, 36, 0.35);
+            color: #ff9d75;
+            padding: 0.35rem 0.95rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .print-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
+        .hero-banner h1 {
+            color: #ffffff;
+            font-size: 2.35rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
         }
 
-        /* Articles & Content */
-        .article {
-            margin-bottom: 3rem;
+        .hero-banner p {
+            color: #cbd5e1;
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto;
         }
 
-        .article:last-child {
+        /* Nav Pills for Legal Navigation */
+        .legal-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 2rem;
+        }
+
+        .legal-nav a {
+            text-decoration: none;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .legal-nav a:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        .legal-nav a.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(241, 90, 36, 0.35);
+        }
+
+        /* Main Container & Articles */
+        .container {
+            max-width: 960px;
+            margin: 2.5rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+
+        .legal-meta-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        .legal-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2.25rem;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .legal-section:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .section-header h2 {
+            font-size: 1.35rem;
+            color: var(--text-heading);
+            line-height: 1.3;
+        }
+
+        .legal-section p {
+            margin-bottom: 1rem;
+            font-size: 0.98rem;
+        }
+
+        .legal-section p:last-child {
             margin-bottom: 0;
         }
 
-        .article h2 {
-            font-size: 1.45rem;
-            color: #0f172a;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.6rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1.25rem;
+        .legal-section ul, .legal-section ol {
+            margin: 1rem 0 1rem 1.5rem;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .article h2::before {
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 22px;
-            background: var(--primary);
-            border-radius: 4px;
-        }
-
-        .article h3 {
-            font-size: 1.15rem;
-            color: #1e293b;
-            margin-top: 1.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .article p {
-            margin-bottom: 1.1rem;
-            color: #334155;
-            font-size: 0.98rem;
-            line-height: 1.75;
-        }
-
-        .article ul, .article ol {
-            margin: 1rem 0 1.5rem 1.75rem;
-            color: #334155;
-        }
-
-        .article li {
-            margin-bottom: 0.6rem;
-            font-size: 0.98rem;
-            line-height: 1.65;
-        }
-
-        .article li strong {
-            color: #0f172a;
-        }
-
-        .highlight-box {
-            background: rgba(241, 90, 36, 0.05);
-            border-left: 4px solid var(--primary);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
+        .legal-section li {
             font-size: 0.96rem;
         }
 
-        .highlight-box p:last-child {
-            margin-bottom: 0;
+        .highlight-box {
+            background: #fff7ed;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #9a3412;
         }
 
-        .info-table {
+        .info-box {
+            background: #f0fdf4;
+            border-left: 4px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #166534;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5rem 0;
+            text-align: left;
             font-size: 0.92rem;
         }
 
-        .info-table th, .info-table td {
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .info-table th {
-            background: #f8fafc;
-            color: #0f172a;
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-heading);
             font-weight: 700;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .info-table tr:nth-child(even) {
-            background: #fdfdfd;
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
         }
 
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
+        tr:last-child td {
+            border-bottom: none;
         }
 
-        a:hover {
-            text-decoration: underline;
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
         }
 
-        /* Site Footer */
-        .site-footer {
-            background-color: #0b1329;
+        /* Footer */
+        .footer {
+            background-color: var(--dark);
             color: #94a3b8;
-            padding: 4.5rem 2rem 2rem;
-            margin-top: 5rem;
+            padding: 3rem 1.5rem 2rem;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.9rem;
         }
 
-        .site-footer-container {
-            max-width: 1000px;
+        .footer-content {
+            max-width: 960px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 2.5rem;
-        }
-
-        .site-footer-col h4 {
-            color: #ffffff;
-            font-size: 1.05rem;
-            margin-bottom: 1.2rem;
-            font-weight: 700;
-        }
-
-        .site-footer-col p {
-            font-size: 0.9rem;
-            line-height: 1.65;
-            margin-bottom: 1rem;
-        }
-
-        .site-footer-col ul {
-            list-style: none;
-        }
-
-        .site-footer-col ul li {
-            margin-bottom: 0.6rem;
-        }
-
-        .site-footer-col ul li a {
-            color: #94a3b8;
-            font-weight: 400;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .site-footer-col ul li a:hover {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .site-footer-bottom {
-            max-width: 1000px;
-            margin: 3rem auto 0;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
             text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            justify-content: center;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-copy {
             font-size: 0.85rem;
             color: #64748b;
         }
 
         @media (max-width: 768px) {
             .navbar {
-                flex-direction: column;
-                gap: 1rem;
                 padding: 1rem;
             }
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
+            .hero-banner h1 {
+                font-size: 1.85rem;
+            }
+            .legal-section {
+                padding: 1.5rem;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.5rem;
-            }
-            .document-card {
-                padding: 2rem 1.25rem;
-                border-radius: 12px;
-            }
-            .hero {
-                padding: 3.5rem 1rem 4rem;
             }
         }
 
-        @media print {
-            .navbar, .site-footer, .print-btn, .hero-badge {
-                display: none !important;
-            }
-            .hero {
-                background: none;
-                color: #000;
-                padding: 1rem 0;
-            }
-            .hero h1 {
-                color: #000;
-            }
-            .container {
-                margin: 0;
-                max-width: 100%;
-                padding: 0;
-            }
-            .document-card {
-                box-shadow: none;
-                border: none;
-                padding: 0;
-            }
-        }
     </style>
 </head>
 <body>
 
+    <!-- Header Navbar -->
     <nav class="navbar">
-        <a href="/" class="nav-logo">JOGA<span>LOOK</span></a>
+        <a href="/" class="nav-logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                <circle cx="24" cy="24" r="24" fill="#0b1329"/>
+                <path d="M10 14 L14 10 L18 13 C19.5 14 20.5 14 24 14 C27.5 14 28.5 14 30 13 L34 10 L38 14 L33 18 L33 38 L15 38 L15 18 Z" fill="#f15a24"/>
+                <path d="M20 14 Q24 17 28 14" stroke="#0b1329" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Joga<span>Look</span>
+        </a>
         <div class="nav-links">
-            <a href="cgu.html" class="">CGU</a>
-            <a href="cgv.html" class="active">CGV</a>
-            <a href="politique_confidentialite.html" class="">Confidentialité</a>
-            <a href="mentions_legales.html" class="">Mentions Légales</a>
-            <a href="politique_cookies.html" class="">Cookies</a>
-            <a href="/" class="nav-back">← Boutique</a>
+            <a href="/">← Retour à la boutique</a>
+            <a href="/contact" class="btn-primary">Support & Contact</a>
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="hero-badge">COMMERCE & VENTE EN LIGNE</div>
+    <!-- Hero Section -->
+    <header class="hero-banner">
+        <div class="hero-badge">Mise à jour : Mars 2026</div>
         <h1>Conditions Générales de Vente</h1>
-        <p>Modalités d'achat, de paiement, de flocage sur-mesure, de livraison et de garantie sur JogaLook.</p>
+        <p>Document officiel encadrant les services de vente et de personnalisation de maillots de sport sur JogaLook.</p>
+        
+        <div class="legal-nav">
+            <a href="cgu.html" class="" title="Conditions Générales d'Utilisation">CGU</a><a href="cgv.html" class="active" title="Conditions Générales de Vente">CGV</a><a href="politique_confidentialite.html" class="" title="Politique de Confidentialité">Confidentialité</a><a href="mentions_legales.html" class="" title="Mentions Légales">Mentions Légales</a><a href="politique_cookies.html" class="" title="Politique des Cookies">Cookies</a>
+        </div>
     </header>
 
-    <div class="container">
-        <main class="document-card">
-            <div class="document-meta">
-                <div class="meta-pill">📅 Dernière mise à jour : <span>Septembre 2026</span></div>
-                <div class="meta-pill">🏢 Société : <span>ATTIC SA (JogaLook)</span></div>
-                <button class="print-btn" onclick="window.print()">
-                    🖨️ Imprimer ce document
-                </button>
+    <main class="container">
+
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Vendeur</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
             </div>
-            
-        <section class="article">
-            <h2>Article 1 - Dispositions Générales & Identification du Vendeur</h2>
-            <p>Les présentes Conditions Générales de Vente (ci-après les <strong>« CGV »</strong>) régissent sans restriction l'ensemble des ventes de maillots, vêtements de sport, équipements et prestations de personnalisation par flocage conclues entre :</p>
-            <p>D'une part, la société <strong>ATTIC SA</strong>, société anonyme immatriculée au RCCM de Saint-Louis sous le numéro <strong>SN STL 2025 A 1556</strong>, NINEA <strong>012216314</strong>, exploitant la marque commerciale <strong>JogaLook</strong>, dont le siège est à Sanar (Saint-Louis) et l'établissement opérationnel à <strong>Dakar HLM-Bentaly, Sénégal</strong>, joignable à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> et par téléphone au <a href="tel:+221781941351">+221 78 194 13 51</a> (ci-après désignée <strong>« JogaLook »</strong> ou le <strong>« Vendeur »</strong>) ;</p>
-            <p>Et d'autre part, toute personne physique ou morale procédant à une commande via le site <a href="https://jogalook.com">jogalook.com</a> (ci-après désignée le <strong>« Client »</strong>).</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Produits et Disponibilité</h2>
-            <p>Les Produits proposés à la vente sont ceux décrits et présentés sur le catalogue en ligne de JogaLook. Ils comprennent des maillots de football (éditions domicile, extérieur, third, rétro), des ensembles complets, des tenues pour clubs, écoles et revendeurs, ainsi que des prestations d'atelier (flocage officiel ou sur-mesure).</p>
-            <p>Les photographies illustrant les Produits sont les plus fidèles possibles. Les offres de Produits et les prix sont valables tant qu'ils sont visibles sur le Site et dans la limite des stocks disponibles. En cas d'indisponibilité exceptionnelle d'un article après passation de commande, le Client en est informé sans délai et remboursé sous quarante-huit (48) heures.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 3 - Prix et Devises</h2>
-            <p>Les prix de vente des Produits sont indiqués en <strong>Francs CFA (XOF)</strong>, toutes taxes comprises (TTC), hors frais de livraison sauf mention expresse contraire.</p>
-            <p>JogaLook se réserve le droit de modifier ses tarifs à tout moment. Toutefois, les Produits seront facturés sur la base des tarifs en vigueur et affichés au moment précis de l'enregistrement de la commande par le Client.</p>
-            <p>Pour les commandes volumineuses émanant de clubs, écoles ou revendeurs, des tarifs dégressifs peuvent être convenus via un devis validé conjointement.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Passation de Commande</h2>
-            <p>Le processus de commande sur JogaLook comprend les étapes suivantes :</p>
-            <ol>
-                <li>Sélection du produit et choix de la taille (S, M, L, XL, XXL, etc.) et de la variante de couleur ;</li>
-                <li>Option de personnalisation d'atelier : configuration du flocage (Face avant, Dos, Nom du joueur ou nom personnel, Numéro, Badges de compétition) avec prévisualisation dynamique ;</li>
-                <li>Ajout au panier d'achat et vérification du récapitulatif détaillé ;</li>
-                <li>Renseignement des coordonnées de livraison (adresse manuelle ou géolocalisation GPS pour Dakar) ;</li>
-                <li>Choix du mode de règlement et validation ferme de la commande.</li>
-            </ol>
-            <p>La confirmation de commande fait l'objet d'un email automatique instantané expédié depuis <strong>JogaLook &lt;contact@jogalook.com&gt;</strong> récapitulant les détails de la commande et le numéro unique de suivi.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 5 - Régime Spécifique des Produits Personnalisés (Flocage d'Atelier)</h2>
-            <div class="highlight-box">
-                <p><strong>⚠️ DÉROGATION LÉGALE AU DROIT DE RÉTRACTATION :</strong> Conformément aux règles régissant la vente à distance et les contrats de consommation portant sur des biens nettement personnalisés ou confectionnés selon les spécifications précises du consommateur, <strong>les maillots ayant fait l'objet d'un flocage personnalisé (nom, prénom, numéro spécifique ou badges sur-mesure) ne peuvent faire l'objet d'aucun droit de rétractation, annulation, échange ou remboursement une fois la production lancée</strong>, sauf vice caché, défaut avéré de fabrication ou non-conformité manifeste imputable à notre atelier.</p>
+            <div class="meta-item">
+                <span class="meta-label">RCCM / NINEA</span>
+                <span class="meta-value">SN STL 2025 A 1556 / 012216314</span>
             </div>
-            <p>Le Client est donc invité à vérifier scrupuleusement l'orthographe des noms, la justesse des numéros et le choix de la taille avant de valider son panier.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 6 - Modalités de Paiement Sécurisé</h2>
-            <p>JogaLook met à la disposition de ses Clients deux modes de règlement fiables et sécurisés :</p>
-
-            <h3>6.1 Paiement Électronique en Ligne (Passerelle PayBammite)</h3>
-            <p>Le Client peut régler sa commande immédiatement en ligne via la passerelle agréée <strong>PayBammite</strong> :</p>
-            <ul>
-                <li><strong>Mobile Money Sénégal & Afrique :</strong> Wave Sénégal, Orange Money, Free Money, Moov Money, MTN Mobile Money ;</li>
-                <li><strong>Cartes Bancaires :</strong> Carte Bancaire Visa, Mastercard avec protocole d'authentification 3D-Secure.</li>
-            </ul>
-            <p>Les transactions sont protégées par un chiffrement SSL/TLS de niveau bancaire. Aucune coordonnée bancaire secrète n'est hébergée sur les serveurs de JogaLook.</p>
-
-            <h3>6.2 Paiement à la Livraison (Cash on Delivery - COD)</h3>
-            <p>Afin de faciliter l'achat pour les clients de Dakar et de sa banlieue, JogaLook propose le paiement au comptant lors de la remise physique du colis par le livreur.</p>
-            <div class="highlight-box">
-                <p><strong>Conditions d'éligibilité au COD :</strong> Le paiement à la livraison est encadré par notre système de fiabilité client (table <code>user_reliability</code>). Il est limité aux commandes comprises entre <strong>5 000 FCFA</strong> et <strong>100 000 FCFA</strong>. En cas de refus abusif ou d'absence injustifiée lors de la livraison, le Client perdra définitivement le bénéfice de ce mode de paiement pour ses commandes futures.</p>
+            <div class="meta-item">
+                <span class="meta-label">Devise & Prix</span>
+                <span class="meta-value">Franc CFA (XOF) TTC</span>
             </div>
-        </section>
-
-        <section class="article">
-            <h2>Article 7 - Livraison, Délais et Modalités de Réception</h2>
-            <p>JogaLook livre ses Produits sur l'ensemble du territoire sénégalais et dans la sous-région ouest-africaine :</p>
-            <table class="info-table">
-                <thead>
-                    <tr>
-                        <th>Destination</th>
-                        <th>Délai indicatif</th>
-                        <th>Modalité de livraison</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Dakar & Banlieue</strong></td>
-                        <td>24h à 48h ouvrées</td>
-                        <td>Coursier express à domicile ou géolocalisation GPS</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Régions du Sénégal</strong></td>
-                        <td>48h à 72h ouvrées</td>
-                        <td>Transporteur partenaire ou point relais (Thiès, St-Louis, etc.)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sous-région & International</strong></td>
-                        <td>5 à 10 jours ouvrés</td>
-                        <td>Colis express international sécurisé</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p>Le Client est tenu de vérifier l'état du colis et des Produits devant le livreur ou lors du retrait. En cas de colis endommagé ou d'article manquant, des réserves motivées doivent être formulées immédiatement auprès du coursier et transmises sous 24h au service client de JogaLook.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 8 - Droit de Rétractation et Retours (Produits Standards Vierges)</h2>
-            <p>Pour les Produits standards <strong>non personnalisés</strong> (maillots vierges sans flocage de nom ni numéro), le Client dispose d'un délai de sept (7) jours calendaires à compter de la réception pour exercer son droit de rétractation sans motif.</p>
-            <p>Les Produits doivent être impérativement retournés dans leur état d'origine, neufs, jamais portés, non lavés, munis de toutes leurs étiquettes d'origine intactes et dans leur sachet d'emballage d'origine. Les frais de réexpédition sont à la charge du Client, sauf erreur imputable à JogaLook.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 9 - Garanties Légales et Conseils d'Entretien</h2>
-            <p>Tous les Produits fournis par JogaLook bénéficient de la garantie légale de conformité et de la garantie contre les vices cachés. Sont exclus de cette garantie les détériorations consécutives à une usure normale, à un mauvais entretien ou au non-respect des consignes de lavage.</p>
-            <div class="highlight-box">
-                <p><strong>Guide d'entretien d'expert pour maillots floqués :</strong></p>
-                <ul>
-                    <li>Laver toujours le maillot sur l'envers afin de protéger les flocages et badges ;</li>
-                    <li>Laver à l'eau froide ou à 30°C maximum (programme délicat) ;</li>
-                    <li>Proscrire formellement l'utilisation du sèche-linge et de l'adoucissant ;</li>
-                    <li>Repassage formellement interdit directement sur les flocages (repasser à l'envers à température minimale avec un tissu de protection).</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="article">
-            <h2>Article 10 - Service Client & Litiges</h2>
-            <p>Pour toute question relative à votre commande, un retour ou une réclamation, notre service client est à votre écoute :</p>
-            <p>📧 Email : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a><br>
-            📞 Téléphone & WhatsApp : <a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a><br>
-            📍 Adresse : Atelier JogaLook, Dakar HLM-Bentaly, Sénégal.</p>
-            <p>En cas de litige, les parties s'engagent à rechercher une conciliation amiable. À défaut, le différend sera tranché conformément au droit sénégalais par le <strong>Tribunal de Commerce de Dakar</strong>.</p>
-        </section>
-        
-        </main>
-    </div>
-
-    <footer class="site-footer">
-        <div class="site-footer-container">
-            <div class="site-footer-col">
-                <h4>JogaLook</h4>
-                <p>Votre boutique en ligne de référence pour les maillots de football officiels, tenues sportives et personnalisation d'atelier haute définition au Sénégal et en Afrique.</p>
-                <p>Édité par <strong>ATTIC SA</strong>.<br>RCCM : SN STL 2025 A 1556 | NINEA : 012216314</p>
-            </div>
-            <div class="site-footer-col">
-                <h4>Documents Légaux</h4>
-                <ul>
-                    <li><a href="cgu.html">Conditions Générales d'Utilisation (CGU)</a></li>
-                    <li><a href="cgv.html">Conditions Générales de Vente (CGV)</a></li>
-                    <li><a href="politique_confidentialite.html">Politique de Confidentialité</a></li>
-                    <li><a href="mentions_legales.html">Mentions Légales</a></li>
-                    <li><a href="politique_cookies.html">Politique des Cookies</a></li>
-                </ul>
-            </div>
-            <div class="site-footer-col">
-                <h4>Service Client & Atelier</h4>
-                <p>📧 Email : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a></p>
-                <p>📞 Assistance : <a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a></p>
-                <p>📍 Dakar HLM-Bentaly, Dakar, Sénégal</p>
+            <div class="meta-item">
+                <span class="meta-label">Service Client</span>
+                <span class="meta-value">+221 78 194 13 51 / +221 71 031 69 39</span>
             </div>
         </div>
-        <div class="site-footer-bottom">
-            &copy; 2026 JogaLook — Tous droits réservés. Marque exploitée par ATTIC SA.
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Dispositions Générales et Champ d'Application</h2>
+            </div>
+            <p>Les présentes <strong>Conditions Générales de Vente (CGV)</strong> s'appliquent sans restriction ni réserve à l'ensemble des ventes conclues par la société <strong>ATTIC SA</strong> (opérant sous la marque commerciale <em>« JogaLook »</em>) auprès de tout acheteur majeur (ci-après <em>« le Client »</em>), via le site Internet <a href="https://www.jogalook.com">www.jogalook.com</a>.</p>
+            <p>La validation définitive d'une commande par le Client vaut acceptation pleine et entière des présentes CGV, dont il reconnaît avoir pris connaissance préalablement à son achat.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Caractéristiques des Produits & Authenticité</h2>
+            </div>
+            <p>JogaLook propose des articles de sport premium :</p>
+            <ul>
+                <li><strong>Maillots officiels et répliques authentiques :</strong> modèles domicile (Home), extérieur (Away), troisième maillot (Third), pré-match et éditions collectors de clubs et d'équipes nationales.</li>
+                <li><strong>Tailles disponibles :</strong> standardisées du XS au 3XL (selon guide des tailles consultable sur chaque fiche produit).</li>
+                <li><strong>Visuels et descriptions :</strong> Les photographies et maquettes présentées sont les plus fidèles possibles. Toutefois, de légères variations de nuances de couleurs peuvent survenir selon l'écran ou l'éclairage.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Atelier de Flocage & Personnalisation sur-mesure</h2>
+            </div>
+            <p>JogaLook met à la disposition du Client un service d'atelier de flocage permettant d'ajouter :</p>
+            <ul>
+                <li>Un nom personnalisé ou nom de joueur officiel</li>
+                <li>Un numéro personnalisé</li>
+                <li>Des badges de manches officiels (Ligue 1, Champions League, Coupe du Monde, etc.)</li>
+            </ul>
+            <div class="highlight-box">
+                <strong>Attention — Dispositions spécifiques aux produits personnalisés :</strong><br>
+                Conformément aux usages commerciaux et aux règles de protection du consommateur relatives aux biens confectionnés nettement sur-mesure, <strong>les articles ayant fait l'objet d'un flocage personnalisé ne peuvent être ni échangés, ni repris, ni remboursés</strong>, sauf défaut avéré imputable à l'impression par nos ateliers. Le Client est invité à vérifier scrupuleusement l'orthographe et les numéros avant validation de sa commande.
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Tarifs et Monnaie de Facturation</h2>
+            </div>
+            <p>Les prix des produits sont indiqués sur le Site en <strong>Francs CFA (XOF)</strong>, toutes taxes comprises (TTC). Les frais de livraison sont calculés et affichés distinctement avant la validation finale de la commande, en fonction de la localité géographique sélectionnée.</p>
+            <p>JogaLook se réserve le droit de modifier ses prix à tout moment. Les produits seront cependant facturés sur la base des tarifs en vigueur au moment de l'enregistrement de la commande.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Processus de Commande</h2>
+            </div>
+            <p>Pour passer commande sur JogaLook, le Client suit le parcours suivant :</p>
+            <ol>
+                <li>Sélection des articles (taille, quantité, options de flocage le cas échéant) et ajout au panier.</li>
+                <li>Authentification rapide par email via notre système sécurisé de code OTP.</li>
+                <li>Renseignement de l'adresse exacte de livraison et du numéro de téléphone joignable (WhatsApp/Appels).</li>
+                <li>Choix du mode de paiement.</li>
+                <li>Vérification du récapitulatif de commande et confirmation finale.</li>
+            </ol>
+            <p>Dès confirmation, un email récapitulatif contenant le numéro unique de commande est adressé au Client.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 6</span>
+                <h2>Modalités de Paiement</h2>
+            </div>
+            <p>JogaLook met à disposition plusieurs modes de règlement sécurisés :</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mode de Paiement</th>
+                            <th>Description & Sécurité</th>
+                            <th>Frais additionnels</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Paiement à la livraison (Cash on Delivery)</strong></td>
+                            <td>Règlement en espèces directement auprès de notre livreur partenaire au moment de la réception du colis.</td>
+                            <td>Aucun</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mobile Money (Wave & Orange Money)</strong></td>
+                            <td>Paiement instantané via votre compte mobile sénégalais via passerelle dédiée.</td>
+                            <td>Aucun</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Carte Bancaire (Visa / Mastercard)</strong></td>
+                            <td>Transaction chiffrée via la passerelle de paiement sécurisée PayBammite aux normes PCI-DSS.</td>
+                            <td>Aucun</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 7</span>
+                <h2>Livraison et Délais d'Acheminement</h2>
+            </div>
+            <p>JogaLook assure la livraison de ses commandes partout au Sénégal :</p>
+            <ul>
+                <li><strong>Région de Dakar :</strong> Expédition express en <strong>24 à 48 heures ouvrées</strong>.</li>
+                <li><strong>Autres Régions du Sénégal :</strong> Acheminement sous <strong>48 à 72 heures ouvrées</strong> via nos transporteurs relais partenaires.</li>
+                <li><strong>Délais supplémentaires Atelier Flocage :</strong> Tout article floqué nécessite un temps de confection artisanale additionnel de 24h à 48h.</li>
+            </ul>
+            <p>Le livreur contacte systématiquement le destinataire par téléphone préalablement à son passage. En cas d'absence injustifiée lors de deux présentations consécutives, la commande sera réacheminée en agence.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 8</span>
+                <h2>Droit de Rétractation et Retours</h2>
+            </div>
+            <p>Pour les <strong>articles standards non personnalisés</strong>, le Client bénéficie d'un délai de <strong>sept (7) jours ouvrés</strong> à compter de la réception pour demander un échange ou un remboursement.</p>
+            <p><strong>Conditions impératives de reprise :</strong></p>
+            <ul>
+                <li>Le maillot doit être dans son état d'origine neuf, non porté, non lavé, exempt de parfum ou de tâche.</li>
+                <li>Toutes les étiquettes et emballages d'origine doivent être parfaitement intacts.</li>
+                <li>Les frais de retour sont à la charge du Client, sauf erreur avérée de préparation commise par JogaLook.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 9</span>
+                <h2>Garanties Légales et Réclamations</h2>
+            </div>
+            <p>Tous nos produits bénéficient de la garantie légale de conformité et de la garantie contre les vices cachés. En cas de non-conformité avérée (défaut de couture, erreur de référence reçue, erreur de flocage par rapport au bon de commande), JogaLook s'engage à échanger le produit sans frais ou à rembourser l'intégralité de la commande.</p>
+            <p>Toute réclamation doit être notifiée par email à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> ou par WhatsApp au <strong>+221 78 194 13 51</strong> dans les 48h suivant la livraison, avec photos justificatives.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 10</span>
+                <h2>Droit Applicable et Juridiction</h2>
+            </div>
+            <p>Les présentes CGV sont soumises à la législation de la <strong>République du Sénégal</strong> (Code des Obligations Civiles et Commerciales). Tout litige qui ne trouverait pas d'issue amiable sera soumis à la juridiction exclusive du <strong>Tribunal de Commerce de Dakar</strong>.</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Boutique</a>
+                <a href="/contact">Contact</a>
+                <a href="cgu.html">CGU</a>
+                <a href="cgv.html">CGV</a>
+                <a href="politique_confidentialite.html">Confidentialité</a>
+                <a href="mentions_legales.html">Mentions Légales</a>
+                <a href="politique_cookies.html">Cookies</a>
+            </div>
+            <p class="footer-copy">&copy; 2026 JogaLook — Propriété exclusive de ATTIC SA. Tous droits réservés. Dakar, Sénégal.</p>
         </div>
     </footer>
 

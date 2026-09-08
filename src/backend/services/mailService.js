@@ -1,6 +1,10 @@
 const nodemailer = require('nodemailer');
 
 const {
+  cle_resend,
+  CLE_RESEND,
+  RESEND_API_KEY,
+  RESEND_KEY,
   SMTP_HOST,
   SMTP_PORT,
   SMTP_USERNAME,
@@ -8,6 +12,9 @@ const {
   SMTP_FROM_EMAIL,
   SMTP_FROM_NAME,
 } = process.env;
+
+const resendApiKey = (cle_resend || CLE_RESEND || RESEND_API_KEY || RESEND_KEY || '').trim();
+const hasResendConfig = Boolean(resendApiKey);
 
 const hasSmtpConfig = Boolean(SMTP_HOST && SMTP_USERNAME && SMTP_PASSWORD && SMTP_FROM_EMAIL);
 
@@ -24,8 +31,85 @@ const transporter = hasSmtpConfig
   : null;
 
 function getFromAddress() {
-  const displayName = SMTP_FROM_NAME?.trim() || 'JogaLook';
-  return `${displayName} <${SMTP_FROM_EMAIL || 'no-reply@jogalook.local'}>`;
+  const displayName = (process.env.RESEND_FROM_NAME || process.env.SMTP_FROM_NAME || 'JogaLook').trim();
+  const email = (process.env.RESEND_FROM_EMAIL || 'contact@jogalook.com').trim();
+  return `${displayName} <${email}>`;
+}
+
+/**
+ * Envoie un email via Resend (en priorité), via SMTP (fallback), ou en console (dev).
+ */
+async function sendMail({ to, subject, text, html }) {
+  const recipient = Array.isArray(to) ? to : [to];
+  const from = getFromAddress();
+
+  // 1. Envoi prioritaire via l'API Resend
+  if (hasResendConfig) {
+    try {
+      console.log(`📡 [Resend] Envoi en cours depuis "${from}" vers : ${recipient.join(', ')}`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: recipient,
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error(`❌ [Resend] Erreur API lors de l'envoi depuis "${from}":`, data);
+        throw new Error(data.message || `Erreur Resend (${response.status})`);
+      }
+
+      console.log(`✅ [Resend] Email envoyé avec succès (${data.id}) depuis "${from}" à ${recipient.join(', ')}`);
+      return {
+        skipped: false,
+        provider: 'resend',
+        id: data.id,
+        message: 'Email envoyé avec succès via Resend.',
+      };
+    } catch (err) {
+      console.error('❌ Échec de l\'envoi Resend:', err.message);
+      if (!transporter) throw err;
+      console.warn('🔄 Tentative de fallback sur SMTP...');
+    }
+  }
+
+  // 2. Envoi via SMTP (Nodemailer)
+  if (transporter) {
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+    });
+    return {
+      skipped: false,
+      provider: 'smtp',
+      info,
+      message: 'Email envoyé avec succès via SMTP.',
+    };
+  }
+
+  // 3. Fallback développement / console
+  console.warn('⚠️ Aucun service d\'email configuré (ni Resend cle_resend, ni SMTP). Email en mode console :');
+  console.warn(`[Destinataire] ${to}`);
+  console.warn(`[Sujet] ${subject}`);
+  console.warn(text || html);
+  return {
+    skipped: true,
+    provider: 'console',
+    message: 'Email affiché dans la console (aucun provider configuré).',
+  };
 }
 
 async function sendOtpEmail({ to, code, recipientName }) {
@@ -43,29 +127,7 @@ async function sendOtpEmail({ to, code, recipientName }) {
     </div>
   `;
 
-  if (!transporter) {
-    console.warn('⚠️ SMTP non configuré. Email OTP en mode console :');
-    console.warn(`Envoyer à ${to}`);
-    console.warn(text);
-    return {
-      skipped: true,
-      message: 'SMTP non configuré, email OTP affiché dans la console.',
-    };
-  }
-
-  const info = await transporter.sendMail({
-    from: getFromAddress(),
-    to,
-    subject,
-    text,
-    html,
-  });
-
-  return {
-    skipped: false,
-    message: 'Email OTP envoyé avec succès.',
-    info,
-  };
+  return sendMail({ to, subject, text, html });
 }
 
 async function sendRegistrationOtpEmail({ to, code }) {
@@ -132,28 +194,7 @@ async function sendRegistrationOtpEmail({ to, code }) {
     </html>
   `;
 
-  if (!transporter) {
-    console.warn('⚠️ SMTP non configuré. Email OTP Inscription affiché en console :');
-    console.warn(`[OTP Inscription] Destinataire: ${to} | Code: ${code}`);
-    return {
-      skipped: true,
-      message: 'SMTP non configuré, email OTP affiché dans la console.',
-    };
-  }
-
-  const info = await transporter.sendMail({
-    from: getFromAddress(),
-    to,
-    subject,
-    text,
-    html,
-  });
-
-  return {
-    skipped: false,
-    message: 'Email OTP envoyé avec succès.',
-    info,
-  };
+  return sendMail({ to, subject, text, html });
 }
 
 
@@ -247,25 +288,18 @@ async function sendContactRequestEmails({ adminEmail, payload }) {
       </td></tr>
     </table></body></html>`;
 
-  if (!transporter) {
-    console.warn('⚠️ SMTP non configuré. Demande de contact affichée en console :');
-    console.warn('[ADMIN]', { to: adminEmail, subject: `[JogaLook] ${subject ? subject : typeLabel} (${name})` });
-    console.warn('[USER]',  { to: email,      subject: `Votre message a bien été reçu — JogaLook` });
-    return { skipped: true };
-  }
-
   await Promise.all([
-    transporter.sendMail({
-      from: getFromAddress(),
+    sendMail({
       to: adminEmail,
       subject: `[JogaLook] ${subject ? subject : typeLabel} (${name})`,
       html: adminHtml,
+      text: `Nouvelle demande ${typeLabel} de ${name} (${email}, ${phone || 'sans tél'}) : ${message}`,
     }),
-    transporter.sendMail({
-      from: getFromAddress(),
+    sendMail({
       to: email,
       subject: `Votre message a bien été reçu — JogaLook`,
       html: userHtml,
+      text: `Bonjour ${name},\n\nNous avons bien reçu votre message concernant "${subject || typeLabel}". Notre équipe vous répondra sous 24h ouvrées.\n\nL'équipe JogaLook`,
     }),
   ]);
 
@@ -276,6 +310,6 @@ module.exports = {
   sendOtpEmail,
   sendRegistrationOtpEmail,
   sendContactRequestEmails,
-  isConfigured: hasSmtpConfig,
+  isConfigured: Boolean(hasResendConfig || hasSmtpConfig),
 };
 

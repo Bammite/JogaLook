@@ -3,23 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Politique de Confidentialité & Protection des Données — JogaLook</title>
+    <title>Politique de Confidentialité — JogaLook</title>
+    <meta name="description" content="Politique de Confidentialité officielles de la plateforme JogaLook, opérée par ATTIC SA à Dakar, Sénégal.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    
+    <!-- Polices Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+
         :root {
             --primary: #f15a24;
             --primary-hover: #d94815;
-            --primary-light: rgba(241, 90, 36, 0.12);
-            --dark: #0f172a;
-            --dark-surface: #1e293b;
+            --primary-light: rgba(241, 90, 36, 0.1);
+            --dark: #0b1329;
+            --dark-surface: #131c38;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #334155;
             --text-heading: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --accent-green: #10b981;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
         }
 
         * {
@@ -29,23 +44,23 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.75;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.8;
             color: var(--text);
             background-color: var(--bg);
             -webkit-font-smoothing: antialiased;
         }
 
-        h1, h2, h3, h4, .nav-logo, .hero-badge {
-            font-family: "Plus Jakarta Sans", sans-serif;
+        h1, h2, h3, h4, .nav-logo, .hero-badge, .tab-btn, .section-number {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-heading);
             font-weight: 700;
         }
 
-        /* Header Navbar */
+        /* Navbar Header */
         .navbar {
-            background-color: #0b1329;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding: 1.1rem 2rem;
             position: sticky;
             top: 0;
@@ -58,12 +73,17 @@
         .nav-logo {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             font-size: 1.45rem;
             font-weight: 800;
             text-decoration: none;
             color: #ffffff;
             letter-spacing: -0.5px;
+        }
+
+        .nav-logo svg, .nav-logo img {
+            height: 28px;
+            width: auto;
         }
 
         .nav-logo span {
@@ -72,532 +92,527 @@
 
         .nav-links {
             display: flex;
-            gap: 1.1rem;
+            gap: 1.25rem;
             align-items: center;
         }
 
         .nav-links a {
             text-decoration: none;
             color: #94a3b8;
+            font-size: 0.92rem;
             font-weight: 500;
-            font-size: 0.9rem;
             transition: all 0.2s ease;
-            padding: 6px 12px;
-            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .nav-links a:hover {
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
         }
 
-        .nav-links a.active {
+        .nav-links .btn-primary {
+            background-color: var(--primary);
             color: #ffffff;
-            background: var(--primary);
+            padding: 0.55rem 1.15rem;
+            border-radius: 8px;
             font-weight: 600;
         }
 
-        .nav-back {
-            background: rgba(241, 90, 36, 0.15) !important;
-            color: var(--primary) !important;
-            border: 1px solid rgba(241, 90, 36, 0.3) !important;
-            font-weight: 600 !important;
-        }
-
-        .nav-back:hover {
-            background: var(--primary) !important;
-            color: #ffffff !important;
+        .nav-links .btn-primary:hover {
+            background-color: var(--primary-hover);
         }
 
         /* Hero Banner */
-        .hero {
-            background: linear-gradient(135deg, #0b1329 0%, #0f172a 60%, #1e293b 100%);
+        .hero-banner {
+            background: linear-gradient(135deg, var(--dark) 0%, #152244 100%);
             color: #ffffff;
-            padding: 4.5rem 1.5rem 5rem;
+            padding: 3.5rem 1.5rem 2.5rem;
             text-align: center;
             position: relative;
             overflow: hidden;
+            border-bottom: 3px solid var(--primary);
         }
 
-        .hero::before {
-            content: "";
+        .hero-banner::before {
+            content: '';
             position: absolute;
-            top: -40%;
-            right: -10%;
-            width: 450px;
-            height: 450px;
-            background: radial-gradient(circle, rgba(241, 90, 36, 0.18) 0%, transparent 70%);
-            border-radius: 50%;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(241, 90, 36, 0.08) 0%, transparent 60%);
             pointer-events: none;
         }
 
         .hero-badge {
-            display: inline-block;
-            padding: 6px 18px;
-            background: rgba(241, 90, 36, 0.18);
-            border: 1px solid rgba(241, 90, 36, 0.35);
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
-            margin-bottom: 1.1rem;
-        }
-
-        .hero h1 {
-            font-size: clamp(2.2rem, 4vw, 3rem);
-            color: #ffffff;
-            margin-bottom: 0.8rem;
-            font-weight: 800;
-        }
-
-        .hero p {
-            color: #94a3b8;
-            font-size: 1.05rem;
-            max-width: 650px;
-            margin: 0 auto;
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 960px;
-            margin: -2.8rem auto 4.5rem;
-            padding: 0 1.5rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        .document-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.07), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-            border: 1px solid var(--border);
-            padding: 3.5rem 3rem;
-        }
-
-        .document-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 2rem;
-            margin-bottom: 2.5rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .meta-pill {
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .meta-pill span {
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .print-btn {
-            background: #f1f5f9;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
+            background: rgba(241, 90, 36, 0.15);
+            border: 1px solid rgba(241, 90, 36, 0.35);
+            color: #ff9d75;
+            padding: 0.35rem 0.95rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .print-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
+        .hero-banner h1 {
+            color: #ffffff;
+            font-size: 2.35rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
         }
 
-        /* Articles & Content */
-        .article {
-            margin-bottom: 3rem;
+        .hero-banner p {
+            color: #cbd5e1;
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 0 auto;
         }
 
-        .article:last-child {
+        /* Nav Pills for Legal Navigation */
+        .legal-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 2rem;
+        }
+
+        .legal-nav a {
+            text-decoration: none;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .legal-nav a:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        .legal-nav a.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(241, 90, 36, 0.35);
+        }
+
+        /* Main Container & Articles */
+        .container {
+            max-width: 960px;
+            margin: 2.5rem auto 4rem;
+            padding: 0 1.5rem;
+        }
+
+        .legal-meta-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        .legal-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2.25rem;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .legal-section:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .section-header h2 {
+            font-size: 1.35rem;
+            color: var(--text-heading);
+            line-height: 1.3;
+        }
+
+        .legal-section p {
+            margin-bottom: 1rem;
+            font-size: 0.98rem;
+        }
+
+        .legal-section p:last-child {
             margin-bottom: 0;
         }
 
-        .article h2 {
-            font-size: 1.45rem;
-            color: #0f172a;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 0.6rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1.25rem;
+        .legal-section ul, .legal-section ol {
+            margin: 1rem 0 1rem 1.5rem;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .article h2::before {
-            content: "";
-            display: inline-block;
-            width: 6px;
-            height: 22px;
-            background: var(--primary);
-            border-radius: 4px;
-        }
-
-        .article h3 {
-            font-size: 1.15rem;
-            color: #1e293b;
-            margin-top: 1.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .article p {
-            margin-bottom: 1.1rem;
-            color: #334155;
-            font-size: 0.98rem;
-            line-height: 1.75;
-        }
-
-        .article ul, .article ol {
-            margin: 1rem 0 1.5rem 1.75rem;
-            color: #334155;
-        }
-
-        .article li {
-            margin-bottom: 0.6rem;
-            font-size: 0.98rem;
-            line-height: 1.65;
-        }
-
-        .article li strong {
-            color: #0f172a;
-        }
-
-        .highlight-box {
-            background: rgba(241, 90, 36, 0.05);
-            border-left: 4px solid var(--primary);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
+        .legal-section li {
             font-size: 0.96rem;
         }
 
-        .highlight-box p:last-child {
-            margin-bottom: 0;
+        .highlight-box {
+            background: #fff7ed;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #9a3412;
         }
 
-        .info-table {
+        .info-box {
+            background: #f0fdf4;
+            border-left: 4px solid var(--accent-green);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-size: 0.94rem;
+            color: #166534;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5rem 0;
+            text-align: left;
             font-size: 0.92rem;
         }
 
-        .info-table th, .info-table td {
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .info-table th {
-            background: #f8fafc;
-            color: #0f172a;
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-heading);
             font-weight: 700;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .info-table tr:nth-child(even) {
-            background: #fdfdfd;
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
         }
 
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
+        tr:last-child td {
+            border-bottom: none;
         }
 
-        a:hover {
-            text-decoration: underline;
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
         }
 
-        /* Site Footer */
-        .site-footer {
-            background-color: #0b1329;
+        /* Footer */
+        .footer {
+            background-color: var(--dark);
             color: #94a3b8;
-            padding: 4.5rem 2rem 2rem;
-            margin-top: 5rem;
+            padding: 3rem 1.5rem 2rem;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.9rem;
         }
 
-        .site-footer-container {
-            max-width: 1000px;
+        .footer-content {
+            max-width: 960px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 2.5rem;
-        }
-
-        .site-footer-col h4 {
-            color: #ffffff;
-            font-size: 1.05rem;
-            margin-bottom: 1.2rem;
-            font-weight: 700;
-        }
-
-        .site-footer-col p {
-            font-size: 0.9rem;
-            line-height: 1.65;
-            margin-bottom: 1rem;
-        }
-
-        .site-footer-col ul {
-            list-style: none;
-        }
-
-        .site-footer-col ul li {
-            margin-bottom: 0.6rem;
-        }
-
-        .site-footer-col ul li a {
-            color: #94a3b8;
-            font-weight: 400;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .site-footer-col ul li a:hover {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .site-footer-bottom {
-            max-width: 1000px;
-            margin: 3rem auto 0;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
             text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            justify-content: center;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-copy {
             font-size: 0.85rem;
             color: #64748b;
         }
 
         @media (max-width: 768px) {
             .navbar {
-                flex-direction: column;
-                gap: 1rem;
                 padding: 1rem;
             }
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
+            .hero-banner h1 {
+                font-size: 1.85rem;
+            }
+            .legal-section {
+                padding: 1.5rem;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.5rem;
-            }
-            .document-card {
-                padding: 2rem 1.25rem;
-                border-radius: 12px;
-            }
-            .hero {
-                padding: 3.5rem 1rem 4rem;
             }
         }
 
-        @media print {
-            .navbar, .site-footer, .print-btn, .hero-badge {
-                display: none !important;
-            }
-            .hero {
-                background: none;
-                color: #000;
-                padding: 1rem 0;
-            }
-            .hero h1 {
-                color: #000;
-            }
-            .container {
-                margin: 0;
-                max-width: 100%;
-                padding: 0;
-            }
-            .document-card {
-                box-shadow: none;
-                border: none;
-                padding: 0;
-            }
-        }
     </style>
 </head>
 <body>
 
+    <!-- Header Navbar -->
     <nav class="navbar">
-        <a href="/" class="nav-logo">JOGA<span>LOOK</span></a>
+        <a href="/" class="nav-logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                <circle cx="24" cy="24" r="24" fill="#0b1329"/>
+                <path d="M10 14 L14 10 L18 13 C19.5 14 20.5 14 24 14 C27.5 14 28.5 14 30 13 L34 10 L38 14 L33 18 L33 38 L15 38 L15 18 Z" fill="#f15a24"/>
+                <path d="M20 14 Q24 17 28 14" stroke="#0b1329" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Joga<span>Look</span>
+        </a>
         <div class="nav-links">
-            <a href="cgu.html" class="">CGU</a>
-            <a href="cgv.html" class="">CGV</a>
-            <a href="politique_confidentialite.html" class="active">Confidentialité</a>
-            <a href="mentions_legales.html" class="">Mentions Légales</a>
-            <a href="politique_cookies.html" class="">Cookies</a>
-            <a href="/" class="nav-back">← Boutique</a>
+            <a href="/">← Retour à la boutique</a>
+            <a href="/contact" class="btn-primary">Support & Contact</a>
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="hero-badge">DONNÉES PERSONNELLES & VIE PRIVÉE</div>
+    <!-- Hero Section -->
+    <header class="hero-banner">
+        <div class="hero-badge">Conforme Loi Sénégalaise 2008-12</div>
         <h1>Politique de Confidentialité</h1>
-        <p>Protection de vos données personnelles, respect de la vie privée et conformité avec la loi sénégalaise n° 2008-12.</p>
+        <p>Document officiel encadrant les services de vente et de personnalisation de maillots de sport sur JogaLook.</p>
+        
+        <div class="legal-nav">
+            <a href="cgu.html" class="" title="Conditions Générales d'Utilisation">CGU</a><a href="cgv.html" class="" title="Conditions Générales de Vente">CGV</a><a href="politique_confidentialite.html" class="active" title="Politique de Confidentialité">Confidentialité</a><a href="mentions_legales.html" class="" title="Mentions Légales">Mentions Légales</a><a href="politique_cookies.html" class="" title="Politique des Cookies">Cookies</a>
+        </div>
     </header>
 
-    <div class="container">
-        <main class="document-card">
-            <div class="document-meta">
-                <div class="meta-pill">📅 Dernière mise à jour : <span>Septembre 2026</span></div>
-                <div class="meta-pill">🏢 Société : <span>ATTIC SA (JogaLook)</span></div>
-                <button class="print-btn" onclick="window.print()">
-                    🖨️ Imprimer ce document
-                </button>
+    <main class="container">
+
+        <div class="legal-meta-card">
+            <div class="meta-item">
+                <span class="meta-label">Responsable du traitement</span>
+                <span class="meta-value">ATTIC SA (JogaLook)</span>
             </div>
-            
-        <section class="article">
-            <h2>Article 1 - Engagement de Confidentialité et Responsable du Traitement</h2>
-            <p>La protection de vos données personnelles est une priorité absolue pour <strong>JogaLook</strong>. La présente Politique de Confidentialité a pour vocation de vous informer en toute transparence sur la manière dont vos données sont collectées, utilisées et protégées lorsque vous utilisez notre site <a href="https://jogalook.com">jogalook.com</a>.</p>
-            <p>Le responsable du traitement des données à caractère personnel est la société <strong>ATTIC SA</strong>, immatriculée au RCCM sous le numéro <strong>SN STL 2025 A 1556</strong>, NINEA <strong>012216314</strong>, dont le siège social est sis à Sanar, Saint-Louis, et exploitant l'enseigne JogaLook à Dakar HLM-Bentaly, Sénégal.</p>
-            <p>Le traitement des données à caractère personnel mis en œuvre sur la Plateforme est conforme aux dispositions de la <strong>loi sénégalaise n° 2008-12 du 25 janvier 2008</strong> relative à la protection des données à caractère personnel, sous le contrôle de la <strong>Commission de Protection des Données Personnelles du Sénégal (CDP)</strong>.</p>
-        </section>
-
-        <section class="article">
-            <h2>Article 2 - Données à Caractère Personnel Collectées</h2>
-            <p>JogaLook ne collecte que les données strictement adéquates, pertinentes et nécessaires aux finalités poursuivies :</p>
-            <ul>
-                <li><strong>Données d'identification :</strong> Nom, prénom, civilité ;</li>
-                <li><strong>Données de contact :</strong> Adresse de courrier électronique, numéros de téléphone (utilisés pour la notification SMS de livraison et les codes OTP de vérification) ;</li>
-                <li><strong>Données de livraison :</strong> Adresse postale de livraison, ville, quartier, repères géographiques et, le cas échéant, coordonnées GPS transmises volontairement par le Client pour une livraison rapide à Dakar ;</li>
-                <li><strong>Données relatives aux commandes et à l'atelier :</strong> Historique des achats, modèles choisis, textes et numéros personnalisés saisis pour le flocage d'atelier, récapitulatifs de facturation ;</li>
-                <li><strong>Données de paiement :</strong> Mode de règlement sélectionné (Wave, Orange Money, Carte, COD). <em>JogaLook ne conserve aucun numéro de carte bancaire ni code secret Mobile Money : les transactions sont intégralement déléguées à l'établissement de paiement agréé PayBammite ;</em></li>
-                <li><strong>Données techniques de connexion :</strong> Adresses IP, logs de connexion, horodatage, agent utilisateur, dans le respect des règles de sécurité et de détection des fraudes.</li>
-            </ul>
-        </section>
-
-        <section class="article">
-            <h2>Article 3 - Finalités et Bases Légales du Traitement</h2>
-            <p>Vos données font l'objet d'un traitement pour les finalités suivantes :</p>
-            <table class="info-table">
-                <thead>
-                    <tr>
-                        <th>Finalité du traitement</th>
-                        <th>Base légale (Loi 2008-12)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Gestion, exécution et livraison de votre commande de maillots</td>
-                        <td>Exécution du contrat de vente</td>
-                    </tr>
-                    <tr>
-                        <td>Création et fabrication des marquages dans l'atelier SVG</td>
-                        <td>Exécution du contrat de vente</td>
-                    </tr>
-                    <tr>
-                        <td>Authentification sécurisée sans mot de passe par code OTP</td>
-                        <td>Intérêt légitime et sécurité du compte</td>
-                    </tr>
-                    <tr>
-                        <td>Calcul de l'éligibilité au Paiement à la Livraison (COD) et lutte anti-fraude</td>
-                        <td>Intérêt légitime de protection contre les abus</td>
-                    </tr>
-                    <tr>
-                        <td>Émission des factures et tenue des registres comptables</td>
-                        <td>Obligation légale sénégalaise</td>
-                    </tr>
-                    <tr>
-                        <td>Réponse à vos demandes de devis (clubs, écoles, revendeurs) via le formulaire de contact</td>
-                        <td>Consentement de l'utilisateur</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section class="article">
-            <h2>Article 4 - Destinataires et Sous-traitants des Données</h2>
-            <p>Les données collectées sont destinées aux services habilités de JogaLook (service client, atelier de flocage, logistique). Elles peuvent être transmises de façon strictement sécurisée aux prestataires suivants :</p>
-            <ul>
-                <li><strong>Nos livreurs et coursiers partenaires :</strong> uniquement les nom, téléphone et adresse/GPS nécessaires à la remise du colis ;</li>
-                <li><strong>La passerelle de paiement PayBammite :</strong> pour l'encaissement sécurisé des transactions ;</li>
-                <li><strong>Notre routeur de messagerie transactionnelle (Resend) :</strong> pour l'envoi des codes de connexion OTP et confirmations de commande depuis <code>contact@jogalook.com</code> ;</li>
-                <li><strong>Nos hébergeurs d'infrastructure cloud :</strong> Vercel Inc. et Supabase Inc. (serveurs sécurisés avec chiffrement des données au repos et en transit).</li>
-            </ul>
-            <div class="highlight-box">
-                <p><strong>Engagement ferme JogaLook :</strong> Vos données personnelles ne sont <strong>JAMAIS vendues, louées ou cédées</strong> à des tiers à des fins publicitaires ou de prospection commerciale.</p>
+            <div class="meta-item">
+                <span class="meta-label">Délégué aux Données (DPO)</span>
+                <span class="meta-value">dpo@jogalook.com</span>
             </div>
-        </section>
-
-        <section class="article">
-            <h2>Article 5 - Durée de Conservation des Données</h2>
-            <p>Vos données sont conservées pendant une durée strictement nécessaire aux finalités pour lesquelles elles sont collectées :</p>
-            <ul>
-                <li><strong>Données du Compte Client actif :</strong> pendant toute la durée d'utilisation du compte, puis archivées pendant trois (3) ans après la dernière activité enregistrée ;</li>
-                <li><strong>Données de commande et facturation :</strong> dix (10) ans conformément aux obligations du Code de commerce et du Code général des impôts sénégalais ;</li>
-                <li><strong>Codes OTP de vérification :</strong> supprimés ou invalidés automatiquement dix (10) minutes après leur émission ;</li>
-                <li><strong>Logs de connexion et sécurité :</strong> conservés pour une durée maximale de douze (12) mois.</li>
-            </ul>
-        </section>
-
-        <section class="article">
-            <h2>Article 6 - Sécurité des Données</h2>
-            <p>JogaLook applique les meilleures pratiques de sécurité de l'industrie pour protéger vos informations :</p>
-            <ul>
-                <li>Chiffrement systématique de toutes les communications via le protocole HTTPS / TLS ;</li>
-                <li>Hachage cryptographique irréversible des données sensibles (bcrypt) ;</li>
-                <li>Politiques de sécurité au niveau des lignes de base de données (Row Level Security - RLS) ;</li>
-                <li>Accès aux données réservé aux seuls personnels habilités tenus à une obligation de stricte confidentialité.</li>
-            </ul>
-        </section>
-
-        <section class="article">
-            <h2>Article 7 - Vos Droits sur Vos Données Personnelles</h2>
-            <p>Conformément à la loi n° 2008-12 du 25 janvier 2008, vous disposez des droits suivants concernant vos données à caractère personnel :</p>
-            <ul>
-                <li><strong>Droit d'accès :</strong> vous pouvez obtenir la confirmation que des données vous concernant sont traitées et en recevoir copie ;</li>
-                <li><strong>Droit de rectification :</strong> vous pouvez exiger que soient rectifiées ou complétées des informations inexactes ou périmées ;</li>
-                <li><strong>Droit à l'effacement (« droit à l'oubli ») :</strong> vous pouvez solliciter la suppression de vos données, sous réserve des délais légaux de conservation comptable ;</li>
-                <li><strong>Droit d'opposition :</strong> vous pouvez vous opposer au traitement de vos données pour des motifs légitimes.</li>
-            </ul>
-            <p>Pour exercer l'un quelconque de ces droits, il vous suffit d'adresser une demande écrite par email à notre Délégué à la Protection des Données : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a>, accompagnée d'un justificatif d'identité si nécessaire.</p>
-            <p>En cas de contestation non résolue, vous avez le droit de saisir la <strong>Commission de Protection des Données Personnelles du Sénégal (CDP)</strong> : <a href="https://www.cdp.sn" target="_blank" rel="noopener">www.cdp.sn</a>.</p>
-        </section>
-        
-        </main>
-    </div>
-
-    <footer class="site-footer">
-        <div class="site-footer-container">
-            <div class="site-footer-col">
-                <h4>JogaLook</h4>
-                <p>Votre boutique en ligne de référence pour les maillots de football officiels, tenues sportives et personnalisation d'atelier haute définition au Sénégal et en Afrique.</p>
-                <p>Édité par <strong>ATTIC SA</strong>.<br>RCCM : SN STL 2025 A 1556 | NINEA : 012216314</p>
+            <div class="meta-item">
+                <span class="meta-label">Cadre légal</span>
+                <span class="meta-value">Loi sénégalaise n° 2008-12 (CDP)</span>
             </div>
-            <div class="site-footer-col">
-                <h4>Documents Légaux</h4>
-                <ul>
-                    <li><a href="cgu.html">Conditions Générales d'Utilisation (CGU)</a></li>
-                    <li><a href="cgv.html">Conditions Générales de Vente (CGV)</a></li>
-                    <li><a href="politique_confidentialite.html">Politique de Confidentialité</a></li>
-                    <li><a href="mentions_legales.html">Mentions Légales</a></li>
-                    <li><a href="politique_cookies.html">Politique des Cookies</a></li>
-                </ul>
-            </div>
-            <div class="site-footer-col">
-                <h4>Service Client & Atelier</h4>
-                <p>📧 Email : <a href="mailto:contact@jogalook.com">contact@jogalook.com</a></p>
-                <p>📞 Assistance : <a href="tel:+221781941351">+221 78 194 13 51</a> / <a href="tel:+221710316939">+221 71 031 69 39</a></p>
-                <p>📍 Dakar HLM-Bentaly, Dakar, Sénégal</p>
+            <div class="meta-item">
+                <span class="meta-label">Sécurité</span>
+                <span class="meta-value">Chiffrement TLS & Base PostgreSQL Supabase</span>
             </div>
         </div>
-        <div class="site-footer-bottom">
-            &copy; 2026 JogaLook — Tous droits réservés. Marque exploitée par ATTIC SA.
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 1</span>
+                <h2>Engagement de JogaLook pour la Vie Privée</h2>
+            </div>
+            <p>La société <strong>ATTIC SA</strong> (ci-après <em>« JogaLook »</em>) accorde une importance primordiale à la protection et à la confidentialité des données à caractère personnel de ses utilisateurs et clients.</p>
+            <p>La présente Politique de Confidentialité décrit avec précision et transparence les catégories de données collectées, les finalités de leur traitement, ainsi que les mesures de sécurité et les droits dont vous disposez, conformément aux dispositions de la <strong>Loi sénégalaise n° 2008-12 du 25 janvier 2008</strong> portant sur la protection des données à caractère personnel et aux recommandations de la <strong>Commission de Protection des Données Personnelles (CDP)</strong> du Sénégal.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 2</span>
+                <h2>Catégories de Données Personnelles Collectées</h2>
+            </div>
+            <p>Dans le cadre de l’exploitation de notre plateforme, nous collectons les données suivantes :</p>
+            <ul>
+                <li><strong>Données d’identification et de contact :</strong> Adresse email (utilisée pour l'envoi de l'OTP de connexion sécurisé et des confirmations de commande), nom, prénom, numéro de téléphone portable (joignable pour la coordination des livraisons).</li>
+                <li><strong>Données de livraison et facturation :</strong> Adresse postale complète de livraison (ville, quartier, repère géographique pour Dakar et régions).</li>
+                <li><strong>Données de personnalisation d'atelier :</strong> Textes et numéros de flocage transmis lors de la commande de maillots personnalisés.</li>
+                <li><strong>Données de transactions financières :</strong> Références de commande, montant facturé, statut du paiement (veuillez noter que les données de cartes bancaires sont traitées directement par les passerelles bancaires certifiées sans que JogaLook n'y ait jamais accès).</li>
+                <li><strong>Données techniques de connexion :</strong> Adresse IP, type d'appareil, navigateur et logs d'authentification OTP pour prévenir les fraudes.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 3</span>
+                <h2>Finalités des Traitements et Bases Légales</h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Finalité du traitement</th>
+                            <th>Base Légale</th>
+                            <th>Durée de conservation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Authentification sans mot de passe (OTP)</strong></td>
+                            <td>Exécution contractuelle & Sécurité</td>
+                            <td>Durée d'activité du compte utilisateur</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gestion & Livraison des commandes</strong></td>
+                            <td>Exécution du contrat de vente</td>
+                            <td>Durée de la relation + 5 ans (obligations comptables)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service client & Suivi réclamations</strong></td>
+                            <td>Intérêt légitime / Relation client</td>
+                            <td>3 ans après le dernier contact</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prévention de la fraude & Sécurité</strong></td>
+                            <td>Intérêt légitime & Obligations légales</td>
+                            <td>1 an pour les logs de connexion</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Communications d'offres promotionnelles</strong></td>
+                            <td>Consentement préalable de l'utilisateur</td>
+                            <td>Jusqu'au retrait du consentement / désabonnement</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 4</span>
+                <h2>Destinataires des Données et Sous-traitants Techniques</h2>
+            </div>
+            <p>JogaLook ne vend, ne loue, ni ne cède aucune donnée personnelle à des courtiers ou à des régies publicitaires tierces. Les données sont partagées uniquement avec nos sous-traitants techniques strictement nécessaires au fonctionnement du service :</p>
+            <ul>
+                <li><strong>Vercel Inc. :</strong> Hébergement du frontend et du réseau de distribution de contenu (CDN) sécurisé.</li>
+                <li><strong>Supabase Inc. :</strong> Hébergement de la base de données PostgreSQL chiffrée avec politiques de sécurité RLS (Row Level Security).</li>
+                <li><strong>Resend Inc. :</strong> Infrastructure certifiée pour l’envoi ultra-sécurisé des emails transactionnels et des codes OTP.</li>
+                <li><strong>Partenaires logistiques et livreurs :</strong> Uniquement le nom, le numéro de téléphone et l'adresse de destination pour assurer la remise physique du colis.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 5</span>
+                <h2>Mesures de Sécurité des Données</h2>
+            </div>
+            <p>Nous appliquons les standards de cybersécurité les plus stricts :</p>
+            <div class="info-box">
+                <strong>Garanties de sécurité :</strong>
+                <ul style="margin: 0.5rem 0 0 1rem;">
+                    <li>Chiffrement systématique de toutes les communications via protocole <strong>HTTPS / TLS 1.3</strong>.</li>
+                    <li>Authentification par OTP à usage unique, éliminant les risques de vol de mot de passe.</li>
+                    <li>Tokens de session JWT signés cryptographiquement.</li>
+                    <li>Accès à la base de données restreint aux microservices autorisés via des clés de service ultra-sécurisées.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 6</span>
+                <h2>Vos Droits sur Vos Données Personnelles</h2>
+            </div>
+            <p>Conformément à la législation sénégalaise, vous bénéficiez des droits suivants :</p>
+            <ul>
+                <li><strong>Droit d'accès et de communication :</strong> Vous pouvez demander une copie intégrale des données que nous détenons vous concernant.</li>
+                <li><strong>Droit de rectification :</strong> Vous pouvez demander la mise à jour ou la correction de vos coordonnées.</li>
+                <li><strong>Droit à l'effacement (« droit à l'oubli ») :</strong> Vous pouvez demander la suppression définitive de votre compte et de vos données, sous réserve de nos obligations légales de conservation des factures.</li>
+                <li><strong>Droit d'opposition :</strong> Vous pouvez vous opposer à tout moment à la réception d'emails promotionnels en cliquant sur le lien de désinscription ou en nous écrivant.</li>
+            </ul>
+            <p>Pour exercer l'un de ces droits, adressez simplement votre demande par email à <a href="mailto:contact@jogalook.com">contact@jogalook.com</a> avec une pièce justificative d'identité. Nous nous engageons à vous répondre dans un délai maximal de <strong>30 jours</strong>.</p>
+        </section>
+
+        <section class="legal-section">
+            <div class="section-header">
+                <span class="section-badge">Article 7</span>
+                <h2>Recours auprès de l'Autorité de Contrôle</h2>
+            </div>
+            <p>Si vous estimez que le traitement de vos données personnelles par JogaLook n'est pas conforme aux exigences légales, vous avez le droit d'introduire une réclamation auprès de la <strong>Commission de Protection des Données Personnelles (CDP) du Sénégal</strong> (site web : <a href="https://www.cdp.sn" target="_blank" rel="noopener">www.cdp.sn</a>).</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Boutique</a>
+                <a href="/contact">Contact</a>
+                <a href="cgu.html">CGU</a>
+                <a href="cgv.html">CGV</a>
+                <a href="politique_confidentialite.html">Confidentialité</a>
+                <a href="mentions_legales.html">Mentions Légales</a>
+                <a href="politique_cookies.html">Cookies</a>
+            </div>
+            <p class="footer-copy">&copy; 2026 JogaLook — Propriété exclusive de ATTIC SA. Tous droits réservés. Dakar, Sénégal.</p>
         </div>
     </footer>
 
