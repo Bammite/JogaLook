@@ -12,7 +12,6 @@ import {
   SparklesIcon,
   TagIcon
 } from '../components/icons/AppIcons';
-import { MOCK_TEMPLATES } from '../utils/templatePresets';
 import { normalizeSvgForDisplay } from '../utils/svgUtils';
 import './CustomPage.css';
 

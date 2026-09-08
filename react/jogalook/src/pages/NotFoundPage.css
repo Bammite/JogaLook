@@ -1,0 +1,291 @@
+.notfound-wrapper {
+  --primary: #f15a24;
+  --primary-glow: rgba(241, 90, 36, 0.4);
+  --primary-hover: #ff6b35;
+  --dark-bg: #070c1a;
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(241, 90, 36, 0.35);
+
+  background-color: var(--dark-bg);
+  color: var(--text);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  position: relative;
+  padding: 1.5rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambiance Stade & Lumieres */
+.notfound-stadium-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(241, 90, 36, 0.12) 0%, rgba(11, 19, 41, 0.05) 50%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: notfoundPulseGlow 6s ease-in-out infinite alternate;
+}
+
+.notfound-ambient-1 {
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.notfound-ambient-2 {
+  position: absolute;
+  bottom: 10%;
+  right: 15%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(241, 90, 36, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.notfound-pitch-lines {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at center, transparent 150px, rgba(255, 255, 255, 0.015) 151px, transparent 152px),
+    linear-gradient(to right, transparent 49.8%, rgba(255, 255, 255, 0.02) 50%, transparent 50.2%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Carte Principale 404 */
+.notfound-card {
+  position: relative;
+  z-index: 1;
+  max-width: 580px;
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 3.5rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: notfoundCardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Logo discret */
+.notfound-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  letter-spacing: -0.3px;
+  transition: transform 0.2s ease;
+}
+
+.notfound-brand:hover {
+  transform: scale(1.03);
+}
+
+.notfound-brand svg {
+  width: 26px;
+  height: 26px;
+}
+
+.notfound-brand span {
+  color: var(--primary);
+}
+
+/* Badge d'arbitrage */
+.notfound-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(241, 90, 36, 0.12);
+  border: 1px solid rgba(241, 90, 36, 0.3);
+  color: #ff8c5a;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 1.5rem;
+}
+
+.notfound-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--primary);
+  animation: notfoundBlinkDot 1.5s infinite;
+}
+
+/* Grand chiffre 404 */
+.notfound-code {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 6.5rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -3px;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #ffffff 30%, #94a3b8 70%, var(--primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.notfound-ball {
+  display: inline-block;
+  animation: notfoundBounceBall 2.5s infinite ease-in-out;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 12px var(--primary-glow));
+}
+
+.notfound-card h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.85rem;
+  letter-spacing: -0.5px;
+}
+
+.notfound-card p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 2.25rem;
+}
+
+/* Actions */
+.notfound-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.notfound-btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 700;
+  padding: 0.95rem 1.6rem;
+  border-radius: 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.notfound-btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 15px var(--primary-glow), 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid transparent;
+}
+
+.notfound-btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(241, 90, 36, 0.5);
+}
+
+.notfound-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid var(--border);
+}
+
+.notfound-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.notfound-btn-link {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  padding: 0.5rem;
+}
+
+.notfound-btn-link:hover {
+  color: #ffffff;
+}
+
+/* Animations */
+@keyframes notfoundCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes notfoundPulseGlow {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes notfoundBounceBall {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(180deg);
+  }
+}
+
+@keyframes notfoundBlinkDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (max-width: 480px) {
+  .notfound-card {
+    padding: 2.5rem 1.5rem;
+  }
+  .notfound-code {
+    font-size: 5rem;
+  }
+  .notfound-card h1 {
+    font-size: 1.4rem;
+  }
+  .notfound-card p {
+    font-size: 0.92rem;
+  }
+}

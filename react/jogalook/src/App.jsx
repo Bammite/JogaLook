@@ -28,6 +28,7 @@ import {
 import CartPage from './pages/CartPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 import FloatingCart from './components/FloatingCart';
 import './App.css';
 
@@ -134,6 +135,9 @@ function AppShell() {
           <Route path="actualites"       element={<AdminSportsNews />} />
           <Route path="logs"             element={<AdminLogs />} />
         </Route>
+
+        {/* ── Page 404 Hors-Jeu ── */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {showFloatingCart && <FloatingCart />}
     </>

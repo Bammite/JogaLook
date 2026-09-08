@@ -196,11 +196,11 @@ export default function NewsPage() {
                 {filtered.length === 0 ? (
                   <div className="news-empty">
                     <div className="news-empty-icon"><NewspaperIcon size={44} color="#94A3B8" /></div>
-                    <h3>Aucun article publié</h3>
+                    <h3>{articles.length === 0 ? 'Aucune actualité pour le moment' : 'Aucun résultat trouvé'}</h3>
                     <p>
                       {searchQuery || selectedCategory !== 'ALL'
                         ? 'Aucun article ne correspond à votre filtre.'
-                        : 'Les actualités publiées apparaîtront ici dès qu’elles seront créées.'}
+                        : 'Les actualités sportives apparaîtront ici dès leur publication.'}
                     </p>
                     {(searchQuery || selectedCategory !== 'ALL') && (
                       <button className="btn-primary" onClick={() => { setSearchQuery(''); setSelectedCategory('ALL'); }}>

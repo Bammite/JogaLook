@@ -18,23 +18,6 @@ import {
 } from '../components/icons/AppIcons';
 import './ProductDetailPage.css';
 
-const FALLBACK_PRODUCT = {
-  id: 'fallback-1',
-  name: 'Maillot Premium',
-  description: 'Maillot de haute qualité pour les sportifs exigeants. Tissu respirant, coupe ajustée, disponible en plusieurs coloris.',
-  base_price: 89.99,
-  image_url: 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=800&h=900&fit=crop',
-  is_customizable: true,
-  categories: { name: 'Football' },
-  shops: { name: 'JogaLook Store' },
-  product_variants: [
-    { id: 'v1', size: 'S', color_name: 'Noir', color_hex: '#1F2937', stock_quantity: 10 },
-    { id: 'v2', size: 'M', color_name: 'Blanc', color_hex: '#F8FAFC', stock_quantity: 5 },
-    { id: 'v3', size: 'L', color_name: 'Rouge', color_hex: '#DC2626', stock_quantity: 8 },
-    { id: 'v4', size: 'XL', color_name: 'Noir', color_hex: '#1F2937', stock_quantity: 0 },
-  ],
-};
-
 const SIZES_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
 function sortSizes(variants) {
@@ -68,6 +51,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setNotFound(false);
       try {
         const res = await fetch(`/api/products/${id}`);
         if (!res.ok) {
@@ -84,12 +68,8 @@ export default function ProductDetailPage() {
           setProduct(json.data);
         }
       } catch {
-        // Use fallback if API not connected
-        if (id === 'fallback-1' || !id) {
-          setProduct(FALLBACK_PRODUCT);
-        } else {
-          setProduct(FALLBACK_PRODUCT); // Show demo even for unknown IDs
-        }
+        setProduct(null);
+        setNotFound(true);
       } finally {
         setLoading(false);
       }

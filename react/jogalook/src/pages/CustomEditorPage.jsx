@@ -174,42 +174,46 @@ export default function CustomEditorPage() {
       setLoading(true);
       let foundTemplate = null;
 
-      // 1. Chercher dans les templates mock prédéfinis
-      const mockFound = MOCK_TEMPLATES.find((t) => String(t.id) === String(id));
-      if (mockFound) {
-        foundTemplate = mockFound;
-      } else {
-        // 2. Tenter de charger depuis l'API backend /api/templates/:id
+      // 1. Tenter de charger depuis l'API backend /api/templates/:id
+      try {
+        const res = await fetch(`/api/templates/${id}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            foundTemplate = json.data;
+          }
+        }
+      } catch (err) {
+        console.warn('Template API single fetch error:', err);
+      }
+
+      // 2. Si non trouvé, tenter de charger depuis la liste complète /api/templates
+      if (!foundTemplate) {
         try {
-          const res = await fetch(`/api/templates/${id}`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json.success && json.data) {
-              foundTemplate = json.data;
+          const resList = await fetch('/api/templates');
+          if (resList.ok) {
+            const jsonList = await resList.json();
+            if (jsonList.success && Array.isArray(jsonList.data)) {
+              foundTemplate = jsonList.data.find((t) => String(t.id) === String(id));
             }
           }
         } catch (err) {
-          console.warn('Template API single fetch error:', err);
-        }
-
-        // 3. Si non trouvé, tenter de charger depuis la liste complète /api/templates
-        if (!foundTemplate) {
-          try {
-            const resList = await fetch('/api/templates');
-            if (resList.ok) {
-              const jsonList = await resList.json();
-              if (jsonList.success && Array.isArray(jsonList.data)) {
-                foundTemplate = jsonList.data.find((t) => String(t.id) === String(id));
-              }
-            }
-          } catch (err) {
-            console.warn('Template API list fetch error:', err);
-          }
+          console.warn('Template API list fetch error:', err);
         }
       }
 
-      // 4. Fallback sur le premier template
-      const activeTpl = foundTemplate || MOCK_TEMPLATES[0];
+      // 3. Chercher dans les presets uniquement si l'id correspond exactement
+      if (!foundTemplate) {
+        foundTemplate = MOCK_TEMPLATES.find((t) => String(t.id) === String(id)) || null;
+      }
+
+      if (!foundTemplate) {
+        setTemplate(null);
+        setLoading(false);
+        return;
+      }
+
+      const activeTpl = foundTemplate;
       setTemplate(activeTpl);
 
       // Initialiser chaque variable indépendamment selon le template
@@ -827,6 +831,24 @@ export default function CustomEditorPage() {
       <div className="figma-editor-loading">
         <div className="editor-spinner"></div>
         <p>Chargement du modèle vectoriel...</p>
+      </div>
+    );
+  }
+
+  if (!template) {
+    return (
+      <div className="figma-editor-loading" style={{ gap: '16px', padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#1a1a2e', margin: 0 }}>Modèle introuvable</h2>
+        <p style={{ color: '#64748b', margin: '0 0 16px', maxWidth: '400px' }}>
+          Ce modèle de maillot n&apos;est pas disponible pour le moment.
+        </p>
+        <button
+          className="btn-primary"
+          style={{ padding: '12px 24px', borderRadius: '12px', cursor: 'pointer', background: 'var(--primary, #F15A24)', color: '#fff', border: 'none', fontWeight: '700' }}
+          onClick={() => navigate('/custom')}
+        >
+          ← Choisir un autre modèle
+        </button>
       </div>
     );
   }
