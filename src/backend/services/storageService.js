@@ -133,13 +133,44 @@ async function uploadFile(file, bucketKey = 'misc', folder = '') {
   const fileName = generateFilePath(file.originalname);
   const fullPath = folder ? `${folder.replace(/^\/+|\/+$/g, '')}/${fileName}` : fileName;
 
-  const { data, error } = await supabaseAdmin.storage
+  let { data, error } = await supabaseAdmin.storage
     .from(bucket)
     .upload(fullPath, file.buffer, {
       contentType: file.mimetype,
       cacheControl: '3600',
       upsert: false,
     });
+
+  // Rattrapage automatique si le bucket distant a une restriction MIME obsolète
+  if (error && error.message && error.message.toLowerCase().includes('not supported')) {
+    console.warn(`[Storage] Type MIME refusé par Supabase pour le bucket ${bucket}. Tentative de mise à jour des autorisations...`);
+    try {
+      await supabaseAdmin.storage.updateBucket(bucket, {
+        public: true,
+        fileSizeLimit: MAX_FILE_SIZE,
+        allowedMimeTypes: ALLOWED_MIME,
+      });
+
+      // Seconde tentative d'upload après mise à jour
+      const retry = await supabaseAdmin.storage
+        .from(bucket)
+        .upload(fullPath, file.buffer, {
+          contentType: file.mimetype,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (!retry.error) {
+        data = retry.data;
+        error = null;
+        console.log(`[Storage] Upload réussi après mise à jour du bucket ${bucket}.`);
+      } else {
+        error = retry.error;
+      }
+    } catch (retryErr) {
+      console.warn('[Storage] Échec du rattrapage automatique:', retryErr.message);
+    }
+  }
 
   if (error) {
     const err = new Error(`Erreur upload Supabase: ${error.message}`);
