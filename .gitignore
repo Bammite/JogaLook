@@ -4,3 +4,4 @@
 *.sql
 api.txt
 /ImageProduit/*
+*.bak

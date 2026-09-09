@@ -107,6 +107,21 @@ async function uploadFile(file, bucketKey = 'misc', folder = '') {
             verifiedBuckets.add(bucket);
           }
         } else {
+          // Synchroniser les types MIME du bucket existant pour autoriser les nouveaux formats (image/avif)
+          try {
+            const { error: updateError } = await supabaseAdmin.storage.updateBucket(bucket, {
+              public: true,
+              fileSizeLimit: MAX_FILE_SIZE,
+              allowedMimeTypes: ALLOWED_MIME
+            });
+            if (updateError) {
+              console.warn(`[Storage] Impossible de synchroniser les types MIME pour ${bucket}:`, updateError.message);
+            } else {
+              console.log(`[Storage] Bucket ${bucket} synchronisé avec les types MIME autorisés (AVIF, WebP, etc.).`);
+            }
+          } catch (updateErr) {
+            console.warn(`[Storage] Erreur mise à jour bucket ${bucket}:`, updateErr.message);
+          }
           verifiedBuckets.add(bucket);
         }
       }

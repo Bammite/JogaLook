@@ -11,7 +11,8 @@
     "dev:full": "cd react/jogalook && npm run build && cd ../.. && nodemon server.js",
     "start": "node server.js",
     "create-admin": "node ./src/backend/scripts/createAdmin.js",
-    "test:email": "node ./src/backend/scripts/testEmail.js"
+    "test:email": "node ./src/backend/scripts/testEmail.js",
+    "sync:buckets": "node ./src/backend/scripts/syncBuckets.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.40.0",
