@@ -1,0 +1,256 @@
+/* ==========================================================================
+   LocationPromptModal.css — Modale d'autorisation de localisation / choix alternatif
+   ========================================================================== */
+
+.loc-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: locOverlayFade 0.2s ease-out forwards;
+}
+
+@keyframes locOverlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.loc-prompt-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 440px;
+  padding: 32px 24px 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  position: relative;
+  animation: locModalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes locModalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Bouton fermer en haut à droite */
+.loc-prompt-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.loc-prompt-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Badge icône stylisé avec radar pulsant */
+.loc-prompt-icon-badge {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loc-prompt-icon-inner {
+  position: relative;
+  z-index: 2;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #FFF3EB;
+  border: 2px solid rgba(241, 90, 36, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(241, 90, 36, 0.18);
+}
+
+.loc-prompt-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(241, 90, 36, 0.25);
+  animation: locRadarPulse 2s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes locRadarPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+/* Titre & Description */
+.loc-prompt-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.loc-prompt-desc {
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+  padding: 0 8px;
+}
+
+/* Message d'erreur */
+.loc-prompt-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  text-align: left;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Actions (2 boutons) */
+.loc-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.loc-prompt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.loc-prompt-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Bouton 1 : Autoriser (Primary) */
+.loc-prompt-btn--primary {
+  background: linear-gradient(135deg, #F15A24 0%, #EA580C 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(241, 90, 36, 0.35);
+}
+
+.loc-prompt-btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ea4e15 0%, #c2410c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(241, 90, 36, 0.45);
+}
+
+.loc-prompt-btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Bouton 2 : Choisir une autre option (Secondary) */
+.loc-prompt-btn--secondary {
+  background: #f8fafc;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+}
+
+.loc-prompt-btn--secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Spinner de chargement */
+.loc-prompt-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: locSpin 0.7s linear infinite;
+}
+
+@keyframes locSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Texte informatif discret */
+.loc-prompt-hint {
+  margin-top: 18px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Responsive mobile */
+@media (max-width: 480px) {
+  .loc-prompt-card {
+    padding: 26px 18px 22px;
+    border-radius: 20px;
+  }
+  .loc-prompt-title {
+    font-size: 1.15rem;
+  }
+  .loc-prompt-desc {
+    font-size: 0.88rem;
+  }
+  .loc-prompt-btn {
+    padding: 13px 16px;
+    font-size: 0.9rem;
+  }
+}

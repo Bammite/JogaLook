@@ -14,6 +14,7 @@ import {
 } from './icons/AppIcons';
 import './CheckoutModal.css';
 import JerseyPreview from './JerseyPreview';
+import LocationPromptModal from './LocationPromptModal';
 
 /* ─── Villes disponibles ─── */
 const CITIES = [
@@ -82,6 +83,7 @@ export default function CheckoutModal({ open, onClose }) {
   const [step, setStep]                       = useState('checkout'); // 'checkout' | 'loading' | 'success' | 'error'
   const [errorMsg, setErrorMsg]               = useState('');
   const [paymentData, setPaymentData]         = useState(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   // Fonction pour capturer la géolocalisation GPS
   const handleGetLocation = useCallback(() => {
@@ -100,20 +102,38 @@ export default function CheckoutModal({ open, onClose }) {
           lng: longitude,
           accuracy: Math.round(accuracy)
         });
+        setErrors(er => ({ ...er, location: '' }));
         setLocationError('');
+        setIsLocationModalOpen(false);
       },
       (error) => {
         setIsLocating(false);
         let msg = 'Impossible d’obtenir votre position GPS.';
         if (error.code === error.PERMISSION_DENIED) {
-          msg = 'Autorisation GPS refusée. Veuillez réessayer.';
+          msg = 'Accès à la position refusé. Veuillez autoriser la localisation dans les réglages de votre navigateur ou choisir une autre option.';
         } else if (error.code === error.TIMEOUT) {
-          msg = 'Délai GPS dépassé. Veuillez réessayer.';
+          msg = 'Le délai de détection GPS a expiré. Veuillez réessayer ou choisir une autre option.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = 'Signal GPS indisponible. Veuillez réessayer ou choisir une autre option.';
         }
         setLocationError(msg);
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+  }, []);
+
+  const handleChooseOtherOption = useCallback(() => {
+    setIsLocationModalOpen(false);
+    setLocationError('');
+    setErrors(er => ({ ...er, location: '' }));
+    setDeliveryMode('phone_call');
+    setTimeout(() => {
+      const el = document.getElementById('cm-delivery-mode');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }, 100);
   }, []);
 
   // Pré-remplissage avec l'utilisateur connecté (table userinfo)
@@ -202,6 +222,7 @@ export default function CheckoutModal({ open, onClose }) {
 
   useEffect(() => {
     if (!open) {
+      setIsLocationModalOpen(false);
       const t = setTimeout(() => {
         setStep('checkout'); setErrors({}); setErrorMsg(''); setPaymentData(null);
       }, 300);
@@ -260,10 +281,6 @@ export default function CheckoutModal({ open, onClose }) {
     if (!phoneNumber.trim())  errs.phoneNumber  = 'Le numéro est requis.';
     else if (!/^\d{7,15}$/.test(phoneNumber.replace(/\s/g, '')))
       errs.phoneNumber = 'Numéro invalide (7 à 15 chiffres).';
-    
-    if (deliveryMode === 'gps' && !gpsCoords) {
-      errs.location = 'Veuillez activer votre position GPS pour continuer.';
-    }
 
     if (!isCod && !paymentMethod) errs.paymentMethod = 'Choisissez une méthode.';
     setErrors(errs);
@@ -278,6 +295,14 @@ export default function CheckoutModal({ open, onClose }) {
     }
 
     if (!validate()) return;
+
+    // Si l'option GPS est sélectionnée et que la localisation n'est pas encore accordée
+    if (deliveryMode === 'gps' && !gpsCoords) {
+      setLocationError('');
+      setIsLocationModalOpen(true);
+      return;
+    }
+
     setStep('loading');
     try {
       const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
@@ -705,6 +730,16 @@ export default function CheckoutModal({ open, onClose }) {
         )}
 
       </div>
+
+      {/* MODAL DE CONFIRMATION / AUTORISATION GÉOLOCALISATION */}
+      <LocationPromptModal
+        open={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onAuthorize={handleGetLocation}
+        onChooseOther={handleChooseOtherOption}
+        isLocating={isLocating}
+        error={locationError}
+      />
     </div>
   );
 }

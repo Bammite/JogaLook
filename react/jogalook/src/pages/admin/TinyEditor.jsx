@@ -173,7 +173,7 @@ export default function TinyEditor({ value, onChange, placeholder = 'Rédigez vo
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+          accept="image/png,image/jpeg,image/jpg,image/webp,image/avif,image/gif"
           style={{ display: 'none' }}
           onChange={handleDirectImageUpload}
         />

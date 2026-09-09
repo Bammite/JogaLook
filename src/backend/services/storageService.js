@@ -27,6 +27,7 @@ const ALLOWED_MIME = [
   'image/jpeg',
   'image/jpg',
   'image/webp',
+  'image/avif',
   'image/gif',
   'image/svg+xml',
   'image/svg',

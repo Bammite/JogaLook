@@ -20,6 +20,7 @@ import {
 } from '../components/icons/AppIcons';
 import './CartPage.css';
 import JerseyPreview from '../components/JerseyPreview';
+import LocationPromptModal from '../components/LocationPromptModal';
 
 /* ─── Villes disponibles ─── */
 const CITIES = [
@@ -167,6 +168,7 @@ export default function CartPage() {
   const [submitting, setSubmitting]           = useState(false);
   const [orderSuccess, setOrderSuccess]       = useState(null);
   const [errorMessage, setErrorMessage]       = useState('');
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   // ── Retour après paiement PayBammite ──
   const [paymentReturn, setPaymentReturn]     = useState(null); // { status, verifying, data }
@@ -196,19 +198,35 @@ export default function CartPage() {
           accuracy: Math.round(accuracy)
         });
         setLocationError('');
+        setIsLocationModalOpen(false);
       },
       (error) => {
         setIsLocating(false);
         let msg = 'Impossible d’obtenir votre position GPS.';
         if (error.code === error.PERMISSION_DENIED) {
-          msg = 'Autorisation GPS refusée. Veuillez réessayer.';
+          msg = 'Accès à la position refusé. Veuillez autoriser la localisation dans les réglages de votre navigateur ou choisir une autre option.';
         } else if (error.code === error.TIMEOUT) {
-          msg = 'Délai GPS dépassé. Veuillez réessayer.';
+          msg = 'Le délai de détection GPS a expiré. Veuillez réessayer ou choisir une autre option.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = 'Signal GPS indisponible. Veuillez réessayer ou choisir une autre option.';
         }
         setLocationError(msg);
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+  };
+
+  const handleChooseOtherOption = () => {
+    setIsLocationModalOpen(false);
+    setLocationError('');
+    setDeliveryMode('phone_call');
+    setTimeout(() => {
+      const el = document.getElementById(isMobileCheckoutOpen ? 'deliveryMode-m' : 'deliveryMode-d');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }, 100);
   };
 
   // Génération de l'adresse formatée complète
@@ -454,6 +472,13 @@ export default function CartPage() {
     const cleanPhone = phoneNumber.replace(/[\s\-\.]/g, '');
     if (!cleanPhone || cleanPhone.length < 8) {
       setErrorMessage('Veuillez renseigner un numéro de téléphone valide.');
+      return;
+    }
+
+    // Si mode GPS sélectionné mais coordonnées non accordées/récupérées
+    if (deliveryMode === 'gps' && !gpsCoords) {
+      setLocationError('');
+      setIsLocationModalOpen(true);
       return;
     }
 
@@ -1091,6 +1116,16 @@ export default function CartPage() {
         )}
       </main>
       <Footer />
+
+      {/* MODAL DE DEMANDE DE LOCALISATION / CHOIX ALTERNATIF */}
+      <LocationPromptModal
+        open={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onAuthorize={handleGetLocation}
+        onChooseOther={handleChooseOtherOption}
+        isLocating={isLocating}
+        error={locationError}
+      />
     </>
   );
 }
