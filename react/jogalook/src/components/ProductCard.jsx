@@ -20,13 +20,11 @@ function ProductCard({ product }) {
   const variants = product?.product_variants ?? [];
   const hasVariants = variants.filter(v => !v.deleted_at && v.size).length > 0;
 
-  // Couleurs uniques pour les dots décoratifs
+  // Couleurs uniques pour les dots — uniquement celles configurées dans les variantes
   const uniqueColorHexes = [...new Set(
-    variants.filter(v => v.color_hex).map(v => v.color_hex)
+    variants.filter(v => !v.deleted_at && v.color_hex).map(v => v.color_hex)
   )].slice(0, 4);
-  const colors = uniqueColorHexes.length > 0
-    ? uniqueColorHexes
-    : (Array.isArray(product?.colors) && product.colors.length ? product.colors : null);
+  const colors = uniqueColorHexes.length > 0 ? uniqueColorHexes : null;
 
   // État du modal de sélection de taille
   const [sizePickerOpen, setSizePickerOpen] = useState(false);
