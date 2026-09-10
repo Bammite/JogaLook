@@ -74,9 +74,10 @@ router.use('/payments',      require('./routes/paymentRoutes'));
 router.use('/deliveries',    require('./routes/deliveryRoutes'));
 
 // ==============================================================================
-// LOGS & TRAÇABILITÉ
+// LOGS & TRAÇABILITÉ & TRAFIC
 // ==============================================================================
 router.use('/logs',          require('./routes/logRoutes'));
+router.use('/traffic',       require('./routes/trafficRoutes'));
 router.use('/sports-news',   require('./routes/sportsArticleRoutes'));
 
 // ==============================================================================

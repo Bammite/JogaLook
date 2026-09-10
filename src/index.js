@@ -22,6 +22,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Suivi automatique du trafic et des visites sur tout le site (non-bloquant)
+const trafficTracker = require('./backend/middleware/trafficTracker');
+app.use(trafficTracker);
+
 // ==============================================================================
 // 2. ROUTES API BACKEND (SUPABASE & CRUD)
 // ==============================================================================
