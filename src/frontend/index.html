@@ -11,11 +11,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Barlow+Condensed:wght@700;800;900&family=Bebas+Neue&family=Chakra+Petch:wght@700&family=Montserrat:wght@700;800;900&family=Orbitron:wght@700;900&family=Oswald:wght@600;700&family=Permanent+Marker&family=Playfair+Display:wght@700;900&family=Russo+One&family=Staatliches&family=Teko:wght@600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-6iMN7ISa.js"></script>
+    <script type="module" crossorigin src="/assets/index-Cz-xNThL.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CT5Kl8ms.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Filet de sécurité exécuté avant le bundle React : il couvre notamment
+      // les erreurs de MIME sur un ancien fichier JS mis en cache.
+      (() => {
+        const key = 'jogalook-bootstrap-recovery';
+        const recover = async () => {
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, String(Date.now()));
+          try {
+            if ('caches' in window) {
+              await Promise.all((await caches.keys()).map((name) => caches.delete(name)));
+            }
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map((registration) => registration.unregister()));
+            }
+          } catch (_) {
+            // Le rechargement anti-cache reste utile même si le nettoyage échoue.
+          }
+          const url = new URL(window.location.href);
+          url.searchParams.set('__jgl_bootstrap_recovery', String(Date.now()));
+          window.location.replace(url.toString());
+        };
+        window.addEventListener('error', (event) => {
+          const target = event.target;
+          if (target?.tagName === 'SCRIPT' || target?.tagName === 'LINK') void recover();
+        }, true);
+      })();
+    </script>
   </body>
 </html>
-

@@ -14,7 +14,35 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Filet de sécurité exécuté avant le bundle React : il couvre notamment
+      // les erreurs de MIME sur un ancien fichier JS mis en cache.
+      (() => {
+        const key = 'jogalook-bootstrap-recovery';
+        const recover = async () => {
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, String(Date.now()));
+          try {
+            if ('caches' in window) {
+              await Promise.all((await caches.keys()).map((name) => caches.delete(name)));
+            }
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map((registration) => registration.unregister()));
+            }
+          } catch (_) {
+            // Le rechargement anti-cache reste utile même si le nettoyage échoue.
+          }
+          const url = new URL(window.location.href);
+          url.searchParams.set('__jgl_bootstrap_recovery', String(Date.now()));
+          window.location.replace(url.toString());
+        };
+        window.addEventListener('error', (event) => {
+          const target = event.target;
+          if (target?.tagName === 'SCRIPT' || target?.tagName === 'LINK') void recover();
+        }, true);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-

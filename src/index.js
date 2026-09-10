@@ -53,8 +53,20 @@ app.get(['/404', '/404.html'], (req, res) => {
   res.status(404).sendFile(path.join(frontendPath, '404.html'));
 });
 
-// Fichiers statiques frontend (assets, css, js, favicon, legal/*.html, 404.html)
-app.use(express.static(frontendPath));
+// Fichiers statiques frontend (assets, css, js, favicon, legal/*.html, 404.html).
+// index.html doit toujours être revalidé ; les assets Vite hashés peuvent être
+// conservés longtemps puisqu'un nouveau nom est généré à chaque build.
+app.use(express.static(frontendPath, {
+  setHeaders: (res, filePath) => {
+    if (path.basename(filePath) === 'index.html') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
 
 // Middleware SPA : toute requête GET qui ne cible pas /api ou /service renvoie index.html (géré ensuite par React Router)
 app.use((req, res, next) => {
@@ -67,7 +79,14 @@ app.use((req, res, next) => {
     req.path !== '/404' &&
     req.path !== '/404.html'
   ) {
+    // Une requête qui ressemble à un fichier statique ne doit jamais recevoir
+    // index.html : cela provoquerait une erreur MIME pour les modules JS.
+    if (path.extname(req.path)) return next();
+
     const indexPath = path.join(frontendPath, 'index.html');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.sendFile(indexPath, (err) => {
       if (err) next();
     });
