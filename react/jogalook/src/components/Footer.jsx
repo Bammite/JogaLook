@@ -3,6 +3,7 @@ import logoImg from '../assets/LogoPourFondnoir.png';
 import {
   InstagramIcon,
   TiktokIcon,
+  WhatsappIcon,
   CreditCardIcon,
   BankIcon,
   MobileMoneyIcon,
@@ -22,12 +23,14 @@ function Footer() {
               Qualité premium, livraison rapide et service client 5 étoiles.
             </p>
             <div className="footer-social">
-              <a href="#" aria-label="Facebook"><span>f</span></a>
-              <a href="#" aria-label="Instagram">
+              <a href="https://www.facebook.com/profile.php?id=61593884236549" aria-label="Facebook"><span>f</span></a>
+              <a href="https://www.instagram.com/jogalook" aria-label="Instagram">
                 <InstagramIcon size={16} />
               </a>
-              <a href="#" aria-label="Twitter"><span>𝕏</span></a>
-              <a href="#" aria-label="TikTok">
+              <a href="https://wa.me/+221781941351" aria-label="WhatsApp">
+                <WhatsappIcon size={16} />
+              </a>
+              <a href="https://www.tiktok.com/@jogalook.officiel" aria-label="TikTok">
                 <TiktokIcon size={16} />
               </a>
             </div>

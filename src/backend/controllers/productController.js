@@ -4,6 +4,17 @@ const { supabaseAdmin } = require('../supabaseClient');
 // PRODUITS & VARIANTES - CONTROLLER CRUD
 // ==============================================================================
 
+// Fonction utilitaire pour trier les produits par ordre de priorité d'affichage
+const sortProductsWithOrder = (products) => {
+  if (!Array.isArray(products)) return products;
+  return [...products].sort((a, b) => {
+    const orderA = a.display_order != null && a.display_order !== '' ? Number(a.display_order) : 999999;
+    const orderB = b.display_order != null && b.display_order !== '' ? Number(b.display_order) : 999999;
+    if (orderA !== orderB) return orderA - orderB;
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+};
+
 // 1. Lister tous les produits (avec filtrage optionnel par catégorie/boutique)
 exports.getAllProducts = async (req, res) => {
   try {
@@ -19,6 +30,7 @@ exports.getAllProducts = async (req, res) => {
         product_images ( id, url, alt_text, position, is_primary )
       `)
       .is('deleted_at', null)
+      .order('display_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range(Number(offset), Number(offset) + Number(limit) - 1);
 
@@ -26,6 +38,29 @@ exports.getAllProducts = async (req, res) => {
     if (shop_id) query = query.eq('shop_id', shop_id);
 
     let { data, error } = await query;
+
+    // Si la colonne display_order n'existe pas encore, re-tenter sans cette colonne
+    if (error && error.message?.includes('display_order')) {
+      let retryQuery = supabaseAdmin
+        .from('products')
+        .select(`
+          *,
+          categories!category_id ( id, name, slug ),
+          shops ( id, name, logo_url ),
+          product_variants ( id, size, color_name, color_hex, stock_quantity, price_override ),
+          product_images ( id, url, alt_text, position, is_primary )
+        `)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .range(Number(offset), Number(offset) + Number(limit) - 1);
+
+      if (category_id) retryQuery = retryQuery.eq('category_id', category_id);
+      if (shop_id) retryQuery = retryQuery.eq('shop_id', shop_id);
+
+      const retryRes = await retryQuery;
+      data = retryRes.data;
+      error = retryRes.error;
+    }
 
     // Fallback si PostgREST n'a pas encore mis en cache la relation explicite
     if (error && (error.message?.includes('schema cache') || error.code === 'PGRST200')) {
@@ -82,10 +117,12 @@ exports.getAllProducts = async (req, res) => {
 
     if (error) throw error;
 
+    const sortedData = sortProductsWithOrder(data || []);
+
     return res.json({
       success: true,
-      count: data.length,
-      data
+      count: sortedData.length,
+      data: sortedData
     });
   } catch (error) {
     console.error('Erreur getAllProducts:', error);
@@ -159,7 +196,7 @@ exports.getProductById = async (req, res) => {
 // 3. Créer un nouveau produit
 exports.createProduct = async (req, res) => {
   try {
-    const { name, slug, description, base_price, category_id, shop_id, supplier_id, image_url, images, template_id, is_customizable, is_active, variants } = req.body;
+    const { name, slug, description, base_price, category_id, shop_id, supplier_id, image_url, images, template_id, is_customizable, is_active, variants, display_order } = req.body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Le champ "name" est requis.' });
@@ -212,24 +249,42 @@ exports.createProduct = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Ce slug est déjà utilisé pour un autre produit.' });
     }
 
+    const displayOrderVal = display_order !== undefined && display_order !== null && display_order !== ''
+      ? Number(display_order)
+      : null;
+
     // Insertion du produit principal
-    const { data: product, error: productError } = await supabaseAdmin
+    const productPayload = {
+      name: name.trim(),
+      slug: normalizedSlug,
+      description: description || null,
+      base_price: Number(base_price),
+      image_url: primaryImageUrl,
+      category_id,
+      template_id: Boolean(is_customizable) ? template_id : null,
+      shop_id: shop_id || null,
+      supplier_id: supplier_id || null,
+      is_customizable: Boolean(is_customizable),
+      is_active: is_active !== false,
+      display_order: displayOrderVal,
+    };
+
+    let { data: product, error: productError } = await supabaseAdmin
       .from('products')
-      .insert([{
-        name: name.trim(),
-        slug: normalizedSlug,
-        description: description || null,
-        base_price: Number(base_price),
-        image_url: primaryImageUrl,
-        category_id,
-        template_id: Boolean(is_customizable) ? template_id : null,
-        shop_id: shop_id || null,
-        supplier_id: supplier_id || null,
-        is_customizable: Boolean(is_customizable),
-        is_active: is_active !== false,
-      }])
+      .insert([productPayload])
       .select()
       .single();
+
+    if (productError && productError.message?.includes('display_order')) {
+      delete productPayload.display_order;
+      const retry = await supabaseAdmin
+        .from('products')
+        .insert([productPayload])
+        .select()
+        .single();
+      product = retry.data;
+      productError = retry.error;
+    }
 
     if (productError) throw productError;
 
@@ -385,6 +440,9 @@ exports.updateProduct = async (req, res) => {
     }
     if (is_active !== undefined) cleanUpdates.is_active = Boolean(is_active);
     if (primaryImageUrl) cleanUpdates.image_url = primaryImageUrl;
+    if (display_order !== undefined) {
+      cleanUpdates.display_order = (display_order !== '' && display_order !== null) ? Number(display_order) : null;
+    }
 
     const { data, error } = await supabaseAdmin
       .from('products')
@@ -429,3 +487,37 @@ exports.deleteProduct = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// 6. Réordonner les produits (mise à jour groupée de display_order)
+exports.reorderProducts = async (req, res) => {
+  try {
+    // order = [{ id: 'uuid', display_order: 1 }, { id: 'uuid2', display_order: 2 }, ...]
+    const { order } = req.body;
+
+    if (!Array.isArray(order) || order.length === 0) {
+      return res.status(400).json({ success: false, message: 'Le tableau "order" est requis.' });
+    }
+
+    // Mettre à jour chaque produit séquentiellement
+    const errors = [];
+    for (const item of order) {
+      const { id, display_order } = item;
+      if (!id) continue;
+      const { error } = await supabaseAdmin
+        .from('products')
+        .update({ display_order: display_order != null ? Number(display_order) : null })
+        .eq('id', id);
+      if (error) errors.push({ id, error: error.message });
+    }
+
+    if (errors.length > 0) {
+      return res.status(500).json({ success: false, message: 'Erreurs partielles', errors });
+    }
+
+    return res.json({ success: true, message: 'Ordre mis à jour avec succès.' });
+  } catch (error) {
+    console.error('Erreur reorderProducts:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+

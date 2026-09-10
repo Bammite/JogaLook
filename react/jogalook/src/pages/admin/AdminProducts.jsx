@@ -20,6 +20,7 @@ const EMPTY = {
   template_id: '',
   is_customizable: false,
   is_active: true,
+  display_order: '',
 };
 
 const normalizeVariant = (variant = {}) => ({
@@ -163,6 +164,7 @@ export default function AdminProducts() {
       template_id: p.template_id ?? '',
       is_customizable: Boolean(p.is_customizable),
       is_active: p.is_active !== false,
+      display_order: p.display_order ?? '',
     });
     setShowForm(true);
   };
@@ -363,6 +365,7 @@ export default function AdminProducts() {
           stock_quantity: Number(v.stock_quantity) || 0,
           price_override: v.price_override !== '' && v.price_override != null ? Number(v.price_override) : null,
         })),
+        display_order: form.display_order !== '' && form.display_order != null ? Number(form.display_order) : null,
       };
 
       const method = editing ? 'PUT' : 'POST';
@@ -385,6 +388,45 @@ export default function AdminProducts() {
     if (!confirm('Supprimer ce produit ?')) return;
     await fetch(`${API}/${id}`, { method: 'DELETE' });
     await load();
+  };
+
+  const moveProduct = async (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= filtered.length) return;
+
+    const a = filtered[idx];
+    const b = filtered[targetIdx];
+
+    // Assigner des numéros d'ordre relatifs si non définis
+    const allOrders = items
+      .map(p => p.display_order)
+      .filter(o => o != null)
+      .map(Number);
+    const maxOrder = allOrders.length > 0 ? Math.max(...allOrders) : 0;
+
+    // Calculer les nouveaux ordres : on échange les positions dans la liste filtrée
+    const orderedItems = [...filtered];
+    // Assigner display_order = position+1 à tous les éléments filtrés après le swap
+    orderedItems.splice(idx, 1);
+    orderedItems.splice(targetIdx, 0, a);
+
+    const reorderPayload = orderedItems.map((p, i) => ({
+      id: p.id,
+      display_order: i + 1,
+    }));
+
+    try {
+      const res = await fetch(`${API}/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: reorderPayload }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message);
+      await load();
+    } catch (err) {
+      alert('Erreur lors de la mise à jour de l\'ordre : ' + err.message);
+    }
   };
 
   return (
@@ -746,6 +788,21 @@ export default function AdminProducts() {
             </select>
           </div>
 
+          <div className="admin-form-group">
+            <label className="admin-form-label">Ordre d'affichage</label>
+            <input
+              type="number"
+              min="1"
+              className="admin-form-input"
+              value={form.display_order}
+              onChange={e => setForm({ ...form, display_order: e.target.value })}
+              placeholder="ex: 1 = premier affiché"
+            />
+            <small style={{ color: 'var(--admin-text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+              Laissez vide pour ordre par défaut. Plus le chiffre est petit, plus le produit apparaît en premier.
+            </small>
+          </div>
+
           <div className="admin-form-group admin-form-group--full">
             <label className="admin-form-label">Description</label>
             <textarea className="admin-form-textarea" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description du produit…" />
@@ -1036,14 +1093,15 @@ export default function AdminProducts() {
                   <th>Photos</th>
                   <th>Personnalisable</th>
                   <th>Statut</th>
+                  <th>Ordre</th>
                   <th>Créé le</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0
-                  ? <tr><td colSpan={8}><div className="admin-empty"><div className="admin-empty__icon"><ProductIcon /></div><p>Aucun produit trouvé</p></div></td></tr>
-                  : filtered.map(p => {
+                  ? <tr><td colSpan={9}><div className="admin-empty"><div className="admin-empty__icon"><ProductIcon /></div><p>Aucun produit trouvé</p></div></td></tr>
+                  : filtered.map((p, idx) => {
                     const imgCount = p.product_images?.length || (p.image_url ? 1 : 0);
                     return (
                       <tr key={p.id}>
@@ -1079,6 +1137,35 @@ export default function AdminProducts() {
                         </td>
                         <td><span className={`admin-badge admin-badge--${p.is_customizable ? 'purple' : 'gray'}`}>{p.is_customizable ? 'Oui' : 'Non'}</span></td>
                         <td><span className={`admin-badge admin-badge--${p.is_active ? 'green' : 'red'}`}>{p.is_active ? 'Actif' : 'Inactif'}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{
+                              minWidth: '28px',
+                              textAlign: 'center',
+                              fontWeight: 700,
+                              fontSize: '0.85rem',
+                              color: p.display_order != null ? 'var(--primary)' : 'var(--admin-text-muted)',
+                            }}>
+                              {p.display_order != null ? `#${p.display_order}` : '—'}
+                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <button
+                                className="admin-btn admin-btn--icon admin-btn--sm"
+                                style={{ padding: '2px 5px', fontSize: '0.7rem', lineHeight: 1 }}
+                                title="Remonter"
+                                disabled={idx === 0}
+                                onClick={() => moveProduct(idx, -1)}
+                              >▲</button>
+                              <button
+                                className="admin-btn admin-btn--icon admin-btn--sm"
+                                style={{ padding: '2px 5px', fontSize: '0.7rem', lineHeight: 1 }}
+                                title="Descendre"
+                                disabled={idx === filtered.length - 1}
+                                onClick={() => moveProduct(idx, 1)}
+                              >▼</button>
+                            </div>
+                          </div>
+                        </td>
                         <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.82rem' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—'}</td>
                         <td>
                           <div style={{ display: 'flex', gap: '6px' }}>
