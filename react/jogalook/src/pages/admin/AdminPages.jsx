@@ -9,6 +9,7 @@ import {
   CustomizationIcon,
   DeliveryIcon,
   EmptyIcon,
+  EyeIcon,
   LogIcon,
   LockIcon,
   OrderIcon,
@@ -553,25 +554,118 @@ export function AdminCustomizations() {
   );
 }
 
-/* ══════════════════════════════ LOGS ══════════════════════════════ */
+/* ══════════════════════════════ LOGS & TRAFIC ══════════════════════════════ */
 export function AdminLogs() {
   const MOCK_LOGIN = [
     { id:'1', email_attempted:'amadou@example.com', ip_address:'192.168.1.1', status:'SUCCESS', created_at: new Date().toISOString() },
     { id:'2', email_attempted:'hacker@evil.com', ip_address:'45.12.90.3', status:'FAILURE', failure_reason:'Mot de passe incorrect', created_at: new Date().toISOString() },
   ];
-  const [tab, setTab] = useState('login');
-  const { items: loginLogs, loading } = useCrud('/api/logs/login', MOCK_LOGIN);
+  const [tab, setTab] = useState('traffic');
+  const { items: loginLogs, loading: loadingLogin } = useCrud('/api/logs/login', MOCK_LOGIN);
+
+  // Données de trafic
+  const [trafficStats, setTrafficStats] = useState(null);
+  const [visits, setVisits] = useState([]);
+  const [loadingTraffic, setLoadingTraffic] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
+  const [searchFilter, setSearchFilter] = useState('');
+
+  const fetchTrafficData = useCallback(async () => {
+    setLoadingTraffic(true);
+    try {
+      const token = localStorage.getItem('jogalook_admin_token') || localStorage.getItem('jl_token');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // API Statistiques globales de trafic
+      const resStats = await fetch('/api/traffic/stats', { headers });
+      if (resStats.ok) {
+        const dataStats = await resStats.json();
+        if (dataStats.success) {
+          setTrafficStats(dataStats.stats);
+        }
+      }
+
+      // API Liste des visites paginée
+      const searchParam = searchFilter ? `&path=${encodeURIComponent(searchFilter)}` : '';
+      const resVisits = await fetch(`/api/traffic?page=${page}&limit=25${searchParam}`, { headers });
+      if (resVisits.ok) {
+        const dataVisits = await resVisits.json();
+        if (dataVisits.success) {
+          setVisits(dataVisits.visits || []);
+          if (dataVisits.pagination) {
+            setPagination(dataVisits.pagination);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Erreur chargement trafic:', err);
+    } finally {
+      setLoadingTraffic(false);
+    }
+  }, [page, searchFilter]);
+
+  useEffect(() => {
+    if (tab === 'traffic') {
+      fetchTrafficData();
+    }
+  }, [tab, page, searchFilter, fetchTrafficData]);
+
+  // Formateurs utilitaires
+  const formatUserAgent = (ua) => {
+    if (!ua) return 'Inconnu';
+    if (/mobile|android|iphone|ipad/i.test(ua)) return '📱 Mobile';
+    if (/chrome/i.test(ua)) return '💻 Chrome';
+    if (/safari/i.test(ua)) return '💻 Safari';
+    if (/firefox/i.test(ua)) return '💻 Firefox';
+    return '🖥️ Ordinateur';
+  };
+
+  const formatReferer = (ref) => {
+    if (!ref || ref === 'null' || ref === '') return { label: 'Accès Direct / Favoris', badge: 'admin-badge--gray', icon: '🎯' };
+    try {
+      const url = new URL(ref);
+      const host = url.hostname.toLowerCase();
+      if (host.includes('google')) return { label: 'Google Search', badge: 'admin-badge--green', icon: '🔍' };
+      if (host.includes('whatsapp')) return { label: 'WhatsApp', badge: 'admin-badge--green', icon: '💬' };
+      if (host.includes('facebook') || host.includes('fb')) return { label: 'Facebook', badge: 'admin-badge--green', icon: '🌐' };
+      if (host.includes('instagram')) return { label: 'Instagram', badge: 'admin-badge--purple', icon: '📸' };
+      if (host.includes('jogalook')) return { label: 'Navigation interne', badge: 'admin-badge--gray', icon: '🔗' };
+      return { label: host, badge: 'admin-badge--orange', icon: '🌐' };
+    } catch (_) {
+      return { label: ref.substring(0, 25), badge: 'admin-badge--gray', icon: '🌐' };
+    }
+  };
+
+  // Calcul des referers populaires
+  const getRefererStats = () => {
+    if (!trafficStats?.recentVisits) return [];
+    const counts = {};
+    trafficStats.recentVisits.forEach(v => {
+      const refInfo = formatReferer(v.referer);
+      counts[refInfo.label] = (counts[refInfo.label] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  };
+
+  const refererStats = getRefererStats();
+  const maxPageViews = trafficStats?.topPages?.[0]?.count || 1;
 
   return (
     <div>
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title"><LogIcon /> <span>Logs</span></h1>
-          <p className="admin-page-subtitle">Traçabilité du système</p>
+          <h1 className="admin-page-title"><LogIcon /> <span>Logs & Trafic</span></h1>
+          <p className="admin-page-subtitle">Suivi du trafic, des visites et traçabilité du système</p>
         </div>
       </div>
-      <div style={{ display:'flex', gap:'8px', marginBottom:'16px' }}>
+
+      <div style={{ display:'flex', gap:'8px', marginBottom:'16px', flexWrap:'wrap' }}>
         {[
+          ['traffic', <><EyeIcon /> Trafic & Visites</>],
           ['login', <><LockIcon /> Connexions</>],
           ['orders', <><OrderIcon /> Commandes</>],
           ['reservations', <><ClockIcon /> Réservations</>],
@@ -580,10 +674,209 @@ export function AdminLogs() {
         ))}
       </div>
 
+      {tab === 'traffic' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Cartes KPI synthétiques */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(241, 90, 36, 0.12)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                📊
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Total Visites</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.totalVisits?.toLocaleString('fr-FR') ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                ⚡
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Dernières 24h</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.visits24h?.toLocaleString('fr-FR') ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                🌐
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>IPs Uniques (Récentes)</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.recentUniqueIPs ?? '—'}</div>
+              </div>
+            </div>
+
+            <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.12)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                📄
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Pages Populaires</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.topPages?.length ?? '—'}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grille 2 Colonnes : Top Pages & Origines du Trafic */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+            
+            {/* Top Pages */}
+            <div className="admin-card" style={{ padding: '20px' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔥 Pages les plus visitées (Top Pages)
+              </h3>
+              {!trafficStats?.topPages?.length ? (
+                <p style={{ color: 'var(--admin-text-muted)', fontSize: '0.9rem' }}>Aucune donnée de visite pour le moment.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {trafficStats.topPages.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: 600 }}>
+                        <span style={{ fontFamily: 'monospace', color: '#0f172a' }}>{item.path}</span>
+                        <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{item.count} vues</span>
+                      </div>
+                      <div style={{ height: '6px', width: '100%', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.min(100, (item.count / maxPageViews) * 100)}%`, background: 'var(--primary)', borderRadius: '4px' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Origines & Liens d'accès */}
+            <div className="admin-card" style={{ padding: '20px' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔗 Liens d'accès & Origines (Referers)
+              </h3>
+              {!refererStats.length ? (
+                <p style={{ color: 'var(--admin-text-muted)', fontSize: '0.9rem' }}>Aucune provenance externe détectée.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {refererStats.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{item.label}</span>
+                      <span className="admin-badge admin-badge--green" style={{ fontSize: '0.82rem' }}>{item.count} accès</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* Tableau Détaillé des Visites */}
+          <div className="admin-card">
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Journal des Visites en Temps Réel</h3>
+                <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-muted)' }}>{pagination.total} enregistrements au total</span>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="text"
+                  placeholder="Filtrer par chemin (ex: /catalogue)..."
+                  className="admin-input"
+                  style={{ width: '240px', padding: '6px 12px', fontSize: '0.85rem' }}
+                  value={searchFilter}
+                  onChange={(e) => { setSearchFilter(e.target.value); setPage(1); }}
+                />
+                <button className="admin-btn admin-btn--ghost admin-btn--sm" onClick={fetchTrafficData} title="Rafraîchir">
+                  🔄 Rafraîchir
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-table-wrap">
+              {loadingTraffic ? (
+                <div className="admin-loading"><div className="admin-spinner" /></div>
+              ) : !visits.length ? (
+                <div className="admin-empty" style={{ padding: '40px' }}>
+                  <div className="admin-empty__icon"><SearchIcon /></div>
+                  <p>Aucune visite enregistrée pour le moment.</p>
+                </div>
+              ) : (
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Chemin / Page</th>
+                      <th>Méthode</th>
+                      <th>IP Client</th>
+                      <th>Lien / Source d'accès (Referer)</th>
+                      <th>Appareil</th>
+                      <th>Date & Heure</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visits.map((v) => {
+                      const refInfo = formatReferer(v.referer);
+                      return (
+                        <tr key={v.id}>
+                          <td>
+                            <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontSize: '0.88rem' }}>{v.path}</strong>
+                          </td>
+                          <td>
+                            <span className="admin-badge admin-badge--blue" style={{ fontSize: '0.75rem' }}>{v.method || 'GET'}</span>
+                          </td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: '#475569' }}>
+                            {v.ip_address || '—'}
+                          </td>
+                          <td>
+                            <span className={`admin-badge ${refInfo.badge}`} style={{ fontSize: '0.8rem' }}>
+                              {refInfo.icon} {refInfo.label}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.85rem', color: '#334155' }}>
+                            {formatUserAgent(v.user_agent)}
+                          </td>
+                          <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                            {v.created_at ? new Date(v.created_at).toLocaleString('fr-FR') : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {pagination.pages > 1 && (
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--admin-text-muted)' }}>
+                  Page {pagination.page} sur {pagination.pages}
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                  >
+                    ← Précédent
+                  </button>
+                  <button
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                    disabled={page >= pagination.pages}
+                    onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
+                  >
+                    Suivant →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
       {tab === 'login' && (
         <div className="admin-card">
           <div className="admin-table-wrap">
-            {loading ? <div className="admin-loading"><div className="admin-spinner" /></div> : (
+            {loadingLogin ? <div className="admin-loading"><div className="admin-spinner" /></div> : (
               <table className="admin-table">
                 <thead><tr><th>Email tenté</th><th>IP</th><th>Statut</th><th>Raison</th><th>Date</th></tr></thead>
                 <tbody>
@@ -603,7 +896,7 @@ export function AdminLogs() {
         </div>
       )}
 
-      {tab !== 'login' && (
+      {tab !== 'login' && tab !== 'traffic' && (
         <div className="admin-card">
           <div className="admin-empty" style={{padding:'60px'}}><div className="admin-empty__icon"><SearchIcon /></div><p>Sélectionnez une commande spécifique dans l'onglet Commandes pour voir son historique.</p></div>
         </div>
