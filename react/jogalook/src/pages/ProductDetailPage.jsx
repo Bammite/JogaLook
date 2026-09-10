@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import CheckoutModal from '../components/CheckoutModal';
+import SizePickerModal from '../components/SizePickerModal';
 import {
   BoltIcon,
   PencilIcon,
@@ -47,6 +48,8 @@ export default function ProductDetailPage() {
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [optionPickerOpen, setOptionPickerOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -78,7 +81,7 @@ export default function ProductDetailPage() {
   }, [id]);
 
   // Derive unique colors and sizes from variants
-  const variants = product?.product_variants ?? [];
+  const variants = (product?.product_variants ?? []).filter(v => !v.deleted_at);
   const sortedVariants = sortSizes(variants);
 
   const uniqueColors = [...new Map(
@@ -97,8 +100,18 @@ export default function ProductDetailPage() {
     : uniqueColors.filter(c => sortedVariants.find(v => v.color_hex === c.hex && v.stock_quantity > 0)).map(c => c.hex);
 
   // Find the exact matching variant
+  const hasVariants = sortedVariants.length > 0;
+  // Une couleur unique est implicite ; le modal ne demande la couleur
+  // que lorsqu'il y a réellement plusieurs choix pour la variante.
+  const colorRequired = selectedSize
+    ? new Set(sortedVariants
+        .filter(v => v.size === selectedSize && v.stock_quantity > 0 && v.color_hex)
+        .map(v => v.color_hex)).size > 1
+    : uniqueColors.length > 1;
+  const sizeRequired = uniqueSizes.length > 0;
   const matchedVariant = sortedVariants.find(
-    v => v.color_hex === selectedColor && v.size === selectedSize
+    v => (!colorRequired || v.color_hex === selectedColor) &&
+      (!sizeRequired || v.size === selectedSize)
   ) ?? null;
 
   const inStock = matchedVariant ? matchedVariant.stock_quantity > 0 : false;
@@ -106,7 +119,9 @@ export default function ProductDetailPage() {
     ? Number(matchedVariant.price_override)
     : Number(product?.base_price ?? 0);
 
-  const canAddToCart = selectedColor && selectedSize && inStock;
+  const canAddToCart = hasVariants
+    ? (!colorRequired || selectedColor) && (!sizeRequired || selectedSize) && inStock
+    : true;
   const customizeRoute = product?.template_id ? `/custom/${product.template_id}` : product?.id ? `/custom/${product.id}` : '/custom';
 
   // Gallery images (use product_images if available, fallback to image_url)
@@ -117,8 +132,7 @@ export default function ProductDetailPage() {
         .filter(Boolean)
     : [product?.image_url || 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=800&h=900&fit=crop'];
 
-  const handleAddToCart = () => {
-    if (!canAddToCart) return;
+  const addCurrentItemToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart({
         ...product,
@@ -132,18 +146,34 @@ export default function ProductDetailPage() {
     setTimeout(() => setAddedFeedback(false), 2200);
   };
 
-  const handleReserveNow = () => {
-    if (!canAddToCart) return;
-    for (let i = 0; i < quantity; i++) {
-      addToCart({
-        ...product,
-        price: effectivePrice,
-        selectedSize,
-        selectedColor,
-        variantId: matchedVariant?.id,
-      });
+  const handleAddToCart = () => {
+    if (!canAddToCart) {
+      setPendingAction('cart');
+      setOptionPickerOpen(true);
+      return;
     }
+    addCurrentItemToCart();
+  };
+
+  const handleReserveNow = () => {
+    if (!canAddToCart) {
+      setPendingAction('checkout');
+      setOptionPickerOpen(true);
+      return;
+    }
+    addCurrentItemToCart();
     setIsCheckoutOpen(true);
+  };
+
+  const handleOptionConfirm = () => {
+    if (!canAddToCart) return;
+    if (pendingAction === 'checkout') {
+      addCurrentItemToCart();
+      setIsCheckoutOpen(true);
+    } else {
+      addCurrentItemToCart();
+    }
+    setPendingAction(null);
   };
 
   if (loading) return (
@@ -330,7 +360,7 @@ export default function ProductDetailPage() {
               <button
                 className={`pdp-add-btn${addedFeedback ? ' pdp-add-btn--success' : ''}`}
                 onClick={handleAddToCart}
-                disabled={!canAddToCart}
+                disabled={false}
                 id="add-to-cart-btn"
               >
                 {addedFeedback ? (
@@ -343,7 +373,7 @@ export default function ProductDetailPage() {
                       <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                     </svg>
-                    {canAddToCart ? 'Ajouter au panier' : 'Choisir couleur & taille'}
+                    {canAddToCart ? 'Ajouter au panier' : 'Choisir les options'}
                   </>
                 )}
               </button>
@@ -353,7 +383,7 @@ export default function ProductDetailPage() {
                 className="pdp-add-btn"
                 style={{ background: 'var(--secondary, #1A1A2E)' }}
                 onClick={handleReserveNow}
-                disabled={!canAddToCart}
+                disabled={false}
               >
                 <BoltIcon size={16} /> Réserver / Payer
               </button>
@@ -403,6 +433,16 @@ export default function ProductDetailPage() {
       <CheckoutModal
         open={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+      />
+      <SizePickerModal
+        product={product}
+        open={optionPickerOpen}
+        onClose={() => { setOptionPickerOpen(false); setPendingAction(null); }}
+        selectedSize={selectedSize}
+        selectedColor={selectedColor}
+        onSelectSize={setSelectedSize}
+        onSelectColor={setSelectedColor}
+        onConfirm={handleOptionConfirm}
       />
     </>
   );

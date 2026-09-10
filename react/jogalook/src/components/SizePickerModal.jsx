@@ -56,7 +56,7 @@ export default function SizePickerModal({
 
   if (!open || !product) return null;
 
-  const variants = sortVariants(product.product_variants ?? []);
+  const variants = sortVariants((product.product_variants ?? []).filter(v => !v.deleted_at));
   const basePrice = Number(product.base_price ?? 0);
 
   // Tailles uniques
