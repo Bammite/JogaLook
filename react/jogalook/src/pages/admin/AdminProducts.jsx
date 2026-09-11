@@ -65,6 +65,7 @@ export default function AdminProducts() {
   const [uploadProgress, setUploadProgress] = useState('');
   const [customUrlInput, setCustomUrlInput] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [savingScoreId, setSavingScoreId] = useState(null);
 
   const [categories, setCategories] = useState([]);
   const [shops, setShops] = useState([]);
@@ -390,42 +391,25 @@ export default function AdminProducts() {
     await load();
   };
 
-  const moveProduct = async (idx, direction) => {
-    const targetIdx = idx + direction;
-    if (targetIdx < 0 || targetIdx >= filtered.length) return;
+  const handleInlineScoreChange = async (productId, val) => {
+    const rawVal = val.trim();
+    const parsed = rawVal === '' ? null : Number(rawVal);
+    if (rawVal !== '' && isNaN(parsed)) return;
 
-    const a = filtered[idx];
-    const b = filtered[targetIdx];
-
-    // Assigner des numéros d'ordre relatifs si non définis
-    const allOrders = items
-      .map(p => p.display_order)
-      .filter(o => o != null)
-      .map(Number);
-    const maxOrder = allOrders.length > 0 ? Math.max(...allOrders) : 0;
-
-    // Calculer les nouveaux ordres : on échange les positions dans la liste filtrée
-    const orderedItems = [...filtered];
-    // Assigner display_order = position+1 à tous les éléments filtrés après le swap
-    orderedItems.splice(idx, 1);
-    orderedItems.splice(targetIdx, 0, a);
-
-    const reorderPayload = orderedItems.map((p, i) => ({
-      id: p.id,
-      display_order: i + 1,
-    }));
-
+    setSavingScoreId(productId);
     try {
-      const res = await fetch(`${API}/reorder`, {
+      const res = await fetch(`${API}/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order: reorderPayload }),
+        body: JSON.stringify({ display_order: parsed }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.message);
       await load();
     } catch (err) {
-      alert('Erreur lors de la mise à jour de l\'ordre : ' + err.message);
+      alert('Erreur lors de la modification du score : ' + err.message);
+    } finally {
+      setSavingScoreId(null);
     }
   };
 
@@ -789,17 +773,18 @@ export default function AdminProducts() {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Ordre d'affichage</label>
+            <label className="admin-form-label">Score de mise en avant</label>
             <input
               type="number"
-              min="1"
+              min="0"
+              step="1"
               className="admin-form-input"
               value={form.display_order}
               onChange={e => setForm({ ...form, display_order: e.target.value })}
-              placeholder="ex: 1 = premier affiché"
+              placeholder="ex: 100, 50, 10... (0 = standard)"
             />
             <small style={{ color: 'var(--admin-text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-              Laissez vide pour ordre par défaut. Plus le chiffre est petit, plus le produit apparaît en premier.
+              Plus le score est élevé, plus le produit apparaît en tête. Si score égal ou absent (0), tri par prix croissant (les moins chers d'abord).
             </small>
           </div>
 
@@ -1101,8 +1086,10 @@ export default function AdminProducts() {
               <tbody>
                 {filtered.length === 0
                   ? <tr><td colSpan={9}><div className="admin-empty"><div className="admin-empty__icon"><ProductIcon /></div><p>Aucun produit trouvé</p></div></td></tr>
-                  : filtered.map((p, idx) => {
+                  : filtered.map((p) => {
                     const imgCount = p.product_images?.length || (p.image_url ? 1 : 0);
+                    const isSavingThis = savingScoreId === p.id;
+                    const hasScore = p.display_order != null && Number(p.display_order) > 0;
                     return (
                       <tr key={p.id}>
                         <td>
@@ -1138,32 +1125,46 @@ export default function AdminProducts() {
                         <td><span className={`admin-badge admin-badge--${p.is_customizable ? 'purple' : 'gray'}`}>{p.is_customizable ? 'Oui' : 'Non'}</span></td>
                         <td><span className={`admin-badge admin-badge--${p.is_active ? 'green' : 'red'}`}>{p.is_active ? 'Actif' : 'Inactif'}</span></td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{
-                              minWidth: '28px',
-                              textAlign: 'center',
-                              fontWeight: 700,
-                              fontSize: '0.85rem',
-                              color: p.display_order != null ? 'var(--primary)' : 'var(--admin-text-muted)',
-                            }}>
-                              {p.display_order != null ? `#${p.display_order}` : '—'}
-                            </span>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                              <button
-                                className="admin-btn admin-btn--icon admin-btn--sm"
-                                style={{ padding: '2px 5px', fontSize: '0.7rem', lineHeight: 1 }}
-                                title="Remonter"
-                                disabled={idx === 0}
-                                onClick={() => moveProduct(idx, -1)}
-                              >▲</button>
-                              <button
-                                className="admin-btn admin-btn--icon admin-btn--sm"
-                                style={{ padding: '2px 5px', fontSize: '0.7rem', lineHeight: 1 }}
-                                title="Descendre"
-                                disabled={idx === filtered.length - 1}
-                                onClick={() => moveProduct(idx, 1)}
-                              >▼</button>
-                            </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              key={`${p.id}-${p.display_order}`}
+                              defaultValue={p.display_order ?? ''}
+                              placeholder="0"
+                              disabled={isSavingThis}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim();
+                                const currentVal = p.display_order != null ? String(p.display_order) : '';
+                                if (val !== currentVal) {
+                                  handleInlineScoreChange(p.id, val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.target.blur();
+                                }
+                              }}
+                              style={{
+                                width: '62px',
+                                padding: '5px 8px',
+                                borderRadius: '8px',
+                                border: hasScore ? '1px solid rgba(241, 90, 36, 0.45)' : '1px solid var(--admin-border)',
+                                background: hasScore ? 'rgba(241, 90, 36, 0.1)' : 'rgba(255,255,255,0.04)',
+                                color: hasScore ? 'var(--primary)' : 'inherit',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                textAlign: 'center',
+                                outline: 'none',
+                                opacity: isSavingThis ? 0.4 : 1,
+                                transition: 'all 0.2s ease',
+                              }}
+                              title="Modifiez le score puis appuyez sur Entrée ou cliquez ailleurs pour enregistrer"
+                            />
+                            {isSavingThis && (
+                              <div className="admin-spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                            )}
                           </div>
                         </td>
                         <td style={{ color: 'var(--admin-text-muted)', fontSize: '0.82rem' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—'}</td>

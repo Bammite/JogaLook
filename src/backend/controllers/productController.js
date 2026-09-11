@@ -4,13 +4,21 @@ const { supabaseAdmin } = require('../supabaseClient');
 // PRODUITS & VARIANTES - CONTROLLER CRUD
 // ==============================================================================
 
-// Fonction utilitaire pour trier les produits par ordre de priorité d'affichage
+// Fonction utilitaire pour trier les produits par score de priorité (ou prix le plus bas si même score/aucun score)
 const sortProductsWithOrder = (products) => {
   if (!Array.isArray(products)) return products;
   return [...products].sort((a, b) => {
-    const orderA = a.display_order != null && a.display_order !== '' ? Number(a.display_order) : 999999;
-    const orderB = b.display_order != null && b.display_order !== '' ? Number(b.display_order) : 999999;
-    if (orderA !== orderB) return orderA - orderB;
+    // Score : plus il est élevé, plus le produit apparaît haut dans l'affichage
+    const scoreA = a.display_order != null && a.display_order !== '' ? Number(a.display_order) : 0;
+    const scoreB = b.display_order != null && b.display_order !== '' ? Number(b.display_order) : 0;
+    if (scoreA !== scoreB) return scoreB - scoreA;
+
+    // Pour ceux de même score ou score absent (0) : tri par prix croissant (le plus bas d'abord)
+    const priceA = a.base_price != null && a.base_price !== '' ? Number(a.base_price) : Number.POSITIVE_INFINITY;
+    const priceB = b.base_price != null && b.base_price !== '' ? Number(b.base_price) : Number.POSITIVE_INFINITY;
+    if (priceA !== priceB) return priceA - priceB;
+
+    // Fallback date de création (le plus récent d'abord)
     return new Date(b.created_at || 0) - new Date(a.created_at || 0);
   });
 };
@@ -30,7 +38,8 @@ exports.getAllProducts = async (req, res) => {
         product_images ( id, url, alt_text, position, is_primary )
       `)
       .is('deleted_at', null)
-      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('display_order', { ascending: false, nullsFirst: false })
+      .order('base_price', { ascending: true })
       .order('created_at', { ascending: false })
       .range(Number(offset), Number(offset) + Number(limit) - 1);
 
@@ -51,6 +60,7 @@ exports.getAllProducts = async (req, res) => {
           product_images ( id, url, alt_text, position, is_primary )
         `)
         .is('deleted_at', null)
+        .order('base_price', { ascending: true })
         .order('created_at', { ascending: false })
         .range(Number(offset), Number(offset) + Number(limit) - 1);
 
@@ -70,6 +80,7 @@ exports.getAllProducts = async (req, res) => {
         .from('products')
         .select('*')
         .is('deleted_at', null)
+        .order('base_price', { ascending: true })
         .order('created_at', { ascending: false })
         .range(Number(offset), Number(offset) + Number(limit) - 1);
 
@@ -354,6 +365,7 @@ exports.updateProduct = async (req, res) => {
       is_active,
       images,
       variants,
+      display_order,
     } = req.body;
 
     // Déterminer l'image principale
@@ -444,12 +456,24 @@ exports.updateProduct = async (req, res) => {
       cleanUpdates.display_order = (display_order !== '' && display_order !== null) ? Number(display_order) : null;
     }
 
-    const { data, error } = await supabaseAdmin
+    let { data, error } = await supabaseAdmin
       .from('products')
       .update(cleanUpdates)
       .eq('id', id)
       .select()
       .single();
+
+    if (error && error.message?.includes('display_order')) {
+      delete cleanUpdates.display_order;
+      const retryRes = await supabaseAdmin
+        .from('products')
+        .update(cleanUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+      data = retryRes.data;
+      error = retryRes.error;
+    }
 
     if (error) throw error;
 
