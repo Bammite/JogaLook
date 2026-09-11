@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { AdminModal } from './AdminModal';
 import {
   AddIcon,
@@ -563,6 +564,8 @@ export function AdminLogs() {
   const [tab, setTab] = useState('traffic');
   const { items: loginLogs, loading: loadingLogin } = useCrud('/api/logs/login', MOCK_LOGIN);
 
+  const { token: authContextToken } = useAuth();
+
   // Données de trafic
   const [trafficStats, setTrafficStats] = useState(null);
   const [visits, setVisits] = useState([]);
@@ -574,8 +577,8 @@ export function AdminLogs() {
   const fetchTrafficData = useCallback(async () => {
     setLoadingTraffic(true);
     try {
-      const token = localStorage.getItem('jogalook_admin_token') || localStorage.getItem('jl_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
+      const activeToken = authContextToken || localStorage.getItem('jogalook-token') || localStorage.getItem('jogalook_admin_token') || localStorage.getItem('jl_token');
+      const headers = activeToken ? { 'Authorization': `Bearer ${activeToken}` } : {};
 
       // API Statistiques globales de trafic
       const resStats = await fetch('/api/traffic/stats', { headers });

@@ -12,12 +12,21 @@ module.exports = async function adminAuth(req, res, next) {
 
   try {
     const token = authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(401).json({ success: false, message: 'Token administrateur manquant ou invalide' });
+    }
+
     const decoded = jwt.verify(token, JWT_SECRET);
+    const targetUserId = decoded.user_id || decoded.id || decoded.sub;
+
+    if (!targetUserId) {
+      return res.status(401).json({ success: false, message: 'Structure de token invalide' });
+    }
 
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, role, status, email, first_name, last_name')
-      .eq('id', decoded.user_id)
+      .eq('id', targetUserId)
       .single();
 
     if (userError || !user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role) || user.status !== 'ACTIVE') {
