@@ -573,6 +573,7 @@ export function AdminLogs() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
   const [searchFilter, setSearchFilter] = useState('');
+  const [viewMode, setViewMode] = useState('sessions'); // 'sessions' (visites uniques par session) ou 'pageviews' (tous les affichages)
 
   const fetchTrafficData = useCallback(async () => {
     setLoadingTraffic(true);
@@ -591,7 +592,8 @@ export function AdminLogs() {
 
       // API Liste des visites paginée
       const searchParam = searchFilter ? `&path=${encodeURIComponent(searchFilter)}` : '';
-      const resVisits = await fetch(`/api/traffic?page=${page}&limit=25${searchParam}`, { headers });
+      const modeParam = `&mode=${viewMode}`;
+      const resVisits = await fetch(`/api/traffic?page=${page}&limit=25${searchParam}${modeParam}`, { headers });
       if (resVisits.ok) {
         const dataVisits = await resVisits.json();
         if (dataVisits.success) {
@@ -606,13 +608,13 @@ export function AdminLogs() {
     } finally {
       setLoadingTraffic(false);
     }
-  }, [page, searchFilter]);
+  }, [page, searchFilter, viewMode, authContextToken]);
 
   useEffect(() => {
     if (tab === 'traffic') {
       fetchTrafficData();
     }
-  }, [tab, page, searchFilter, fetchTrafficData]);
+  }, [tab, page, searchFilter, viewMode, fetchTrafficData]);
 
   // Formateurs utilitaires
   const formatUserAgent = (ua) => {
@@ -662,7 +664,7 @@ export function AdminLogs() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title"><LogIcon /> <span>Logs & Trafic</span></h1>
-          <p className="admin-page-subtitle">Suivi du trafic, des visites et traçabilité du système</p>
+          <p className="admin-page-subtitle">Suivi du trafic, des sessions d'utilisateurs et traçabilité du système</p>
         </div>
       </div>
 
@@ -680,15 +682,15 @@ export function AdminLogs() {
       {tab === 'traffic' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* Cartes KPI synthétiques */}
+          {/* Cartes KPI synthétiques (dé-doublonnées par Session) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(241, 90, 36, 0.12)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-                📊
+                👥
               </div>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Total Visites</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.totalVisits?.toLocaleString('fr-FR') ?? '—'}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Visites Uniques (Sessions)</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.totalSessions?.toLocaleString('fr-FR') ?? '—'}</div>
               </div>
             </div>
 
@@ -697,28 +699,28 @@ export function AdminLogs() {
                 ⚡
               </div>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Dernières 24h</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.visits24h?.toLocaleString('fr-FR') ?? '—'}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Sessions (24h)</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.sessions24h?.toLocaleString('fr-FR') ?? '—'}</div>
               </div>
             </div>
 
             <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-                🌐
+                📄
               </div>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>IPs Uniques (Récentes)</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.recentUniqueIPs ?? '—'}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Total Pages Vues</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.totalPageviews?.toLocaleString('fr-FR') ?? '—'}</div>
               </div>
             </div>
 
             <div className="admin-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.12)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-                📄
+                📈
               </div>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Pages Populaires</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.topPages?.length ?? '—'}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Moyenne Pages / Session</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{trafficStats?.pagesPerSession ?? '1.0'}</div>
               </div>
             </div>
           </div>
@@ -778,18 +780,36 @@ export function AdminLogs() {
                 <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>Journal des Visites en Temps Réel</h3>
                 <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-muted)' }}>{pagination.total} enregistrements au total</span>
               </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+              {/* Selecteur de Mode (Sessions vs Pageviews) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
+                  <button
+                    className={`admin-btn admin-btn--sm ${viewMode === 'sessions' ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
+                    style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                    onClick={() => { setViewMode('sessions'); setPage(1); }}
+                  >
+                    👥 Visites / Sessions
+                  </button>
+                  <button
+                    className={`admin-btn admin-btn--sm ${viewMode === 'pageviews' ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
+                    style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                    onClick={() => { setViewMode('pageviews'); setPage(1); }}
+                  >
+                    📄 Toutes les pages vues
+                  </button>
+                </div>
+
                 <input
                   type="text"
-                  placeholder="Filtrer par chemin (ex: /catalogue)..."
+                  placeholder="Filtrer par chemin..."
                   className="admin-input"
-                  style={{ width: '240px', padding: '6px 12px', fontSize: '0.85rem' }}
+                  style={{ width: '200px', padding: '6px 12px', fontSize: '0.85rem' }}
                   value={searchFilter}
                   onChange={(e) => { setSearchFilter(e.target.value); setPage(1); }}
                 />
                 <button className="admin-btn admin-btn--ghost admin-btn--sm" onClick={fetchTrafficData} title="Rafraîchir">
-                  🔄 Rafraîchir
+                  🔄
                 </button>
               </div>
             </div>
@@ -806,10 +826,11 @@ export function AdminLogs() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Chemin / Page</th>
+                      <th>{viewMode === 'sessions' ? 'Première Page Visitée' : 'Chemin / Page'}</th>
+                      {viewMode === 'sessions' && <th>Pages vues (Session)</th>}
                       <th>Méthode</th>
                       <th>IP Client</th>
-                      <th>Lien / Source d'accès (Referer)</th>
+                      <th>Lien / Source d'accès</th>
                       <th>Appareil</th>
                       <th>Date & Heure</th>
                     </tr>
@@ -822,6 +843,13 @@ export function AdminLogs() {
                           <td>
                             <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontSize: '0.88rem' }}>{v.path}</strong>
                           </td>
+                          {viewMode === 'sessions' && (
+                            <td>
+                              <span className="admin-badge admin-badge--green" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+                                📄 {v.page_views_count || 1} page(s)
+                              </span>
+                            </td>
+                          )}
                           <td>
                             <span className="admin-badge admin-badge--blue" style={{ fontSize: '0.75rem' }}>{v.method || 'GET'}</span>
                           </td>
