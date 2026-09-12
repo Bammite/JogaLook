@@ -20,6 +20,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminTemplates from './pages/admin/AdminTemplates';
 import AdminSportsNews from './pages/admin/AdminSportsNews';
 import AdminKeywords from './pages/admin/AdminKeywords';
+import AdminCategoryGroups from './pages/admin/AdminCategoryGroups';
 import {
   AdminShops, AdminSuppliers, AdminCategories,
   AdminVariants, AdminPayments, AdminDeliveries,
@@ -29,6 +30,7 @@ import CartPage from './pages/CartPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import CategoryGroupPage from './pages/CategoryGroupPage';
 import FloatingCart from './components/FloatingCart';
 import './App.css';
 
@@ -77,7 +79,7 @@ function GuestOnly({ children }) {
 
 function AppShell() {
   const location = useLocation();
-  const showFloatingCart = ['/', '/catalogue', '/accueil'].includes(location.pathname);
+  const showFloatingCart = ['/', '/catalogue', '/accueil'].includes(location.pathname) || location.pathname.startsWith('/groupe');
 
   return (
     <>
@@ -85,6 +87,7 @@ function AppShell() {
         {/* ── Public ── */}
         <Route path="/"                  element={<CatalogPage />} />
         <Route path="/catalogue"         element={<CatalogPage />} />
+        <Route path="/groupe/:slug"      element={<CategoryGroupPage />} />
         <Route path="/accueil"           element={<HomePage />} />
         <Route path="/home"              element={<Navigate to="/accueil" replace />} />
         <Route path="/recherche"         element={<SearchPage />} />
@@ -122,6 +125,7 @@ function AppShell() {
           <Route path="produits"         element={<AdminProducts />} />
           <Route path="variantes"        element={<AdminVariants />} />
           <Route path="categories"       element={<AdminCategories />} />
+          <Route path="groupes-categories" element={<AdminCategoryGroups />} />
           <Route path="templates"        element={<AdminTemplates />} />
           <Route path="personnalisations" element={<AdminCustomizations />} />
           <Route path="mots-cles"         element={<AdminKeywords />} />

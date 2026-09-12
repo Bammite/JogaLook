@@ -27,6 +27,11 @@ const sortProductsWithOrder = (products) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { category_id, shop_id, limit = 50, offset = 0 } = req.query;
+    // Une ligne supplémentaire permet au client de savoir s'il reste une page,
+    // sans lancer une coûteuse requête COUNT sur Supabase.
+    const pageSize = Math.min(Math.max(Number.parseInt(limit, 10) || 50, 1), 500);
+    const pageOffset = Math.max(Number.parseInt(offset, 10) || 0, 0);
+    const pageEnd = pageOffset + pageSize;
 
     let query = supabaseAdmin
       .from('products')
@@ -41,7 +46,7 @@ exports.getAllProducts = async (req, res) => {
       .order('display_order', { ascending: false, nullsFirst: false })
       .order('base_price', { ascending: true })
       .order('created_at', { ascending: false })
-      .range(Number(offset), Number(offset) + Number(limit) - 1);
+      .range(pageOffset, pageEnd);
 
     if (category_id) query = query.eq('category_id', category_id);
     if (shop_id) query = query.eq('shop_id', shop_id);
@@ -62,7 +67,7 @@ exports.getAllProducts = async (req, res) => {
         .is('deleted_at', null)
         .order('base_price', { ascending: true })
         .order('created_at', { ascending: false })
-        .range(Number(offset), Number(offset) + Number(limit) - 1);
+        .range(pageOffset, pageEnd);
 
       if (category_id) retryQuery = retryQuery.eq('category_id', category_id);
       if (shop_id) retryQuery = retryQuery.eq('shop_id', shop_id);
@@ -82,7 +87,7 @@ exports.getAllProducts = async (req, res) => {
         .is('deleted_at', null)
         .order('base_price', { ascending: true })
         .order('created_at', { ascending: false })
-        .range(Number(offset), Number(offset) + Number(limit) - 1);
+        .range(pageOffset, pageEnd);
 
       if (category_id) fallbackQuery = fallbackQuery.eq('category_id', category_id);
       if (shop_id) fallbackQuery = fallbackQuery.eq('shop_id', shop_id);
@@ -128,12 +133,20 @@ exports.getAllProducts = async (req, res) => {
 
     if (error) throw error;
 
-    const sortedData = sortProductsWithOrder(data || []);
+    const hasMore = (data || []).length > pageSize;
+    const pageData = (data || []).slice(0, pageSize);
+    const sortedData = sortProductsWithOrder(pageData);
 
     return res.json({
       success: true,
       count: sortedData.length,
-      data: sortedData
+      data: sortedData,
+      pagination: {
+        limit: pageSize,
+        offset: pageOffset,
+        next_offset: pageOffset + pageData.length,
+        has_more: hasMore,
+      },
     });
   } catch (error) {
     console.error('Erreur getAllProducts:', error);
@@ -544,4 +557,3 @@ exports.reorderProducts = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-

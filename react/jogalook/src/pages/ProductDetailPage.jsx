@@ -21,6 +21,15 @@ import './ProductDetailPage.css';
 
 const SIZES_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
+const REPORT_REASONS = [
+  { value: 'INAPPROPRIATE_CONTENT', label: 'Contenu inapproprié' },
+  { value: 'COPYRIGHT_INFRINGEMENT', label: 'Atteinte aux droits d’auteur' },
+  { value: 'COUNTERFEIT_OR_TRADEMARK', label: 'Contrefaçon ou atteinte à une marque' },
+  { value: 'MISLEADING_OR_FRAUDULENT', label: 'Information trompeuse ou fraude' },
+  { value: 'PRIVACY_OR_PERSONAL_DATA', label: 'Données personnelles ou vie privée' },
+  { value: 'OTHER', label: 'Autre motif' },
+];
+
 function sortSizes(variants) {
   return [...variants].sort((a, b) => {
     const ai = SIZES_ORDER.indexOf(a.size);
@@ -30,6 +39,110 @@ function sortSizes(variants) {
     if (bi === -1) return -1;
     return ai - bi;
   });
+}
+
+function ProductFeedbackModal({ mode, product, onClose }) {
+  const isReport = mode === 'report';
+  const [reason, setReason] = useState('');
+  const [contact, setContact] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+
+    if (isReport && !reason) {
+      setError('Veuillez choisir un motif de signalement.');
+      return;
+    }
+    if (!isReport && (!contact.trim() || !message.trim())) {
+      setError('Votre moyen de contact et votre message sont requis.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/product-feedback/${isReport ? 'reports' : 'inquiries'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          ...(isReport ? { reason, contact, description: message } : { contact, message }),
+        }),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.message || 'Une erreur est survenue.');
+      setSuccess(json.message);
+    } catch (requestError) {
+      setError(requestError.message || 'Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="pdp-feedback-overlay" role="presentation" onClick={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="pdp-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="pdp-feedback-title">
+        <button type="button" className="pdp-feedback-close" onClick={onClose} aria-label="Fermer">×</button>
+        {success ? (
+          <div className="pdp-feedback-success">
+            <span>✓</span>
+            <h2>{isReport ? 'Signalement envoyé' : 'Demande envoyée'}</h2>
+            <p>{success}</p>
+            <button type="button" className="pdp-feedback-submit" onClick={onClose}>Fermer</button>
+          </div>
+        ) : (
+          <>
+            <h2 id="pdp-feedback-title">{isReport ? 'Signaler ce produit' : 'Demander un renseignement'}</h2>
+            <p className="pdp-feedback-intro">
+              {isReport
+                ? 'Aidez-nous à maintenir un catalogue fiable. Votre signalement sera examiné par notre équipe.'
+                : 'Laissez votre question et un moyen de vous répondre.'}
+            </p>
+            <form className="pdp-feedback-form" onSubmit={handleSubmit}>
+              {isReport && (
+                <label>
+                  Motif <span aria-hidden="true">*</span>
+                  <select value={reason} onChange={(event) => setReason(event.target.value)} required>
+                    <option value="">Sélectionnez un motif</option>
+                    {REPORT_REASONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                  </select>
+                </label>
+              )}
+              <label>
+                Email ou numéro de téléphone {isReport ? <em>(facultatif)</em> : <span aria-hidden="true">*</span>}
+                <input
+                  type="text"
+                  value={contact}
+                  onChange={(event) => setContact(event.target.value)}
+                  placeholder="vous@exemple.com ou +221…"
+                  required={!isReport}
+                />
+              </label>
+              <label>
+                {isReport ? 'Description' : 'Votre message'} {isReport ? <em>(facultatif)</em> : <span aria-hidden="true">*</span>}
+                <textarea
+                  rows="5"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  placeholder={isReport ? 'Expliquez le problème si vous le souhaitez.' : 'Comment pouvons-nous vous aider ?'}
+                  required={!isReport}
+                />
+              </label>
+              {error && <p className="pdp-feedback-error" role="alert">{error}</p>}
+              <button className="pdp-feedback-submit" type="submit" disabled={submitting}>
+                {submitting ? 'Envoi en cours…' : (isReport ? 'Envoyer le signalement' : 'Envoyer la demande')}
+              </button>
+            </form>
+          </>
+        )}
+      </section>
+    </div>
+  );
 }
 
 export default function ProductDetailPage() {
@@ -50,6 +163,7 @@ export default function ProductDetailPage() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [optionPickerOpen, setOptionPickerOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [feedbackMode, setFeedbackMode] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -425,6 +539,10 @@ export default function ProductDetailPage() {
                   <span>Produits certifiés JogaLook</span>
                 </div>
               </div>
+              <div className="pdp-secondary-actions" aria-label="Actions concernant ce produit">
+                <button type="button" onClick={() => setFeedbackMode('inquiry')}>Demander un renseignement</button>
+                <button type="button" onClick={() => setFeedbackMode('report')}>Signaler</button>
+              </div>
             </div>
           </section>
         </div>
@@ -444,6 +562,13 @@ export default function ProductDetailPage() {
         onSelectColor={setSelectedColor}
         onConfirm={handleOptionConfirm}
       />
+      {feedbackMode && (
+        <ProductFeedbackModal
+          mode={feedbackMode}
+          product={product}
+          onClose={() => setFeedbackMode(null)}
+        />
+      )}
     </>
   );
 }

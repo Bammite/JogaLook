@@ -1,0 +1,184 @@
+/* ============================================================
+   PAGE DÉDIÉE GROUPE DE CATÉGORIES
+   ============================================================ */
+
+.group-page {
+  padding: 32px 0 80px;
+  min-height: calc(100vh - 78px - 300px);
+  background: var(--bg, #F8FAFC);
+}
+
+/* ── Fil d'Ariane ── */
+.group-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-light, #64748B);
+  margin-bottom: 24px;
+}
+
+.group-breadcrumbs a {
+  color: var(--text-light, #64748B);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.group-breadcrumbs a:hover {
+  color: var(--primary, #f15a24);
+}
+
+.group-breadcrumbs__sep {
+  opacity: 0.5;
+}
+
+.group-breadcrumbs__current {
+  color: var(--secondary, #0F172A);
+  font-weight: 600;
+}
+
+/* ── En-tête / Bannière du Groupe ── */
+.group-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(241, 90, 36, 0.04) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 36px 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.group-header__content {
+  max-width: 680px;
+}
+
+.group-header__badge {
+  display: inline-block;
+  font-family: var(--heading);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary, #f15a24);
+  background: rgba(var(--primary-rgb), 0.1);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.group-header__title {
+  font-family: var(--heading);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: var(--secondary, #0F172A);
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.group-header__desc {
+  font-size: 1.02rem;
+  color: var(--text-light, #64748B);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.group-header__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 14px 24px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.group-header__count strong {
+  font-family: var(--heading);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary, #f15a24);
+  line-height: 1;
+}
+
+.group-header__count span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light, #64748B);
+  margin-top: 4px;
+}
+
+/* ── Barre d'outils du groupe ── */
+.group-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── Responsive Mobile ── */
+@media (max-width: 768px) {
+  .group-page {
+    padding: 20px 0 60px;
+  }
+
+  .group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    gap: 16px;
+  }
+
+  .group-header__title {
+    font-size: 1.8rem;
+  }
+
+  .group-header__desc {
+    font-size: 0.92rem;
+  }
+
+  .group-header__count {
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 16px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .group-header__count strong {
+    font-size: 1.2rem;
+  }
+
+  .group-header__count span {
+    margin-top: 0;
+    font-size: 0.8rem;
+  }
+
+  .group-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .group-chips .filter-chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}

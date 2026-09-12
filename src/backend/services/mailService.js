@@ -307,9 +307,9 @@ async function sendContactRequestEmails({ adminEmail, payload }) {
 }
 
 module.exports = {
+  sendMail,
   sendOtpEmail,
   sendRegistrationOtpEmail,
   sendContactRequestEmails,
   isConfigured: Boolean(hasResendConfig || hasSmtpConfig),
 };
-

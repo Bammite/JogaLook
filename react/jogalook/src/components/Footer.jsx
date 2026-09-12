@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import './Footer.css';
 import logoImg from '../assets/LogoPourFondnoir.png';
 import {
@@ -15,59 +16,46 @@ function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <a href="/" className="footer-logo">
+            <Link to="/" className="footer-logo">
               <img src={logoImg} alt="JogaLook" className="logo-img" />
-            </a>
+            </Link>
             <p>
               Votre destination n°1 pour les maillots de sport authentiques.
               Qualité premium, livraison rapide et service client 5 étoiles.
             </p>
             <div className="footer-social">
-              <a href="https://www.facebook.com/profile.php?id=61593884236549" aria-label="Facebook"><span>f</span></a>
-              <a href="https://www.instagram.com/jogalook" aria-label="Instagram">
+              <a href="https://www.facebook.com/profile.php?id=61593884236549" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><span>f</span></a>
+              <a href="https://www.instagram.com/jogalook" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <InstagramIcon size={16} />
               </a>
-              <a href="https://wa.me/+221781941351" aria-label="WhatsApp">
+              <a href="https://wa.me/+221781941351" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
                 <WhatsappIcon size={16} />
               </a>
-              <a href="https://www.tiktok.com/@jogalook.officiel" aria-label="TikTok">
+              <a href="https://www.tiktok.com/@jogalook.officiel" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
                 <TiktokIcon size={16} />
               </a>
             </div>
           </div>
 
           <div className="footer-column">
-            <h4>Boutique</h4>
+            <h4>Navigation</h4>
             <ul>
-              <li><a href="#">Nouveautés</a></li>
-              <li><a href="#">Maillots Domicile</a></li>
-              <li><a href="#">Maillots Extérieur</a></li>
-              <li><a href="#">Maillots Third</a></li>
-              <li><a href="#">Éditions Spéciales</a></li>
-              <li><a href="#">Promotions</a></li>
+              <li><Link to="/accueil">Accueil</Link></li>
+              <li><Link to="/catalogue">Catalogue complet</Link></li>
+              <li><Link to="/custom">Personnaliser un maillot</Link></li>
+              <li><Link to="/actualites">Actus sportives</Link></li>
+              <li><Link to="/contact">Nous contacter</Link></li>
             </ul>
           </div>
 
           <div className="footer-column">
-            <h4>Aide</h4>
+            <h4>Aide & Compte</h4>
             <ul>
-              <li><a href="#">Mon Compte</a></li>
-              <li><a href="#">Suivi de Commande</a></li>
-              <li><a href="#">Guide des Tailles</a></li>
-              <li><a href="#">Livraison</a></li>
-              <li><a href="#">Retours</a></li>
-              <li><a href="#">FAQ</a></li>
-            </ul>
-          </div>
-
-          <div className="footer-column">
-            <h4>À Propos</h4>
-            <ul>
-              <li><a href="#">Notre Histoire</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Carrières</a></li>
-              <li><a href="#">Presse</a></li>
-              <li><a href="/contact">Contact</a></li>
+              <li><Link to="/profil">Mon Compte</Link></li>
+              <li><Link to="/mes-commandes">Mes Commandes</Link></li>
+              <li><Link to="/panier">Mon Panier</Link></li>
+              <li><Link to="/contact">Service Client</Link></li>
+              <li><a href="/legal/cgv.html#livraison">Livraison & Retours</a></li>
             </ul>
           </div>
 

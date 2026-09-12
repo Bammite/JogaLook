@@ -34,6 +34,7 @@ const NAV_SECTIONS = [
       { to: '/admin/produits', icon: <ProductIcon />, label: 'Produits' },
       { to: '/admin/variantes', icon: <VariantIcon />, label: 'Variantes & Stock' },
       { to: '/admin/categories', icon: <CategoryIcon />, label: 'Catégories' },
+      { to: '/admin/groupes-categories', icon: <CategoryIcon />, label: 'Groupes de catégories' },
       { to: '/admin/templates', icon: <TemplateIcon />, label: 'Templates SVG' },
       { to: '/admin/personnalisations', icon: <CustomizationIcon />, label: 'Personnalisations' },
       { to: '/admin/mots-cles', icon: <ProductIcon />, label: 'Mots-clés produits' },

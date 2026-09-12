@@ -53,8 +53,9 @@ router.use('/otp',           require('./routes/otpRoutes'));
 // ==============================================================================
 router.use('/shops',         require('./routes/shopRoutes'));
 router.use('/suppliers',     require('./routes/supplierRoutes'));
-router.use('/categories',    require('./routes/categoryRoutes'));
-router.use('/products',      require('./routes/productRoutes'));
+router.use('/categories',      require('./routes/categoryRoutes'));
+router.use('/category-groups', require('./routes/categoryGroupRoutes'));
+router.use('/products',        require('./routes/productRoutes'));
 router.use('/variants',      require('./routes/variantRoutes'));
 router.use('/keywords',      require('./routes/keywordRoutes'));
 router.use('/search',        require('./routes/searchRoutes'));
@@ -89,6 +90,6 @@ router.use('/upload',        require('./routes/upload'));
 // CONTACT & DEMANDES COMMERCIALES
 // ==============================================================================
 router.use('/contact',       require('./routes/contactRoutes'));
+router.use('/product-feedback', require('./routes/productFeedbackRoutes'));
 
 module.exports = router;
-

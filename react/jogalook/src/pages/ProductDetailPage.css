@@ -527,6 +527,187 @@
   color: var(--text-light);
 }
 
+/* ── Discreet product actions ── */
+.pdp-secondary-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.pdp-secondary-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.pdp-secondary-actions button:hover,
+.pdp-secondary-actions button:focus-visible {
+  color: #475569;
+  text-decoration: underline;
+  outline: none;
+}
+
+/* ── Report / inquiry modal ── */
+.pdp-feedback-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.pdp-feedback-modal {
+  position: relative;
+  width: min(100%, 480px);
+  padding: 30px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
+}
+
+.pdp-feedback-modal h2 {
+  margin: 0 34px 8px 0;
+  color: var(--secondary);
+  font-family: var(--heading);
+  font-size: 1.28rem;
+}
+
+.pdp-feedback-intro {
+  margin: 0 0 22px;
+  color: var(--text-light);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.pdp-feedback-close {
+  position: absolute;
+  top: 13px;
+  right: 15px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pdp-feedback-form {
+  display: grid;
+  gap: 16px;
+}
+
+.pdp-feedback-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.pdp-feedback-form label em {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.pdp-feedback-form select,
+.pdp-feedback-form input,
+.pdp-feedback-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.pdp-feedback-form textarea {
+  resize: vertical;
+}
+
+.pdp-feedback-form select:focus,
+.pdp-feedback-form input:focus,
+.pdp-feedback-form textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.pdp-feedback-error {
+  margin: -4px 0 0;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+.pdp-feedback-submit {
+  min-height: 43px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--secondary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pdp-feedback-submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.pdp-feedback-success {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 8px 2px 2px;
+  text-align: center;
+}
+
+.pdp-feedback-success > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.pdp-feedback-success h2,
+.pdp-feedback-success p {
+  margin: 0;
+}
+
+.pdp-feedback-success p {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 /* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
@@ -582,5 +763,13 @@
 
   .pdp-features {
     padding: 14px;
+  }
+
+  .pdp-secondary-actions {
+    justify-content: space-between;
+  }
+
+  .pdp-feedback-modal {
+    padding: 26px 20px;
   }
 }
