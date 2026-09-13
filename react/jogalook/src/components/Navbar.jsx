@@ -50,7 +50,7 @@ function Navbar() {
   // Charger les groupes de catégories depuis l'API
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/category-groups')
+    fetch('/api/category-groups?navbar=true')
       .then(res => res.json())
       .then(json => {
         if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {

@@ -10,6 +10,7 @@ const EMPTY_FORM = {
   slug: '',
   description: '',
   display_order: 0,
+  show_in_navbar: true,
   category_ids: [],
 };
 
@@ -72,6 +73,7 @@ export default function AdminCategoryGroups() {
       slug: group.slug || '',
       description: group.description || '',
       display_order: group.display_order ?? 0,
+      show_in_navbar: group.show_in_navbar !== false,
       category_ids: (group.categories || []).map(c => c.id),
     });
     setCatSearch('');
@@ -131,6 +133,7 @@ export default function AdminCategoryGroups() {
         slug: form.slug.trim() || form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         description: form.description?.trim() || null,
         display_order: Number(form.display_order) || 0,
+        show_in_navbar: form.show_in_navbar !== false,
         category_ids: form.category_ids,
       };
 
@@ -229,13 +232,14 @@ export default function AdminCategoryGroups() {
                   <th>Slug</th>
                   <th>Catégories associées</th>
                   <th>Description</th>
+                  <th>Navbar</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredGroups.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="admin-empty">
                         <div className="admin-empty__icon"><CategoryIcon /></div>
                         <p>Aucun groupe de catégories trouvé</p>
@@ -289,6 +293,11 @@ export default function AdminCategoryGroups() {
                           {group.description || '—'}
                         </td>
                         <td>
+                          <span className={`admin-badge ${group.show_in_navbar !== false ? 'admin-badge--green' : 'admin-badge--gray'}`}>
+                            {group.show_in_navbar !== false ? 'Visible' : 'Masqué'}
+                          </span>
+                        </td>
+                        <td>
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button
                               className="admin-btn admin-btn--icon admin-btn--sm"
@@ -335,6 +344,22 @@ export default function AdminCategoryGroups() {
               placeholder="ex: Vêtements, Sport, Électronique…"
             />
           </div>
+
+          <label
+            className="admin-form-group"
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          >
+            <input
+              type="checkbox"
+              checked={form.show_in_navbar}
+              onChange={e => setForm({ ...form, show_in_navbar: e.target.checked })}
+              style={{ accentColor: 'var(--primary)', width: '17px', height: '17px' }}
+            />
+            <span>
+              <strong className="admin-form-label" style={{ display: 'block', marginBottom: '2px' }}>Afficher dans la navbar</strong>
+              <small style={{ color: 'var(--admin-text-muted)' }}>Le groupe sera visible dans la navigation publique.</small>
+            </span>
+          </label>
 
           <div className="admin-form-group">
             <label className="admin-form-label">Slug (identifiant URL)</label>

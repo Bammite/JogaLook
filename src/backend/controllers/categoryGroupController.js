@@ -30,6 +30,7 @@ const ensureDefaultGroups = async () => {
 // 1. Lister tous les groupes avec leurs catégories associées
 exports.getAllGroups = async (req, res) => {
   try {
+    const navbarOnly = String(req.query.navbar || '').toLowerCase() === 'true';
     await ensureDefaultGroups();
 
     // Récupérer tous les groupes actifs
@@ -53,11 +54,15 @@ exports.getAllGroups = async (req, res) => {
       throw groupsErr;
     }
 
-    if (!groups || groups.length === 0) {
+    const visibleGroups = navbarOnly
+      ? (groups || []).filter(group => group.show_in_navbar !== false)
+      : (groups || []);
+
+    if (visibleGroups.length === 0) {
       return res.json({ success: true, count: 0, data: [] });
     }
 
-    const groupIds = groups.map(g => g.id);
+    const groupIds = visibleGroups.map(g => g.id);
 
     // Récupérer les liaisons avec les catégories
     let groupItems = [];
@@ -94,7 +99,7 @@ exports.getAllGroups = async (req, res) => {
       }
     });
 
-    const enrichedGroups = groups.map(g => ({
+    const enrichedGroups = visibleGroups.map(g => ({
       ...g,
       categories: categoryMap.get(g.id) || []
     }));
@@ -245,7 +250,7 @@ exports.getGroupByIdOrSlug = async (req, res) => {
 // 3. Créer un nouveau groupe de catégories
 exports.createGroup = async (req, res) => {
   try {
-    const { name, slug, description, icon, display_order, category_ids = [] } = req.body;
+    const { name, slug, description, icon, display_order, show_in_navbar = true, category_ids = [] } = req.body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Le nom du groupe est requis.' });
@@ -269,6 +274,7 @@ exports.createGroup = async (req, res) => {
         description: description?.trim() || null,
         icon: icon?.trim() || null,
         display_order: display_order !== '' && display_order != null ? Number(display_order) : 0,
+        show_in_navbar: show_in_navbar !== false,
       })
       .select()
       .single();
@@ -307,7 +313,7 @@ exports.createGroup = async (req, res) => {
 exports.updateGroup = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, slug, description, icon, display_order, category_ids } = req.body;
+    const { name, slug, description, icon, display_order, show_in_navbar, category_ids } = req.body;
 
     const updates = {
       updated_at: new Date().toISOString()
@@ -328,6 +334,7 @@ exports.updateGroup = async (req, res) => {
     if (display_order !== undefined) {
       updates.display_order = display_order !== '' && display_order != null ? Number(display_order) : 0;
     }
+    if (show_in_navbar !== undefined) updates.show_in_navbar = show_in_navbar !== false;
 
     const { data: updatedGroup, error: updateErr } = await supabaseAdmin
       .from('category_groups')
