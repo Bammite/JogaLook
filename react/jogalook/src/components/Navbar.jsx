@@ -289,6 +289,16 @@ function Navbar() {
             </div>
           </li>
 
+          <li className="navbar-item">
+            <NavLink
+              to="/partenariat"
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              onClick={() => setMenuOpen(false)}
+            >
+              Partenariats
+            </NavLink>
+          </li>
+
           {/* ── Compte utilisateur Mobile (accordéon, même style que les groupes) ── */}
           {user ? (
             <li className={`navbar-mobile-account navbar-item navbar-item--has-dropdown ${mobileExpandedGroup === 'user-account' ? 'is-open' : ''}`}>

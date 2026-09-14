@@ -1,4 +1,64 @@
 const { supabaseAdmin } = require('../supabaseClient');
+const jwt = require('jsonwebtoken');
+
+function parseCookie(cookieHeader, name) {
+  if (!cookieHeader) return null;
+  for (const cookie of cookieHeader.split(';')) {
+    const [key, value] = cookie.trim().split('=');
+    if (key === name && value) return decodeURIComponent(value);
+  }
+  return null;
+}
+
+function resolveUserId(req) {
+  const authorization = req.headers.authorization || '';
+  if (!authorization.startsWith('Bearer ')) return null;
+  try {
+    const decoded = jwt.decode(authorization.slice(7));
+    return decoded?.user_id || decoded?.id || decoded?.sub || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+exports.recordSearch = async (req, res) => {
+  try {
+    const { search_type, query_text, source_path, results_count, metadata } = req.body || {};
+    const query = String(query_text || '').trim();
+    const allowedTypes = ['PRODUCT_GLOBAL', 'CATALOG', 'CATEGORY_GROUP', 'NEWS'];
+    const userId = resolveUserId(req);
+    const sessionId = req.headers['x-session-id'] || parseCookie(req.headers.cookie, 'jl_sid');
+
+    if (!query) return res.status(400).json({ success: false, message: 'La recherche est vide.' });
+    if (!allowedTypes.includes(search_type)) return res.status(400).json({ success: false, message: 'Type de recherche invalide.' });
+    if (!userId && !sessionId) return res.status(400).json({ success: false, message: 'Session visiteur introuvable.' });
+
+    const count = results_count === null || results_count === undefined || results_count === ''
+      ? null
+      : Number(results_count);
+    if (count !== null && (!Number.isInteger(count) || count < 0)) {
+      return res.status(400).json({ success: false, message: 'Nombre de résultats invalide.' });
+    }
+
+    const { error } = await supabaseAdmin.from('search_history').insert([{
+      user_id: userId,
+      session_id: sessionId || null,
+      search_type,
+      query_text: query.substring(0, 500),
+      source_path: String(source_path || req.path).substring(0, 500),
+      results_count: count,
+      metadata: metadata && typeof metadata === 'object' ? metadata : {},
+      ip_address: String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim().substring(0, 45) || null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500) || null,
+    }]);
+
+    if (error) throw error;
+    return res.status(201).json({ success: true });
+  } catch (error) {
+    console.error('Erreur recordSearch:', error);
+    return res.status(500).json({ success: false, message: 'Impossible d’enregistrer la recherche.' });
+  }
+};
 
 exports.searchProducts = async (req, res) => {
   try {

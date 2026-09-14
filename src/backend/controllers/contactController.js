@@ -5,7 +5,7 @@ const ADMIN_EMAIL = 'princebammite@gmail.com';
 /**
  * POST /api/contact
  * body: { type, name, email, phone?, organization?, message, subject?, quantity?, city? }
- * type: 'WHOLESALER' | 'CLUB' | 'SCHOOL' | 'GENERAL'
+ * type: 'WHOLESALER' | 'CLUB' | 'SCHOOL' | 'EVENT' | 'GENERAL'
  */
 async function submitContact(req, res) {
   try {
@@ -15,13 +15,14 @@ async function submitContact(req, res) {
       return res.status(400).json({ success: false, message: 'Champs obligatoires manquants (nom, email, message).' });
     }
 
-    const validTypes = ['WHOLESALER', 'CLUB', 'SCHOOL', 'GENERAL'];
+    const validTypes = ['WHOLESALER', 'CLUB', 'SCHOOL', 'EVENT', 'GENERAL'];
     const resolvedType = validTypes.includes(type) ? type : 'GENERAL';
 
     const typeLabels = {
       WHOLESALER: 'Commande revendeur',
       CLUB:       'Partenariat club',
       SCHOOL:     'Lot scolaire / équipe',
+      EVENT:      'Événement / entreprise',
       GENERAL:    subject ? `Contact — ${subject}` : 'Message de contact',
     };
 

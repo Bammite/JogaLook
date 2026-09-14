@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import { SearchIcon } from '../components/icons/AppIcons';
+import { useSearchTracking } from '../utils/searchTracking';
 import './CatalogPage.css';
 
 function CatalogSkeleton() {
@@ -334,6 +335,14 @@ function CatalogPage() {
         (product.category || '').toLowerCase().includes(q)
     );
   }
+
+  useSearchTracking({
+    searchType: 'CATALOG',
+    query: searchQuery,
+    sourcePath: '/catalogue',
+    resultsCount: searchQuery.trim() ? filtered.length : null,
+    metadata: { category: activeCategory },
+  });
 
   return (
     <>

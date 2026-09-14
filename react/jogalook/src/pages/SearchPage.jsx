@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { useSearchTracking } from '../utils/searchTracking';
 import './SearchPage.css';
 
 function SearchIcon() {
@@ -29,6 +30,14 @@ export default function SearchPage() {
   const [error, setError] = useState('');
   const [showResults, setShowResults] = useState(Boolean(searchParams.get('q')));
   const query = searchParams.get('q')?.trim() || '';
+
+  useSearchTracking({
+    searchType: 'PRODUCT_GLOBAL',
+    query: input,
+    sourcePath: '/recherche',
+    resultsCount: query ? results.length : null,
+    metadata: { input_mode: 'onchange' },
+  });
 
   useEffect(() => {
     setInput(query);

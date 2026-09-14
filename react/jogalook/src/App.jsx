@@ -31,6 +31,7 @@ import MyOrdersPage from './pages/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import CategoryGroupPage from './pages/CategoryGroupPage';
+import PartnershipPage from './pages/PartnershipPage';
 import FloatingCart from './components/FloatingCart';
 import './App.css';
 
@@ -88,6 +89,7 @@ function AppShell() {
         <Route path="/"                  element={<CatalogPage />} />
         <Route path="/catalogue"         element={<CatalogPage />} />
         <Route path="/groupe/:slug"      element={<CategoryGroupPage />} />
+        <Route path="/partenariat"       element={<PartnershipPage />} />
         <Route path="/accueil"           element={<HomePage />} />
         <Route path="/home"              element={<Navigate to="/accueil" replace />} />
         <Route path="/recherche"         element={<SearchPage />} />

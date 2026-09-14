@@ -34,7 +34,7 @@ router.get('/', (req, res) => {
       logs:           'GET                  /api/logs/login | /api/logs/orders/:id | /api/logs/reservations',
       sportsNews:     'GET/POST/PUT/DELETE  /api/sports-news',
       keywords:       'GET/POST/DELETE       /api/keywords',
-      search:         'GET                   /api/search/products?q=...',
+      search:         'GET/POST              /api/search/products?q=... | /api/search/history',
     }
   });
 });
