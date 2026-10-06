@@ -1,6 +1,10 @@
 const { supabaseAdmin } = require('../supabaseClient');
 const shopController = require('./shopController');
 
+const USER_FIELDS = 'id, email, first_name, last_name, phone, role, status, avatar_url, created_at, updated_at';
+const USER_ROLES = ['CUSTOMER', 'SHOP_OWNER', 'DELIVERER', 'ADMIN', 'SUPER_ADMIN'];
+const USER_STATUSES = ['PENDING', 'ACTIVE', 'SUSPENDED', 'BLOCKED'];
+
 // ==============================================================================
 // UTILISATEURS - CONTROLLER CRUD
 // ==============================================================================
@@ -12,7 +16,7 @@ exports.getAllUsers = async (req, res) => {
 
     let query = supabaseAdmin
       .from('users')
-      .select('id, email, first_name, last_name, phone, role, status, avatar_url, created_at')
+      .select(USER_FIELDS)
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
@@ -36,7 +40,7 @@ exports.getUserById = async (req, res) => {
 
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('*, addresses (*)')
+      .select(`${USER_FIELDS}, addresses (*)`)
       .eq('id', id)
       .is('deleted_at', null)
       .single();
@@ -55,10 +59,26 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-
-    // Ne pas autoriser la mise à jour directe du mot de passe par cette route
-    delete updates.password_hash;
+    const allowedFields = ['email', 'first_name', 'last_name', 'phone', 'role', 'status', 'avatar_url'];
+    const updates = Object.fromEntries(Object.entries(req.body || {}).filter(([key]) => allowedFields.includes(key)));
+    if (!Object.keys(updates).length) {
+      return res.status(400).json({ success: false, message: 'Aucune information modifiable fournie.' });
+    }
+    if (updates.email !== undefined) {
+      updates.email = String(updates.email).trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.email)) {
+        return res.status(400).json({ success: false, message: 'Adresse email invalide.' });
+      }
+    }
+    for (const field of ['first_name', 'last_name', 'phone', 'avatar_url']) {
+      if (updates[field] !== undefined) updates[field] = String(updates[field]).trim() || null;
+    }
+    if (updates.role !== undefined && !USER_ROLES.includes(updates.role)) {
+      return res.status(400).json({ success: false, message: 'Rôle utilisateur invalide.' });
+    }
+    if (updates.status !== undefined && !USER_STATUSES.includes(updates.status)) {
+      return res.status(400).json({ success: false, message: 'Statut utilisateur invalide.' });
+    }
 
     const { data, error } = await supabaseAdmin
       .from('users')
@@ -67,7 +87,7 @@ exports.updateUser = async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
+      .select(USER_FIELDS)
       .single();
 
     if (error) throw error;
@@ -96,7 +116,7 @@ exports.deleteUser = async (req, res) => {
         status: 'BLOCKED'
       })
       .eq('id', id)
-      .select()
+      .select(USER_FIELDS)
       .single();
 
     if (error) throw error;
