@@ -8,6 +8,17 @@
 ALTER TABLE public.shops
     ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
 
+-- Identifiant compact et partageable pour les liens produits.
+ALTER TABLE public.products
+    ADD COLUMN IF NOT EXISTS short_code VARCHAR(12);
+
+UPDATE public.products
+SET short_code = SUBSTRING(REPLACE(id::TEXT, '-', ''), 1, 12)
+WHERE short_code IS NULL OR short_code = '';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_short_code_unique
+    ON public.products (short_code);
+
 -- Paiement confirmé mais encaissé à la réception de la commande.
 ALTER TYPE payment_status ADD VALUE IF NOT EXISTS 'ON_DELIVERY';
 

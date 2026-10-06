@@ -5,6 +5,7 @@ import logoImg from '../assets/Logo.png';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { SettingsIcon, LogOutIcon } from './icons/AppIcons';
+import { getStoreContext } from '../utils/storeContext';
 
 // Groupes par défaut en attendant ou en cas de secours
 const DEFAULT_GROUPS = [
@@ -31,7 +32,7 @@ function ChevronDown({ className = '' }) {
   );
 }
 
-function Navbar() {
+function Navbar({ storeSlug }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropOpen, setUserDropOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null); // slug du groupe ou 'all-categories'
@@ -42,6 +43,9 @@ function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isClassicCatalog = ['/', '/catalogue', '/accueil', '/home'].includes(location.pathname);
+  const activeStoreSlug = storeSlug !== undefined ? storeSlug : isClassicCatalog ? '' : getStoreContext();
+  const catalogHref = activeStoreSlug ? `/${activeStoreSlug}` : '/catalogue';
 
   const userDropRef = useRef(null);
   const navRef = useRef(null);
@@ -114,7 +118,7 @@ function Navbar() {
     <nav className="navbar" ref={navRef}>
       <div className="container navbar-inner">
         {/* ── Logo ── */}
-        <Link to="/" className="navbar-logo">
+        <Link to={activeStoreSlug ? `/${activeStoreSlug}` : '/'} className="navbar-logo">
           <img src={logoImg} alt="JogaLook" className="logo-img" />
         </Link>
 
@@ -123,7 +127,7 @@ function Navbar() {
           {/* 1. Catalogue direct */}
           <li className="navbar-item">
             <NavLink
-              to="/catalogue"
+              to={catalogHref}
               className={({ isActive }) => (isActive && !location.search ? 'active' : '')}
               onClick={() => setMenuOpen(false)}
             >
@@ -147,7 +151,7 @@ function Navbar() {
                 {/* Desktop trigger link */}
                 <div className="navbar-dropdown-trigger-wrapper">
                   <NavLink
-                    to={`/groupe/${group.slug}`}
+                    to={activeStoreSlug ? catalogHref : `/groupe/${group.slug}`}
                     className={`navbar-dropdown-trigger ${isOpen ? 'active' : ''}`}
                     onClick={(e) => {
                       // Sur mobile, ouvrir l'accordéon plutôt que naviguer immédiatement
@@ -175,7 +179,7 @@ function Navbar() {
                       group.categories.map((cat) => (
                         <Link
                           key={cat.id || cat.slug}
-                          to={`/catalogue?category=${encodeURIComponent(cat.name)}`}
+                          to={`${catalogHref}?category=${encodeURIComponent(cat.name)}`}
                           className="navbar-dropdown-menu__link"
                           onClick={() => {
                             setActiveDropdown(null);
@@ -194,7 +198,7 @@ function Navbar() {
 
                   <div className="navbar-dropdown-menu__footer">
                     <Link
-                      to={`/groupe/${group.slug}`}
+                      to={activeStoreSlug ? catalogHref : `/groupe/${group.slug}`}
                       className="navbar-dropdown-menu__see-all"
                       onClick={() => {
                         setActiveDropdown(null);
@@ -240,7 +244,7 @@ function Navbar() {
                 {groups.map((group) => (
                   <div key={group.id || group.slug} className="navbar-mega-column">
                     <Link
-                      to={`/groupe/${group.slug}`}
+                      to={activeStoreSlug ? catalogHref : `/groupe/${group.slug}`}
                       className="navbar-mega-column__title"
                       onClick={() => {
                         setActiveDropdown(null);
@@ -253,7 +257,7 @@ function Navbar() {
                       {(group.categories || []).slice(0, 6).map((cat) => (
                         <li key={cat.id || cat.slug}>
                           <Link
-                            to={`/catalogue?category=${encodeURIComponent(cat.name)}`}
+                            to={`${catalogHref}?category=${encodeURIComponent(cat.name)}`}
                             className="navbar-mega-column__link"
                             onClick={() => {
                               setActiveDropdown(null);
@@ -272,10 +276,10 @@ function Navbar() {
                 ))}
               </div>
 
-              {/* Pied du menu : redirection vers le catalogue global */}
+              {/* Pied du menu : catalogue de la boutique ou catalogue global */}
               <div className="navbar-mega-footer">
                 <Link
-                  to="/catalogue"
+                  to={catalogHref}
                   className="navbar-mega-footer__btn"
                   onClick={() => {
                     setActiveDropdown(null);
@@ -373,7 +377,7 @@ function Navbar() {
 
         {/* ── Actions droite (Recherche, Compte Desktop, Panier) ── */}
         <div className="navbar-actions">
-          <Link to="/recherche" className="icon-btn" aria-label="Rechercher">
+          <Link to={activeStoreSlug ? `/recherche?shop=${encodeURIComponent(activeStoreSlug)}` : '/recherche'} className="icon-btn" aria-label="Rechercher">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />

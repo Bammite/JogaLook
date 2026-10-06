@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useSearchTracking } from '../utils/searchTracking';
+import { getStoreContext } from '../utils/storeContext';
 import './SearchPage.css';
 
 function SearchIcon() {
@@ -11,7 +12,7 @@ function SearchIcon() {
 function ProductRow({ product }) {
   const image = product.image_url || product.image;
   return (
-    <Link to={`/catalogue/${product.id}`} className="search-row">
+    <Link to={`/p/${product.short_code || product.slug || product.id}`} className="search-row">
       <div className="search-row__image">{image && <img src={image} alt="" />}</div>
       <div className="search-row__body"><strong>{product.name}</strong><span>{product.categories?.name || 'Collection'}</span></div>
       <div className="search-row__match">{product.match_type === 'name' ? 'Nom du produit' : `Mot-clé : ${product.matched_keyword}`}</div>
@@ -30,6 +31,7 @@ export default function SearchPage() {
   const [error, setError] = useState('');
   const [showResults, setShowResults] = useState(Boolean(searchParams.get('q')));
   const query = searchParams.get('q')?.trim() || '';
+  const storeSlug = searchParams.get('shop') || getStoreContext();
 
   useSearchTracking({
     searchType: 'PRODUCT_GLOBAL',
@@ -49,7 +51,7 @@ export default function SearchPage() {
     const timer = setTimeout(async () => {
       setLoading(true); setError('');
       try {
-        const response = await fetch(`/api/search/products?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const response = await fetch(`/api/search/products?q=${encodeURIComponent(query)}${storeSlug ? `&shop=${encodeURIComponent(storeSlug)}` : ''}`, { signal: controller.signal });
         const json = await response.json();
         if (!response.ok || !json.success) throw new Error(json.message || 'Recherche impossible.');
         setResults(json.data || []); setSuggestions(json.suggestions || { products: [], keywords: [] });
@@ -58,17 +60,17 @@ export default function SearchPage() {
       } finally { setLoading(false); }
     }, 180);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [query]);
+  }, [query, storeSlug]);
 
   const changeInput = (event) => {
     const value = event.target.value;
-    setInput(value); setShowResults(false); setSearchParams(value.trim() ? { q: value } : {}, { replace: true });
+    setInput(value); setShowResults(false); setSearchParams({ ...(storeSlug ? { shop: storeSlug } : {}), ...(value.trim() ? { q: value } : {}) }, { replace: true });
   };
-  const chooseSuggestion = (value) => { setInput(value); setShowResults(true); setSearchParams({ q: value }); };
+  const chooseSuggestion = (value) => { setInput(value); setShowResults(true); setSearchParams({ ...(storeSlug ? { shop: storeSlug } : {}), q: value }); };
 
   return (
     <main className="search-page">
-      <Navbar />
+      <Navbar storeSlug={storeSlug} />
       <div className="search-page__inner">
         <div className="search-box"><SearchIcon /><input autoFocus value={input} onFocus={() => setShowResults(false)} onChange={changeInput} placeholder="Nom de produit ou mot-clé" aria-label="Rechercher un produit ou un mot-clé" />{input && <button type="button" onClick={() => changeInput({ target: { value: '' } })} aria-label="Effacer">×</button>}</div>
         {!showResults && query && (suggestions.products.length > 0 || suggestions.keywords.length > 0) && <section className="suggestions" aria-label="Suggestions"><div className="suggestions__row">{suggestions.products.map((product) => <button key={`p-${product.id}`} onClick={() => chooseSuggestion(product.name)}>{product.name}</button>)}{suggestions.keywords.map((keyword) => <button key={`k-${keyword.id}`} onClick={() => chooseSuggestion(keyword.word)}>{keyword.word}</button>)}</div></section>}

@@ -238,6 +238,17 @@ export default function MerchantSpace() {
     }
   };
 
+  const copyStorefrontLink = async () => {
+    if (!shop?.slug) return;
+    const url = `${window.location.origin}/${shop.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setNotice('Lien de la boutique copié.');
+    } catch {
+      setNotice(url);
+    }
+  };
+
   const saveProfile = async (event) => {
     event.preventDefault();
     setSavingProfile(true);
@@ -332,7 +343,9 @@ export default function MerchantSpace() {
             <section className="merchant-panel merchant-profile"><div className="merchant-panel__heading"><div><h2>Mon profil</h2><p>Informations de contact et boutique</p></div></div>
               <form onSubmit={saveProfile} className="merchant-form">
                 <div className="merchant-form__section"><h3>Votre compte</h3><div className="merchant-form__grid"><label>Prénom<input value={profileForm.first_name || ''} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} /></label><label>Nom<input value={profileForm.last_name || ''} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} /></label><label>Email<input value={user?.email || ''} disabled /></label><label>Téléphone<input value={profileForm.phone || ''} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} /></label></div></div>
-                <div className="merchant-form__section"><h3>Votre boutique</h3><div className="merchant-form__grid"><label className="merchant-form__full">Nom de la boutique<input required value={profileForm.shop_name || ''} onChange={(e) => setProfileForm({ ...profileForm, shop_name: e.target.value })} /></label><label className="merchant-form__full">Description<textarea rows="4" value={profileForm.description || ''} onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })} /></label><label className="merchant-form__full">Lien du logo<input type="url" value={profileForm.logo_url || ''} onChange={(e) => setProfileForm({ ...profileForm, logo_url: e.target.value })} placeholder="https://…" /></label></div></div>
+                <div className="merchant-form__section"><h3>Votre boutique</h3><div className="merchant-form__grid"><label className="merchant-form__full">Nom de la boutique<input required value={profileForm.shop_name || ''} onChange={(e) => setProfileForm({ ...profileForm, shop_name: e.target.value })} /></label><label className="merchant-form__full">Description<textarea rows="4" value={profileForm.description || ''} onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })} /></label><label className="merchant-form__full">Lien du logo<input type="url" value={profileForm.logo_url || ''} onChange={(e) => setProfileForm({ ...profileForm, logo_url: e.target.value })} placeholder="https://…" /></label></div>
+                  <div className="merchant-storefront-share"><span>{shop?.slug ? `${window.location.origin}/${shop.slug}` : 'Lien indisponible'}</span><button type="button" className="merchant-button merchant-button--ghost" onClick={copyStorefrontLink} disabled={!shop?.slug}>Copier le lien de ma boutique</button></div>
+                </div>
                 <button type="submit" className="merchant-button" disabled={savingProfile}>{savingProfile ? 'Enregistrement…' : 'Enregistrer'}</button>
               </form>
             </section>

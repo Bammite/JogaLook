@@ -145,8 +145,8 @@ function ProductFeedbackModal({ mode, product, onClose }) {
   );
 }
 
-export default function ProductDetailPage() {
-  const { id } = useParams();
+export default function ProductDetailPage({ standalone = false }) {
+  const { id, shopSlug } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
@@ -170,6 +170,14 @@ export default function ProductDetailPage() {
       setLoading(true);
       setNotFound(false);
       try {
+        let expectedShopId;
+        if (standalone) {
+          const shopResponse = await fetch(`/api/shops/${encodeURIComponent(shopSlug || '')}`);
+          const shopJson = await shopResponse.json();
+          if (!shopResponse.ok || !shopJson.success || !shopJson.data || shopJson.data.is_active === false) throw new Error('shop not found');
+          expectedShopId = shopJson.data.id;
+        }
+        let loadedProduct;
         const res = await fetch(`/api/products/${id}`);
         if (!res.ok) {
           // Try with slug fallback
@@ -178,12 +186,14 @@ export default function ProductDetailPage() {
           const json2 = await res2.json();
           const p = json2.data?.[0];
           if (!p) throw new Error('not found');
-          setProduct(p);
+          loadedProduct = p;
         } else {
           const json = await res.json();
           if (!json.success || !json.data) throw new Error('not found');
-          setProduct(json.data);
+          loadedProduct = json.data;
         }
+        if (standalone && loadedProduct.shop_id !== expectedShopId) throw new Error('product not found in shop');
+        setProduct(loadedProduct);
       } catch {
         setProduct(null);
         setNotFound(true);
@@ -192,7 +202,7 @@ export default function ProductDetailPage() {
       }
     }
     load();
-  }, [id]);
+  }, [id, shopSlug, standalone]);
 
   // Derive unique colors and sizes from variants
   const variants = (product?.product_variants ?? []).filter(v => !v.deleted_at);
@@ -292,40 +302,41 @@ export default function ProductDetailPage() {
 
   if (loading) return (
     <>
-      <Navbar />
+      {!standalone && <Navbar />}
       <div className="pdp-loading">
         <div className="pdp-spinner" />
         <p>Chargement du produit…</p>
       </div>
-      <Footer />
+      {!standalone && <Footer />}
     </>
   );
 
   if (notFound) return (
     <>
-      <Navbar />
+      {!standalone && <Navbar />}
       <div className="pdp-not-found">
         <AlertCircleIcon size={48} color="#94A3B8" />
         <h2>Produit introuvable</h2>
         <p>Ce produit n&apos;existe pas ou a été supprimé.</p>
-        <Link to="/catalogue" className="pdp-back-btn">← Retour au catalogue</Link>
+        {!standalone && <Link to="/catalogue" className="pdp-back-btn">← Retour au catalogue</Link>}
       </div>
-      <Footer />
+      {!standalone && <Footer />}
     </>
   );
 
   return (
     <>
-      <Navbar />
+      {!standalone && <Navbar />}
       <main className="pdp-root">
+        {standalone && <header className="merchant-storefront-header merchant-storefront-header--pdp">{product?.shops?.logo_url && <img src={product.shops.logo_url} alt="" />}<div><h1>{product?.shops?.name}</h1></div></header>}
         {/* Breadcrumb */}
-        <nav className="pdp-breadcrumb" aria-label="Fil d'Ariane">
+        {!standalone && <nav className="pdp-breadcrumb" aria-label="Fil d'Ariane">
           <Link to="/">Accueil</Link>
           <span>›</span>
           <Link to="/catalogue">Catalogue</Link>
           <span>›</span>
           <span>{product?.name}</span>
-        </nav>
+        </nav>}
 
         <div className="pdp-layout">
           {/* ─── GALLERY ─── */}
@@ -547,7 +558,7 @@ export default function ProductDetailPage() {
           </section>
         </div>
       </main>
-      <Footer />
+      {!standalone && <Footer />}
       <CheckoutModal
         open={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}

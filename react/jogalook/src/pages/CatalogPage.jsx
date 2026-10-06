@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
@@ -30,6 +30,9 @@ function mapProduct(product) {
 
   return {
     id: product.id,
+    slug: product.slug,
+    short_code: product.short_code,
+    shop_id: product.shop_id,
     name: product.name,
     team: categoryName,
     price: Number(product.base_price ?? 0),
@@ -48,9 +51,10 @@ function mergeProducts(currentProducts, newProducts) {
   return [...currentProducts, ...newProducts.filter((product) => !ids.has(product.id))];
 }
 
-async function fetchProductsPage(limit, offset, { signal, categoryId } = {}) {
+async function fetchProductsPage(limit, offset, { signal, categoryId, shopId } = {}) {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (categoryId) params.set('category_id', categoryId);
+  if (shopId) params.set('shop_id', shopId);
 
   const response = await fetch(`/api/products?${params}`, { signal });
   if (!response.ok) throw new Error('Impossible de charger les produits');
@@ -66,7 +70,8 @@ async function fetchProductsPage(limit, offset, { signal, categoryId } = {}) {
   };
 }
 
-function CatalogPage() {
+function CatalogPage({ standalone = false }) {
+  const { shopSlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
 
@@ -75,6 +80,8 @@ function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'Tous');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [store, setStore] = useState(null);
+  const [storeNotFound, setStoreNotFound] = useState(false);
   const [categoryInitialLoading, setCategoryInitialLoading] = useState(false);
   const [allPage, setAllPage] = useState({ nextOffset: 0, hasMore: false });
   const [categoryPages, setCategoryPages] = useState({});
@@ -123,8 +130,22 @@ function CatalogPage() {
       setAllPage({ nextOffset: 0, hasMore: false });
       categoryPagesRef.current = {};
       setCategoryPages({});
+      setStore(null);
+      setStoreNotFound(false);
 
       try {
+        let currentShopId;
+        if (standalone) {
+          const shopResponse = await fetch(`/api/shops/${encodeURIComponent(shopSlug || '')}`, { signal: controller.signal });
+          const shopJson = await shopResponse.json();
+          if (!shopResponse.ok || !shopJson.success || !shopJson.data || shopJson.data.is_active === false) {
+            if (!cancelled) { setStoreNotFound(true); setLoading(false); }
+            return;
+          }
+          if (cancelled) return;
+          setStore(shopJson.data);
+          currentShopId = shopJson.data.id;
+        }
         // Les catégories ne doivent pas retarder l'affichage des 8 premiers produits.
         void fetch('/api/categories', { signal: controller.signal })
           .then((response) => response.ok ? response.json() : Promise.reject())
@@ -140,7 +161,7 @@ function CatalogPage() {
           });
 
         // 1. Priorité au premier écran : seulement 8 produits.
-        const firstPage = await fetchProductsPage(8, 0, { signal: controller.signal });
+        const firstPage = await fetchProductsPage(8, 0, { signal: controller.signal, shopId: currentShopId });
         if (cancelled) return;
 
         setProducts(firstPage.products);
@@ -153,7 +174,7 @@ function CatalogPage() {
           setLoadingBackgroundScopes((scopes) => ({ ...scopes, all: true }));
           backgroundTimer = window.setTimeout(async () => {
             try {
-              const secondPage = await fetchProductsPage(32, firstPage.nextOffset, { signal: controller.signal });
+              const secondPage = await fetchProductsPage(32, firstPage.nextOffset, { signal: controller.signal, shopId: currentShopId });
               if (cancelled) return;
 
               setProducts((currentProducts) => {
@@ -190,7 +211,7 @@ function CatalogPage() {
       window.clearTimeout(backgroundTimer);
       controller.abort();
     };
-  }, []);
+  }, [shopSlug, standalone]);
 
   const selectedCategory = categories.find((category) => category.name === activeCategory);
   const activeScope = activeCategory === 'Tous' ? 'all' : selectedCategory?.id;
@@ -225,7 +246,7 @@ function CatalogPage() {
       try {
         if (hasCachedProducts) {
           // Premier passage : compléter le cache de la catégorie avec 30 produits.
-          const page = await fetchProductsPage(30, 0, { signal: controller.signal, categoryId: category.id });
+          const page = await fetchProductsPage(30, 0, { signal: controller.signal, categoryId: category.id, shopId: store?.id });
           if (cancelled) return;
 
           setProducts((currentProducts) => {
@@ -238,7 +259,7 @@ function CatalogPage() {
         }
 
         // Aucune donnée de cette catégorie n'est encore en mémoire : 8, puis 32 en arrière-plan.
-        const firstPage = await fetchProductsPage(8, 0, { signal: controller.signal, categoryId: category.id });
+        const firstPage = await fetchProductsPage(8, 0, { signal: controller.signal, categoryId: category.id, shopId: store?.id });
         if (cancelled) return;
 
         setProducts((currentProducts) => {
@@ -253,7 +274,7 @@ function CatalogPage() {
           setLoadingBackgroundScopes((scopes) => ({ ...scopes, [requestKey]: true }));
           backgroundTimer = window.setTimeout(async () => {
             try {
-              const secondPage = await fetchProductsPage(32, firstPage.nextOffset, { signal: controller.signal, categoryId: category.id });
+              const secondPage = await fetchProductsPage(32, firstPage.nextOffset, { signal: controller.signal, categoryId: category.id, shopId: store?.id });
               if (cancelled) return;
 
               setProducts((currentProducts) => {
@@ -290,7 +311,7 @@ function CatalogPage() {
       window.clearTimeout(backgroundTimer);
       controller.abort();
     };
-  }, [activeCategory, categories, loading]);
+  }, [activeCategory, categories, loading, store?.id]);
 
   const loadMoreProducts = async () => {
     if (!activeScope || loadingMore || loadingBackground || !activePage?.hasMore) return;
@@ -300,6 +321,7 @@ function CatalogPage() {
       // 3. Chaque clic charge 40 produits supplémentaires.
       const page = await fetchProductsPage(40, activePage.nextOffset, {
         categoryId: activeCategory === 'Tous' ? undefined : selectedCategory.id,
+        shopId: store?.id,
       });
       if (!isMounted.current) return;
 
@@ -346,9 +368,14 @@ function CatalogPage() {
 
   return (
     <>
-      <Navbar />
+      <Navbar storeSlug={standalone ? shopSlug : ''} />
       <section className="catalog-page">
         <div className="container">
+          {standalone && <header className="merchant-storefront-header">
+            {store?.logo_url && <img src={store.logo_url} alt="" />}
+            <div><h1>{store?.name || (storeNotFound ? 'Boutique introuvable' : 'Boutique')}</h1>{store?.description && <p>{store.description}</p>}</div>
+          </header>}
+          {storeNotFound ? <div className="catalog-empty"><h3>Boutique introuvable ou inactive</h3></div> : <>
           <div className="catalog-toolbar">
             <div className="search-box">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -423,6 +450,7 @@ function CatalogPage() {
               </button>
             </div>
           )}
+          </>}
         </div>
       </section>
       <Footer />

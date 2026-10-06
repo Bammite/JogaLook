@@ -58,8 +58,18 @@ exports.getAllShops = async (req, res) => {
 exports.getShopById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { data, error } = await supabaseAdmin.from('shops').select('*, products (*)').or(`id.eq.${id},slug.eq.${id}`).is('deleted_at', null).single();
-    if (error || !data) return res.status(404).json({ success: false, message: 'Boutique non trouvée' });
+    const { data: bySlug, error: slugError } = await supabaseAdmin
+      .from('shops').select('*').eq('slug', id).is('deleted_at', null).maybeSingle();
+    if (slugError) throw slugError;
+
+    let data = bySlug;
+    if (!data) {
+      const { data: byId, error: idError } = await supabaseAdmin
+        .from('shops').select('*').eq('id', id).is('deleted_at', null).maybeSingle();
+      if (idError && idError.code !== '22P02') throw idError;
+      data = byId;
+    }
+    if (!data) return res.status(404).json({ success: false, message: 'Boutique non trouvée' });
     return res.json({ success: true, data });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

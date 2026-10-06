@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require('../supabaseClient');
+const { randomBytes } = require('crypto');
 
 // ==============================================================================
 // PRODUITS & VARIANTES - CONTROLLER CRUD
@@ -169,7 +170,7 @@ exports.getProductById = async (req, res) => {
         product_variants ( id, sku, size, color_name, color_hex, stock_quantity, price_override ),
         product_images ( id, url, alt_text, position, is_primary )
       `)
-      .or(`id.eq.${id},slug.eq.${id}`)
+      .or(`id.eq.${id},slug.eq.${id},short_code.eq.${id}`)
       .is('deleted_at', null)
       .single();
 
@@ -182,7 +183,7 @@ exports.getProductById = async (req, res) => {
       const singleRes = await supabaseAdmin
         .from('products')
         .select('*')
-        .or(`id.eq.${id},slug.eq.${id}`)
+        .or(`id.eq.${id},slug.eq.${id},short_code.eq.${id}`)
         .is('deleted_at', null)
         .maybeSingle();
 
@@ -282,6 +283,7 @@ exports.createProduct = async (req, res) => {
     const productPayload = {
       name: name.trim(),
       slug: normalizedSlug,
+      short_code: randomBytes(6).toString('hex'),
       description: description || null,
       base_price: Number(base_price),
       image_url: primaryImageUrl,

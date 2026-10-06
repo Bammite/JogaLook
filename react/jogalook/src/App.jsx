@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
@@ -34,6 +35,7 @@ import CategoryGroupPage from './pages/CategoryGroupPage';
 import PartnershipPage from './pages/PartnershipPage';
 import MerchantSpace from './pages/merchant/MerchantSpace';
 import FloatingCart from './components/FloatingCart';
+import { clearStoreContext, getStoreContext, setStoreContext } from './utils/storeContext';
 import './App.css';
 
 // ── Garde : redirige vers /admin/login (si admin) ou /login (si client) ──────
@@ -85,7 +87,28 @@ function GuestOnly({ children }) {
 
 function AppShell() {
   const location = useLocation();
-  const showFloatingCart = ['/', '/catalogue', '/accueil'].includes(location.pathname) || location.pathname.startsWith('/groupe');
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const reservedFirstSegments = new Set(['admin', 'boutiquier', 'catalogue', 'groupe', 'partenariat', 'accueil', 'home', 'recherche', 'p', 'custom', 'actualites', 'actus', 'contact', 'panier', 'cart', 'mes-commandes', 'profil', 'profile', 'login', 'register', 'auth', 'boutique']);
+  const storefrontSlug = pathSegments.length === 1 && !reservedFirstSegments.has(pathSegments[0]) ? pathSegments[0] : '';
+  const searchStoreSlug = location.pathname === '/recherche' ? new URLSearchParams(location.search).get('shop') : '';
+  const nestedStoreSlug = pathSegments[0] === 'boutique' && pathSegments.length === 4 ? pathSegments[1] : '';
+  const classicCatalogPath = ['/', '/catalogue', '/accueil', '/home'].includes(location.pathname);
+
+  useEffect(() => {
+    if (storefrontSlug) setStoreContext(storefrontSlug);
+    else if (nestedStoreSlug) setStoreContext(nestedStoreSlug);
+    else if (searchStoreSlug) setStoreContext(searchStoreSlug);
+    else if (classicCatalogPath) clearStoreContext();
+  }, [storefrontSlug, nestedStoreSlug, searchStoreSlug, classicCatalogPath]);
+
+  const hasStoreContext = Boolean(storefrontSlug || nestedStoreSlug || searchStoreSlug || getStoreContext());
+  const storeProductPage = hasStoreContext && ((pathSegments[0] === 'p' || pathSegments[0] === 'catalogue') && pathSegments.length === 2 || nestedStoreSlug);
+  const storeSearchPage = hasStoreContext && pathSegments[0] === 'recherche';
+  const showFloatingCart = ['/', '/catalogue', '/accueil'].includes(location.pathname)
+    || location.pathname.startsWith('/groupe')
+    || Boolean(storefrontSlug)
+    || storeProductPage
+    || storeSearchPage;
 
   return (
     <>
@@ -99,6 +122,9 @@ function AppShell() {
         <Route path="/home"              element={<Navigate to="/accueil" replace />} />
         <Route path="/recherche"         element={<SearchPage />} />
         <Route path="/catalogue/:id"     element={<ProductDetailPage />} />
+        <Route path="/p/:id"            element={<ProductDetailPage />} />
+        <Route path="/boutique/:shopSlug/produit/:id" element={<ProductDetailPage />} />
+        <Route path="/:shopSlug"         element={<CatalogPage standalone />} />
         <Route path="/custom"            element={<CustomPage />} />
         <Route path="/custom/:id"        element={<CustomEditorPage />} />
         <Route path="/actualites"        element={<NewsPage />} />

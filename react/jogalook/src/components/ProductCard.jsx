@@ -4,7 +4,7 @@ import './ProductCard.css';
 import { useCart } from '../context/CartContext';
 import SizePickerModal from './SizePickerModal';
 
-function ProductCard({ product }) {
+function ProductCard({ product, detailBase }) {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const name = product?.name || 'Produit';
@@ -13,7 +13,8 @@ function ProductCard({ product }) {
   const oldPrice = product?.oldPrice ? Number(product.oldPrice) : null;
   const image = product?.image || product?.image_url || 'https://images.unsplash.com/photo-1580087256394-dc596e5e8c3f?w=400&h=500&fit=crop';
   const badge = product?.badge || (product?.is_customizable ? { type: 'new', text: 'Personnalisable' } : null);
-  const detailUrl = product?.id ? `/catalogue/${product.id}` : '/catalogue';
+  const productReference = product?.short_code || product?.slug || product?.id;
+  const detailUrl = productReference ? `${detailBase ? `${detailBase}/` : '/p/'}${productReference}` : '/catalogue';
   const customizeRoute = product?.template_id ? `/custom/${product.template_id}` : product?.id ? `/custom/${product.id}` : '/custom';
 
   // Variantes du produit

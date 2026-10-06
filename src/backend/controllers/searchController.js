@@ -63,16 +63,33 @@ exports.recordSearch = async (req, res) => {
 exports.searchProducts = async (req, res) => {
   try {
     const query = String(req.query.q || '').trim();
+    const shopSlug = String(req.query.shop || '').trim();
     if (!query) return res.json({ success: true, query: '', count: 0, suggestions: { products: [], keywords: [] }, data: [] });
 
+    let shopId = null;
+    if (shopSlug) {
+      let { data: shop, error: shopError } = await supabaseAdmin
+        .from('shops').select('id').eq('slug', shopSlug).eq('is_active', true).is('deleted_at', null).maybeSingle();
+      if (shopError?.code === '42703' && shopError.message?.includes('is_active')) {
+        const fallback = await supabaseAdmin.from('shops').select('id').eq('slug', shopSlug).is('deleted_at', null).maybeSingle();
+        shop = fallback.data;
+        shopError = fallback.error;
+      }
+      if (shopError) throw shopError;
+      if (!shop) return res.json({ success: true, query, count: 0, suggestions: { products: [], keywords: [] }, data: [] });
+      shopId = shop.id;
+    }
+
     const pattern = `%${query}%`;
+    let namesQuery = supabaseAdmin
+      .from('products')
+      .select('*, categories(id, name, slug), product_variants(id, color_name, color_hex)')
+      .ilike('name', pattern)
+      .is('deleted_at', null)
+      .eq('is_active', true);
+    if (shopId) namesQuery = namesQuery.eq('shop_id', shopId);
     const [nameResult, keywordResult] = await Promise.all([
-      supabaseAdmin
-        .from('products')
-        .select('*, categories(id, name, slug), product_variants(id, color_name, color_hex)')
-        .ilike('name', pattern)
-        .is('deleted_at', null)
-        .eq('is_active', true),
+      namesQuery,
       supabaseAdmin
         .from('keywords')
         .select('id, word, lang')
@@ -109,7 +126,7 @@ exports.searchProducts = async (req, res) => {
 
       if (error) throw error;
       const keywordMatches = (data || [])
-        .filter((relation) => relation.products && !relation.products.deleted_at && relation.products.is_active !== false && !nameIds.has(relation.products.id))
+        .filter((relation) => relation.products && !relation.products.deleted_at && relation.products.is_active !== false && (!shopId || relation.products.shop_id === shopId) && !nameIds.has(relation.products.id))
         .map((relation) => ({
           ...relation.products,
           match_type: 'keyword',
