@@ -32,11 +32,12 @@ import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import CategoryGroupPage from './pages/CategoryGroupPage';
 import PartnershipPage from './pages/PartnershipPage';
+import MerchantSpace from './pages/merchant/MerchantSpace';
 import FloatingCart from './components/FloatingCart';
 import './App.css';
 
 // ── Garde : redirige vers /admin/login (si admin) ou /login (si client) ──────
-function RequireAuth({ children, adminOnly = false }) {
+function RequireAuth({ children, adminOnly = false, merchantOnly = false }) {
   const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
 
@@ -61,6 +62,10 @@ function RequireAuth({ children, adminOnly = false }) {
 
   if (adminOnly && !isAdmin) {
     return <Navigate to="/admin/login" state={{ error: "Accès refusé : Ce compte ne dispose pas des privilèges administrateur." }} replace />;
+  }
+
+  if (merchantOnly && user.role !== 'SHOP_OWNER') {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -105,6 +110,7 @@ function AppShell() {
         <Route path="/mes-commandes"     element={<RequireAuth><MyOrdersPage /></RequireAuth>} />
         <Route path="/profil"            element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/profile"           element={<Navigate to="/profil" replace />} />
+        <Route path="/boutiquier" element={<RequireAuth merchantOnly><MerchantSpace /></RequireAuth>} />
 
         {/* ── Auth Client ── */}
         <Route path="/login"         element={<GuestOnly><LoginPage /></GuestOnly>} />

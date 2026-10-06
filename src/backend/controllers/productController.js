@@ -27,6 +27,7 @@ const sortProductsWithOrder = (products) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { category_id, shop_id, limit = 50, offset = 0 } = req.query;
+    const shopFilter = req.merchant?.shop?.id || shop_id;
     // Une ligne supplémentaire permet au client de savoir s'il reste une page,
     // sans lancer une coûteuse requête COUNT sur Supabase.
     const pageSize = Math.min(Math.max(Number.parseInt(limit, 10) || 50, 1), 500);
@@ -49,7 +50,7 @@ exports.getAllProducts = async (req, res) => {
       .range(pageOffset, pageEnd);
 
     if (category_id) query = query.eq('category_id', category_id);
-    if (shop_id) query = query.eq('shop_id', shop_id);
+    if (shopFilter) query = query.eq('shop_id', shopFilter);
 
     let { data, error } = await query;
 
@@ -70,7 +71,7 @@ exports.getAllProducts = async (req, res) => {
         .range(pageOffset, pageEnd);
 
       if (category_id) retryQuery = retryQuery.eq('category_id', category_id);
-      if (shop_id) retryQuery = retryQuery.eq('shop_id', shop_id);
+      if (shopFilter) retryQuery = retryQuery.eq('shop_id', shopFilter);
 
       const retryRes = await retryQuery;
       data = retryRes.data;
@@ -90,7 +91,7 @@ exports.getAllProducts = async (req, res) => {
         .range(pageOffset, pageEnd);
 
       if (category_id) fallbackQuery = fallbackQuery.eq('category_id', category_id);
-      if (shop_id) fallbackQuery = fallbackQuery.eq('shop_id', shop_id);
+      if (shopFilter) fallbackQuery = fallbackQuery.eq('shop_id', shopFilter);
 
       const fallbackRes = await fallbackQuery;
       if (fallbackRes.error) throw fallbackRes.error;

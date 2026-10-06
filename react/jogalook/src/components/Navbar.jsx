@@ -330,6 +330,11 @@ function Navbar() {
                       <SettingsIcon size={15} /> Administration
                     </Link>
                   )}
+                  {user.role === 'SHOP_OWNER' && (
+                    <Link to="/boutiquier" className="navbar-dropdown__item" onClick={() => setUserDropOpen(false)}>
+                      🏪 Espace boutique
+                    </Link>
+                  )}
                   <Link to="/mes-commandes" className="navbar-dropdown-menu__link" onClick={() => { setMobileExpandedGroup(null); setMenuOpen(false); }}>
                     📦 Mes commandes
                   </Link>
@@ -397,6 +402,11 @@ function Navbar() {
                   {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
                     <Link to="/admin" className="navbar-dropdown__item" onClick={() => setUserDropOpen(false)}>
                       <SettingsIcon size={16} /> Administration
+                    </Link>
+                  )}
+                  {user.role === 'SHOP_OWNER' && (
+                    <Link to="/boutiquier" className="navbar-dropdown-menu__link" onClick={() => { setMobileExpandedGroup(null); setMenuOpen(false); }}>
+                      🏪 Espace boutique
                     </Link>
                   )}
                   <Link to="/mes-commandes" className="navbar-dropdown__item" onClick={() => setUserDropOpen(false)}>

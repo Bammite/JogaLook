@@ -1,7 +1,7 @@
 .env
 .env.example
 /node_modules
-*.sql
+# *.sql
 api.txt
 /ImageProduit/*
 *.bak

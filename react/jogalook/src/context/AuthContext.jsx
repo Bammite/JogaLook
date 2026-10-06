@@ -143,6 +143,14 @@ export function AuthProvider({ children }) {
     persist(null, null);
   }, []);
 
+  const updateCurrentUser = useCallback((updates) => {
+    setUser((currentUser) => {
+      const nextUser = { ...currentUser, ...updates };
+      persist(token, nextUser);
+      return nextUser;
+    });
+  }, [token]);
+
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
   return (
@@ -159,6 +167,7 @@ export function AuthProvider({ children }) {
       loginWithGoogle,
       handleGoogleCallback,
       logout,
+      updateCurrentUser,
     }}>
       {children}
     </AuthContext.Provider>

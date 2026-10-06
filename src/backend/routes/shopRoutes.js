@@ -3,6 +3,7 @@ const router = express.Router();
 const shopController = require('../controllers/shopController');
 
 router.get('/', shopController.getAllShops);
+router.post('/generate-for-owner/:ownerId', shopController.generateShopForOwner);
 router.get('/:id', shopController.getShopById);
 router.post('/', shopController.createShop);
 router.put('/:id', shopController.updateShop);

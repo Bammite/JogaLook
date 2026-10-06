@@ -91,5 +91,6 @@ router.use('/upload',        require('./routes/upload'));
 // ==============================================================================
 router.use('/contact',       require('./routes/contactRoutes'));
 router.use('/product-feedback', require('./routes/productFeedbackRoutes'));
+router.use('/merchant',      require('./routes/merchantRoutes'));
 
 module.exports = router;

@@ -58,37 +58,168 @@ export function AdminShops() {
     { id:'2', name:'SportElite Abidjan', contact_email:'abidjan@sportelite.ci', is_active:true, created_at: new Date().toISOString() },
   ];
   const { items, loading, load, remove } = useCrud('/api/shops', MOCK);
+  const [owners, setOwners] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name:'', contact_email:'', description:'', is_active:true });
+  const [editingShop, setEditingShop] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [form, setForm] = useState({ name:'', owner_id:'', contact_email:'', description:'', is_active:true });
   const [saving, setSaving] = useState(false);
+  const [savingOwner, setSavingOwner] = useState(null);
+  const [generatingOwner, setGeneratingOwner] = useState(false);
+  const [ownerToGenerate, setOwnerToGenerate] = useState('');
   const filtered = items.filter(s => s.name?.toLowerCase().includes(search.toLowerCase()));
+  const ownersWithoutShop = owners.filter(owner => !items.some(shop => shop.owner_id === owner.id));
+
+  useEffect(() => {
+    fetch('/api/users?role=SHOP_OWNER&status=ACTIVE')
+      .then(res => res.json())
+      .then(json => setOwners(json.data || []))
+      .catch(() => setOwners([]));
+  }, []);
 
   const save = async (e) => {
     e.preventDefault(); setSaving(true);
-    try { await fetch('/api/shops', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) }); await load(); setShowForm(false); }
-    catch {} finally { setSaving(false); }
+    try {
+      const res = await fetch('/api/shops', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Impossible de créer cette boutique.');
+      await load(); setShowForm(false);
+    }
+    catch (error) { window.alert(error.message); } finally { setSaving(false); }
+  };
+
+  const assignOwner = async (shopId, owner_id) => {
+    if (!owner_id) return;
+    setSavingOwner(shopId);
+    try {
+      const res = await fetch(`/api/shops/${shopId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ owner_id }) });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Impossible de lier ce propriétaire.');
+      await load();
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setSavingOwner(null);
+    }
+  };
+
+  const generateShop = async () => {
+    if (!ownerToGenerate) return;
+    setGeneratingOwner(true);
+    try {
+      const res = await fetch(`/api/shops/generate-for-owner/${ownerToGenerate}`, { method:'POST' });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Impossible de générer la boutique.');
+      await load();
+      setOwnerToGenerate('');
+    } catch (error) { window.alert(error.message); }
+    finally { setGeneratingOwner(false); }
+  };
+
+  const openEdit = (shop) => {
+    setEditingShop(shop);
+    setEditForm({
+      owner_id: shop.owner_id || '', name: shop.name || '', slug: shop.slug || '',
+      description: shop.description || '', logo_url: shop.logo_url || '', banner_url: shop.banner_url || '',
+      is_verified: Boolean(shop.is_verified), is_active: shop.is_active !== false,
+    });
+  };
+
+  const saveEdit = async (event) => {
+    event.preventDefault();
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/shops/${editingShop.id}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(editForm),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Impossible de modifier cette boutique.');
+      await load(); setEditingShop(null);
+    } catch (error) { window.alert(error.message); }
+    finally { setSavingEdit(false); }
   };
 
   return (
     <PageWrapper title="Boutiques" icon={<ShopIcon />} subtitle={`${items.length} boutique(s)`} onAdd={() => setShowForm(true)}>
+      <div className="admin-card" style={{padding:'16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap'}}>
+        <strong>Générer une boutique pour un boutiquier</strong>
+        <select className="admin-select" aria-label="Compte boutiquier sans boutique" value={ownerToGenerate} onChange={e => setOwnerToGenerate(e.target.value)}>
+          <option value="">Choisir un compte sans boutique</option>
+          {ownersWithoutShop.map(owner => <option key={owner.id} value={owner.id}>{[owner.first_name, owner.last_name].filter(Boolean).join(' ') || owner.email} — {owner.email}</option>)}
+        </select>
+        <button className="admin-btn admin-btn--primary" type="button" disabled={!ownerToGenerate || generatingOwner} onClick={generateShop}>
+          {generatingOwner ? 'Génération…' : 'Générer et lier'}
+        </button>
+        {!ownersWithoutShop.length && <small>Tous les comptes boutiquiers actifs ont déjà une boutique.</small>}
+      </div>
       {showForm && (
         <InlineForm title="Nouvelle boutique" onClose={() => setShowForm(false)} onSubmit={save} saving={saving}>
           <Field label="Nom *" type="text" value={form.name} onChange={v => setForm({...form,name:v})} required />
+          <div className="admin-form-group">
+            <label className="admin-form-label">Compte boutiquier *</label>
+            <select className="admin-form-input" value={form.owner_id} required onChange={e => setForm({...form,owner_id:e.target.value})}>
+              <option value="">Choisir un compte actif</option>
+              {owners.map(owner => <option key={owner.id} value={owner.id}>{[owner.first_name, owner.last_name].filter(Boolean).join(' ') || owner.email} — {owner.email}</option>)}
+            </select>
+            {!owners.length && <small>Aucun compte SHOP_OWNER actif. Attribuez ce rôle à un utilisateur avant de créer la boutique.</small>}
+          </div>
           <Field label="Email de contact" type="email" value={form.contact_email} onChange={v => setForm({...form,contact_email:v})} />
           <Field label="Description" textarea value={form.description} onChange={v => setForm({...form,description:v})} full />
         </InlineForm>
       )}
+      {editingShop && (
+        <AdminModal open onClose={() => setEditingShop(null)} title={`Modifier — ${editingShop.name}`} size="lg" loading={savingEdit}>
+          <form onSubmit={saveEdit} className="admin-form-grid">
+            <div className="admin-form-group">
+              <label className="admin-form-label">Propriétaire *</label>
+              <select className="admin-form-input" value={editForm.owner_id} required onChange={e => setEditForm({...editForm,owner_id:e.target.value})}>
+                <option value="">Choisir un boutiquier</option>
+                {owners.map(owner => <option key={owner.id} value={owner.id}>{[owner.first_name, owner.last_name].filter(Boolean).join(' ') || owner.email} — {owner.email}</option>)}
+              </select>
+            </div>
+            <Field label="Nom *" value={editForm.name} required onChange={v => setEditForm({...editForm,name:v})} />
+            <Field label="Identifiant URL (slug) *" value={editForm.slug} required onChange={v => setEditForm({...editForm,slug:v})} />
+            <Field label="URL du logo" value={editForm.logo_url} onChange={v => setEditForm({...editForm,logo_url:v})} />
+            <Field label="URL de la bannière" value={editForm.banner_url} onChange={v => setEditForm({...editForm,banner_url:v})} />
+            <Field label="Description" textarea full value={editForm.description} onChange={v => setEditForm({...editForm,description:v})} />
+            <div className="admin-form-group">
+              <label className="admin-form-label">Statut</label>
+              <select className="admin-form-input" value={editForm.is_active ? 'ACTIVE' : 'INACTIVE'} onChange={e => setEditForm({...editForm,is_active:e.target.value === 'ACTIVE'})}>
+                <option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option>
+              </select>
+            </div>
+            <div className="admin-form-group">
+              <label className="admin-form-label">Vérification</label>
+              <select className="admin-form-input" value={editForm.is_verified ? 'VERIFIED' : 'UNVERIFIED'} onChange={e => setEditForm({...editForm,is_verified:e.target.value === 'VERIFIED'})}>
+                <option value="UNVERIFIED">Non vérifiée</option><option value="VERIFIED">Vérifiée</option>
+              </select>
+            </div>
+            <div className="admin-form-group admin-form-group--full" style={{display:'flex',justifyContent:'flex-end',gap:8}}>
+              <button className="admin-btn admin-btn--ghost" type="button" onClick={() => setEditingShop(null)}>Annuler</button>
+              <button className="admin-btn admin-btn--primary" type="submit" disabled={savingEdit}>{savingEdit ? 'Enregistrement…' : 'Enregistrer les modifications'}</button>
+            </div>
+          </form>
+        </AdminModal>
+      )}
       <SimpleTable
         search={search} onSearch={setSearch} placeholder="Rechercher une boutique…"
-        columns={['Nom','Email','Statut','Date']} loading={loading} empty={{ icon:<ShopIcon />, text:'Aucune boutique' }}
+        columns={['Nom','Email','Propriétaire','Statut','Date','Actions']} loading={loading} empty={{ icon:<ShopIcon />, text:'Aucune boutique' }}
         rows={filtered} renderRow={s => (
           <tr key={s.id}>
             <td style={{fontWeight:600}}>{s.name}</td>
             <td style={{color:'var(--admin-text-muted)'}}>{s.contact_email ?? '—'}</td>
-            <td><span className={`admin-badge admin-badge--${s.is_active?'green':'red'}`}>{s.is_active?'Active':'Inactive'}</span></td>
+            <td>
+              <select className="admin-select" aria-label={`Propriétaire de ${s.name}`} value={s.owner_id || ''} disabled={savingOwner === s.id} onChange={e => assignOwner(s.id, e.target.value)}>
+                <option value="">Associer un boutiquier</option>
+                {owners.map(owner => <option key={owner.id} value={owner.id}>{[owner.first_name, owner.last_name].filter(Boolean).join(' ') || owner.email}</option>)}
+              </select>
+              {savingOwner === s.id && <small>Enregistrement…</small>}
+            </td>
+            <td><span className={`admin-badge admin-badge--${s.is_active !== false?'green':'red'}`}>{s.is_active !== false?'Active':'Inactive'}</span>{s.is_verified && <span className="admin-badge admin-badge--blue" style={{marginLeft:6}}>Vérifiée</span>}</td>
             <td style={{color:'var(--admin-text-muted)',fontSize:'0.82rem'}}>{s.created_at?new Date(s.created_at).toLocaleDateString('fr-FR'):'—'}</td>
-            <td><button className="admin-btn admin-btn--danger admin-btn--sm" onClick={()=>remove(s.id)}><TrashIcon /></button></td>
+            <td style={{display:'flex',gap:6}}><button className="admin-btn admin-btn--ghost admin-btn--sm" onClick={()=>openEdit(s)}>Modifier</button><button className="admin-btn admin-btn--danger admin-btn--sm" onClick={()=>remove(s.id)} title="Supprimer"><TrashIcon /></button></td>
           </tr>
         )}
       />

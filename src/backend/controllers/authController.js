@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { supabaseAdmin } = require('../supabaseClient');
 const { sendOtpEmail, sendRegistrationOtpEmail, isConfigured: isSmtpConfigured } = require('../services/mailService');
 const { logLoginAttempt } = require('./logController');
+const shopController = require('./shopController');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'jogalook_dev_secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -245,6 +246,12 @@ exports.registerVerifyOtp = async (req, res) => {
 
       if (insertError) throw insertError;
       userRecord = newUser;
+    }
+
+    // Les comptes réactivés qui sont déjà boutiquiers doivent aussi disposer de leur boutique.
+    if (userRecord.role === 'SHOP_OWNER' && userRecord.status === 'ACTIVE') {
+      const shopResult = await shopController.ensureShopForOwner(userRecord.id);
+      if (shopResult.error) throw new Error(shopResult.error);
     }
 
     const token = generateToken({ user_id: userRecord.id, email: userRecord.email, role: userRecord.role });

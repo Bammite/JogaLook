@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require('../supabaseClient');
+const shopController = require('./shopController');
 
 // ==============================================================================
 // UTILISATEURS - CONTROLLER CRUD
@@ -70,6 +71,12 @@ exports.updateUser = async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Dès qu'un compte devient boutiquier actif, lui créer sa boutique s'il n'en a pas.
+    if (data.role === 'SHOP_OWNER' && data.status === 'ACTIVE') {
+      const shopResult = await shopController.ensureShopForOwner(data.id);
+      if (shopResult.error) return res.status(400).json({ success: false, message: shopResult.error });
+    }
 
     return res.json({ success: true, message: 'Profil utilisateur mis à jour', data });
   } catch (error) {
