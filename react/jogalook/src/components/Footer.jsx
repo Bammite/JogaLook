@@ -85,7 +85,7 @@ function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; 2026 JogaLook. Tous droits réservés.</p>
+          <p>&copy; 2026 ATTIC Tous droits réservés.</p>
           <div className="footer-payments">
             <span title="Carte bancaire"><CreditCardIcon size={20} /></span>
             <span title="Virement bancaire"><BankIcon size={20} /></span>
