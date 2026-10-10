@@ -15,7 +15,7 @@ export default defineConfig({
         short_name: 'JogaLook',
         description: 'Découvrez notre collection de maillots de sport authentiques et personnalisables.',
         theme_color: '#FC7002',
-        background_color: '#0f172a',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
