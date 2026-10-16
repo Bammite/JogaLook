@@ -76,6 +76,9 @@ export default function CategoryGroupPage() {
 
             return {
               id: product.id,
+              slug: product.slug,
+              short_code: product.short_code,
+              template_id: product.template_id,
               name: product.name,
               team: categoryName,
               price: Number(product.base_price ?? 0),

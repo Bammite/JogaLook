@@ -177,21 +177,30 @@ export default function ProductDetailPage({ standalone = false }) {
           if (!shopResponse.ok || !shopJson.success || !shopJson.data || shopJson.data.is_active === false) throw new Error('shop not found');
           expectedShopId = shopJson.data.id;
         }
-        let loadedProduct;
-        const res = await fetch(`/api/products/${id}`);
-        if (!res.ok) {
-          // Try with slug fallback
-          const res2 = await fetch(`/api/products?slug=${id}`);
-          if (!res2.ok) throw new Error('not found');
-          const json2 = await res2.json();
-          const p = json2.data?.[0];
-          if (!p) throw new Error('not found');
-          loadedProduct = p;
-        } else {
+        let loadedProduct = null;
+        const res = await fetch(`/api/products/${encodeURIComponent(id || '')}`);
+        if (res.ok) {
           const json = await res.json();
-          if (!json.success || !json.data) throw new Error('not found');
-          loadedProduct = json.data;
+          if (json.success && json.data) {
+            loadedProduct = json.data;
+          }
         }
+
+        // Si non trouvé par l'endpoint direct, tenter par slug via query param
+        if (!loadedProduct) {
+          const res2 = await fetch(`/api/products?slug=${encodeURIComponent(id || '')}`);
+          if (res2.ok) {
+            const json2 = await res2.json();
+            const list = json2.data || [];
+            const p = list.find(prod => prod.slug === id || prod.short_code === id || prod.id === id);
+            if (p) loadedProduct = p;
+          }
+        }
+
+        if (!loadedProduct) {
+          throw new Error('Produit non trouvé');
+        }
+
         if (standalone && loadedProduct.shop_id !== expectedShopId) throw new Error('product not found in shop');
         setProduct(loadedProduct);
       } catch {

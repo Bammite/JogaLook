@@ -27,7 +27,7 @@ const sortProductsWithOrder = (products) => {
 // 1. Lister tous les produits (avec filtrage optionnel par catégorie/boutique)
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category_id, shop_id, limit = 50, offset = 0 } = req.query;
+    const { category_id, shop_id, slug, limit = 50, offset = 0 } = req.query;
     const shopFilter = req.merchant?.shop?.id || shop_id;
     // Une ligne supplémentaire permet au client de savoir s'il reste une page,
     // sans lancer une coûteuse requête COUNT sur Supabase.
@@ -52,6 +52,7 @@ exports.getAllProducts = async (req, res) => {
 
     if (category_id) query = query.eq('category_id', category_id);
     if (shopFilter) query = query.eq('shop_id', shopFilter);
+    if (slug) query = query.eq('slug', slug);
 
     let { data, error } = await query;
 
@@ -73,6 +74,7 @@ exports.getAllProducts = async (req, res) => {
 
       if (category_id) retryQuery = retryQuery.eq('category_id', category_id);
       if (shopFilter) retryQuery = retryQuery.eq('shop_id', shopFilter);
+      if (slug) retryQuery = retryQuery.eq('slug', slug);
 
       const retryRes = await retryQuery;
       data = retryRes.data;
@@ -93,6 +95,7 @@ exports.getAllProducts = async (req, res) => {
 
       if (category_id) fallbackQuery = fallbackQuery.eq('category_id', category_id);
       if (shopFilter) fallbackQuery = fallbackQuery.eq('shop_id', shopFilter);
+      if (slug) fallbackQuery = fallbackQuery.eq('slug', slug);
 
       const fallbackRes = await fallbackQuery;
       if (fallbackRes.error) throw fallbackRes.error;
@@ -160,6 +163,14 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ success: false, message: 'Identifiant invalide' });
+    }
+
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const filterCondition = isUUID
+      ? `id.eq.${id},slug.eq.${id},short_code.eq.${id}`
+      : `slug.eq.${id},short_code.eq.${id}`;
 
     let query = supabaseAdmin
       .from('products')
@@ -170,20 +181,18 @@ exports.getProductById = async (req, res) => {
         product_variants ( id, sku, size, color_name, color_hex, stock_quantity, price_override ),
         product_images ( id, url, alt_text, position, is_primary )
       `)
-      .or(`id.eq.${id},slug.eq.${id},short_code.eq.${id}`)
+      .or(filterCondition)
       .is('deleted_at', null)
-      .single();
+      .maybeSingle();
 
     let { data, error } = await query;
 
     // Fallback manuel si erreur de relation dans le cache
-    if (error && (error.message?.includes('schema cache') || error.code === 'PGRST200')) {
-      console.warn('Fallback getProductById: relation automatique non trouvée, exécution manuelle:', error.message);
-      
+    if (error || !data) {
       const singleRes = await supabaseAdmin
         .from('products')
         .select('*')
-        .or(`id.eq.${id},slug.eq.${id},short_code.eq.${id}`)
+        .or(filterCondition)
         .is('deleted_at', null)
         .maybeSingle();
 
@@ -209,7 +218,7 @@ exports.getProductById = async (req, res) => {
       error = null;
     }
 
-    if (error || !data) {
+    if (!data) {
       return res.status(404).json({ success: false, message: 'Produit non trouvé' });
     }
 

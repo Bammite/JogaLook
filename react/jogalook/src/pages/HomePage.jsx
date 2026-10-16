@@ -198,6 +198,9 @@ function HomePage() {
           const colors = Array.from(new Set((product.product_variants || []).map((v) => v.color_hex).filter(Boolean)));
           return {
             id: product.id,
+            slug: product.slug,
+            short_code: product.short_code,
+            template_id: product.template_id,
             name: product.name,
             team: categoryName,
             price: Number(product.base_price ?? 0),
@@ -206,6 +209,8 @@ function HomePage() {
             badge: product.is_customizable ? { type: 'new', text: 'Personnalisable' } : null,
             colors: colors.length ? colors : ['#1F2937', '#F8FAFC', '#D1D5DB'],
             category: categoryName,
+            product_variants: product.product_variants || [],
+            product_images: product.product_images || [],
           };
         });
 
