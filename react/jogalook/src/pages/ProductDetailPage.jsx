@@ -213,6 +213,15 @@ export default function ProductDetailPage({ standalone = false }) {
     load();
   }, [id, shopSlug, standalone]);
 
+  // S'assurer que la page est bien tout en haut lors du chargement du produit
+  useEffect(() => {
+    if (product) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [product?.id]);
+
   // Derive unique colors and sizes from variants
   const variants = (product?.product_variants ?? []).filter(v => !v.deleted_at);
   const sortedVariants = sortSizes(variants);

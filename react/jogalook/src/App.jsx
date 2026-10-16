@@ -35,6 +35,7 @@ import CategoryGroupPage from './pages/CategoryGroupPage';
 import PartnershipPage from './pages/PartnershipPage';
 import MerchantSpace from './pages/merchant/MerchantSpace';
 import FloatingCart from './components/FloatingCart';
+import ScrollToTop from './components/ScrollToTop';
 import { clearStoreContext, getStoreContext, setStoreContext } from './utils/storeContext';
 import './App.css';
 
@@ -185,6 +186,7 @@ function AppShell() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppShell />
     </BrowserRouter>
   );
