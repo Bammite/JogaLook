@@ -22,6 +22,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Routes pour l'upload et la récupération de documents (/upload, /get)
+const documentRoutes = require('./documentRoutes');
+app.use(documentRoutes);
+
 // Suivi automatique du trafic et des visites sur tout le site (non-bloquant)
 const trafficTracker = require('./backend/middleware/trafficTracker');
 app.use(trafficTracker);

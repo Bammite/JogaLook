@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Téléverser des documents</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      border: 1px solid #334155;
+    }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #f8fafc;
+      text-align: center;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .dropzone {
+      border: 2px dashed #475569;
+      border-radius: 12px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #0f172a50;
+      transition: all 0.2s ease;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #38bdf8;
+      background: #1e293b;
+    }
+    .dropzone svg {
+      width: 48px;
+      height: 48px;
+      stroke: #38bdf8;
+      margin-bottom: 12px;
+    }
+    .dropzone p {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+    .dropzone span {
+      font-size: 0.8rem;
+      color: #64748b;
+      display: block;
+      margin-top: 6px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .file-preview {
+      margin-top: 16px;
+      padding: 12px;
+      background: #0f172a;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      font-size: 0.85rem;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+    }
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 70%;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+      background: #38bdf8;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover:not(:disabled) {
+      background: #7dd3fc;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .nav-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+    .alert {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .alert-success { background: #064e3b; color: #a7f3d0; border: 1px solid #059669; }
+    .alert-error { background: #7f1d1d; color: #fecaca; border: 1px solid #dc2626; }
+    .progress-bar-container {
+      width: 100%;
+      background-color: #334155;
+      border-radius: 9999px;
+      height: 8px;
+      margin-top: 15px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #38bdf8;
+      transition: width 0.15s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📤 Uploader un document</h1>
+    <p class="subtitle">Tous types de fichiers acceptés (PDF, images, zip, docx, etc.)</p>
+
+    <div class="dropzone" id="dropzone">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      </svg>
+      <p><strong>Cliquez ici</strong> ou glissez-déposez vos fichiers</p>
+      <span>Sélectionnez un ou plusieurs fichiers</span>
+      <input type="file" id="fileInput" multiple>
+    </div>
+
+    <div class="file-preview" id="filePreview"></div>
+
+    <div class="progress-bar-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="alert alert-success" id="alertSuccess"></div>
+    <div class="alert alert-error" id="alertError"></div>
+
+    <button class="btn" id="uploadBtn" disabled>Envoyer les fichiers</button>
+
+    <a href="/get" class="nav-link">📂 Voir et récupérer les fichiers uploadés (/get) &rarr;</a>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const alertSuccess = document.getElementById('alertSuccess');
+    const alertError = document.getElementById('alertError');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    let selectedFiles = [];
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      handleFiles(dt.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function handleFiles(files) {
+      if (!files || files.length === 0) return;
+      selectedFiles = Array.from(files);
+      renderPreview();
+    }
+
+    function renderPreview() {
+      if (selectedFiles.length === 0) {
+        filePreview.style.display = 'none';
+        uploadBtn.disabled = true;
+        return;
+      }
+      filePreview.innerHTML = '';
+      selectedFiles.forEach((file) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `
+          <span class="file-name" title="${file.name}">📄 ${file.name}</span>
+          <span>${formatBytes(file.size)}</span>
+        `;
+        filePreview.appendChild(item);
+      });
+      filePreview.style.display = 'block';
+      uploadBtn.disabled = false;
+      alertSuccess.style.display = 'none';
+      alertError.style.display = 'none';
+    }
+
+    uploadBtn.addEventListener('click', () => {
+      if (selectedFiles.length === 0) return;
+
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Envoi en cours...';
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      alertSuccess.style.display = 'none';
+      alertError.style.display = 'none';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload', true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          progressBar.style.width = percentComplete + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Envoyer les fichiers';
+        progressContainer.style.display = 'none';
+
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (xhr.status === 200 && res.success) {
+            alertSuccess.textContent = `Succès ! ${res.uploadedFiles.length} fichier(s) uploadé(s) avec succès.`;
+            alertSuccess.style.display = 'block';
+            selectedFiles = [];
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            uploadBtn.disabled = true;
+          } else {
+            alertError.textContent = res.message || "Une erreur est survenue lors de l'upload.";
+            alertError.style.display = 'block';
+          }
+        } catch (err) {
+          alertError.textContent = "Erreur inattendue du serveur.";
+          alertError.style.display = 'block';
+        }
+      };
+
+      xhr.onerror = () => {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Envoyer les fichiers';
+        progressContainer.style.display = 'none';
+        alertError.textContent = "Erreur réseau lors de l'upload.";
+        alertError.style.display = 'block';
+      };
+
+      xhr.send(formData);
+    });
+  </script>
+</body>
+</html>
